@@ -37,3 +37,17 @@ def test_web_copy_of_taxonomy_is_in_sync():
 
 def test_gender_word_is_not_a_brand():
     assert classify("Women's Cotton Kurti Set")["brand"] is None
+
+
+def test_backfill_tags_everything_but_manual(fake_db):
+    from deal_finder.backfill import tag_all
+
+    fake_db.data["deals"] = {
+        "A": {"title": "Prestige Non-stick Kadai 24cm", "posted": {}},
+        "B": {"title": "Prestige Non-stick Kadai 24cm", "category_source": "manual", "department": "fashion"},
+    }
+    stats = tag_all(fake_db)
+    assert stats["tagged"] == 1 and stats["skipped_manual"] == 1
+    assert fake_db.data["deals"]["A"]["department"] == "home-kitchen"
+    assert fake_db.data["deals"]["A"]["x_status"] == "unposted"
+    assert fake_db.data["deals"]["B"]["department"] == "fashion"
