@@ -120,3 +120,12 @@ def test_x_status_backfilled_for_old_docs(store, fake_db, deal):
     del fake_db.data["deals"][deal.asin]["x_status"]
     store.upsert_deals([deal])
     assert fake_db.data["deals"][deal.asin]["x_status"] == "unposted"
+
+
+def test_manual_products_survive_a_day_but_not_a_week(store, fake_db, clock, deal):
+    store.upsert_deals([deal])
+    fake_db.data["deals"][deal.asin]["source"] = "manual"
+    clock["now"] = NOW + timedelta(hours=48)
+    assert store.deactivate_stale(24) == 0
+    clock["now"] = NOW + timedelta(days=8)
+    assert store.deactivate_stale(24) == 1

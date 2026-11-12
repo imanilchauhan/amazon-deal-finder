@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { DealGrid } from "@/components/DealGrid";
+import { Catalog } from "@/components/Catalog";
+import { CategoryNav } from "@/components/CategoryNav";
 import { JsonLd } from "@/components/SiteChrome";
 import { getDeals, lastChecked } from "@/lib/deals";
 import { istDateTime } from "@/lib/format";
@@ -15,8 +16,10 @@ export const metadata: Metadata = {
 };
 
 export default async function DealsPage() {
-  const deals = await getDeals(100);
+  const deals = await getDeals();
   const checked = lastChecked(deals);
+  const counts: Record<string, number> = {};
+  for (const d of deals) counts[d.department] = (counts[d.department] ?? 0) + 1;
 
   return (
     <main>
@@ -37,11 +40,12 @@ export default async function DealsPage() {
       <section className={s.hero}>
         <h1>All deals today</h1>
         <p className={s.lead}>
-          {deals.length} live Amazon deals, biggest discount first. Filter by discount or budget to find your next steal.
+          {deals.length} live Amazon deals, biggest discount first. Filter by category, brand, price or discount to find your next steal.
           {checked && <> Prices last checked {istDateTime(checked)}.</>}
         </p>
       </section>
-      <DealGrid deals={deals} />
+      <CategoryNav counts={counts} />
+      <Catalog deals={deals} />
       <p className={s.note}>{PRICE_DISCLAIMER}</p>
     </main>
   );

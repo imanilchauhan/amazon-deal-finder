@@ -94,3 +94,29 @@
   color: var(--muted);
   font-size: 15px;
 }
+
+.crumbs {
+  padding: 16px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.crumbs a {
+  text-decoration: none;
+  color: var(--brand-deep);
+}
+.subcats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 20px;
+}
+.subcats a {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  text-decoration: none;
+  font-size: 14px;
+}
+.subcats a:hover {
+  background: var(--brand-soft);
+}

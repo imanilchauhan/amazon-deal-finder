@@ -19,3 +19,11 @@ export function db() {
   const app = getApps().length ? getApp() : initializeApp(config);
   return getFirestore(app);
 }
+
+/** Admin-only helpers (Google sign-in + full Firestore SDK so writes carry the signed-in user's token). */
+export function firebaseApp() {
+  if (!config.projectId) {
+    throw new Error("Missing NEXT_PUBLIC_FIREBASE_* env vars (see web/.env.example).");
+  }
+  return getApps().length ? getApp() : initializeApp(config);
+}

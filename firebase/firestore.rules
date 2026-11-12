@@ -1,15 +1,22 @@
 rules_version = '2';
 
-// Clients (Flutter app, Cloudflare Worker) are READ-ONLY.
-// All writes come from the backend's service account (Admin SDK bypasses these rules).
+// Public clients (website, app, Cloudflare Worker) are READ-ONLY.
+// Writes come from the backend's service account (Admin SDK bypasses these rules) and from
+// the site owner, signed in to /admin with their verified Google account.
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function isOwner() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == 'imanilchauhan3@gmail.com';
+    }
+
     match /deals/{asin} {
       allow get: if true;
-      // The app may only run the feed query (active deals), max 100 at a time.
-      allow list: if resource.data.active == true && request.query.limit <= 100;
-      allow write: if false;
+      // Public feed query: active deals only, max 500 at a time. The owner can list everything.
+      allow list: if (resource.data.active == true && request.query.limit <= 500) || isOwner();
+      allow create, update, delete: if isOwner();
     }
 
     // Post-id -> deal link lookups for the comment-to-DM worker.

@@ -1,16 +1,23 @@
 import Link from "next/link";
+import { CategoryNav } from "@/components/CategoryNav";
 import { DealGrid } from "@/components/DealGrid";
 import { JsonLd } from "@/components/SiteChrome";
 import { getDeals, lastChecked } from "@/lib/deals";
 import { istDateTime } from "@/lib/format";
 import { PRICE_DISCLAIMER, SITE } from "@/lib/site";
+import { DEPARTMENTS } from "@/lib/taxonomy";
 import s from "./page.module.css";
 
 export default async function Home() {
-  const deals = await getDeals(100);
+  const deals = await getDeals();
   const top = deals.slice(0, 12);
   const best = deals[0]?.discountPct ?? 0;
   const checked = lastChecked(deals);
+  const counts: Record<string, number> = {};
+  for (const d of deals) counts[d.department] = (counts[d.department] ?? 0) + 1;
+  const shelves = DEPARTMENTS.filter((d) => (counts[d.slug] ?? 0) >= 3)
+    .sort((a, b) => counts[b.slug] - counts[a.slug])
+    .slice(0, 4);
 
   const itemList = {
     "@context": "https://schema.org",
@@ -54,10 +61,26 @@ export default async function Home() {
       </section>
 
       <div className={s.sectionHead}>
+        <h2>Shop by category</h2>
+      </div>
+      <CategoryNav counts={counts} />
+
+      <div className={s.sectionHead}>
         <h2>Top deals right now</h2>
         <Link href="/deals">See all {deals.length} deals →</Link>
       </div>
       <DealGrid deals={top} showControls={false} />
+      {shelves.map((dep) => (
+        <section key={dep.slug}>
+          <div className={s.sectionHead}>
+            <h2>
+              {dep.icon} {dep.name}
+            </h2>
+            <Link href={`/c/${dep.slug}`}>See all {counts[dep.slug]} →</Link>
+          </div>
+          <DealGrid deals={deals.filter((d) => d.department === dep.slug).slice(0, 4)} />
+        </section>
+      ))}
       <p className={s.note}>{PRICE_DISCLAIMER}</p>
 
       <div className={s.seo}>

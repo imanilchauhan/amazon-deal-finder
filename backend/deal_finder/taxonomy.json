@@ -1,0 +1,1394 @@
+{
+ "version": 1,
+ "departments": [
+  {
+   "slug": "mobiles-tablets",
+   "name": "Mobiles & Tablets",
+   "icon": "📱",
+   "categories": [
+    {
+     "slug": "smartphones",
+     "name": "Smartphones",
+     "keywords": [
+      "smartphone",
+      "5g",
+      "iphone",
+      "galaxy s",
+      "redmi",
+      "oneplus",
+      "realme",
+      "vivo",
+      "oppo",
+      "poco",
+      "pixel",
+      "mobile phone"
+     ]
+    },
+    {
+     "slug": "tablets",
+     "name": "Tablets",
+     "keywords": [
+      "tablet",
+      "ipad",
+      "galaxy tab",
+      "fire hd"
+     ]
+    },
+    {
+     "slug": "mobile-accessories",
+     "name": "Mobile accessories",
+     "keywords": [
+      "phone case",
+      "back cover",
+      "mobile cover",
+      "tempered glass",
+      "screen guard",
+      "charger",
+      "power bank",
+      "usb cable",
+      "type-c cable",
+      "lightning cable",
+      "phone holder",
+      "mobile stand",
+      "adapter"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "electronics",
+   "name": "Electronics",
+   "icon": "🎧",
+   "categories": [
+    {
+     "slug": "headphones-earbuds",
+     "name": "Headphones & earbuds",
+     "keywords": [
+      "earbuds",
+      "headphone",
+      "earphone",
+      "neckband",
+      "tws",
+      "airdopes",
+      "airpods",
+      "buds"
+     ]
+    },
+    {
+     "slug": "speakers",
+     "name": "Speakers",
+     "keywords": [
+      "bluetooth speaker",
+      "soundbar",
+      "home theatre",
+      "speaker"
+     ]
+    },
+    {
+     "slug": "smartwatches-bands",
+     "name": "Smartwatches & bands",
+     "keywords": [
+      "smartwatch",
+      "smart watch",
+      "fitness band",
+      "fitness tracker",
+      "smart band"
+     ]
+    },
+    {
+     "slug": "cameras",
+     "name": "Cameras",
+     "keywords": [
+      "camera",
+      "gopro",
+      "dslr",
+      "webcam",
+      "tripod",
+      "cctv",
+      "dash cam"
+     ]
+    },
+    {
+     "slug": "tvs",
+     "name": "TVs",
+     "keywords": [
+      "smart tv",
+      "led tv",
+      "oled",
+      "qled",
+      "television",
+      "fire tv",
+      "streaming stick",
+      "projector"
+     ]
+    },
+    {
+     "slug": "gaming",
+     "name": "Gaming",
+     "keywords": [
+      "gaming",
+      "playstation",
+      "ps5",
+      "xbox",
+      "controller",
+      "gamepad",
+      "nintendo"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "computers-accessories",
+   "name": "Computers & Accessories",
+   "icon": "💻",
+   "categories": [
+    {
+     "slug": "laptops",
+     "name": "Laptops",
+     "keywords": [
+      "laptop",
+      "notebook",
+      "macbook",
+      "chromebook",
+      "ideapad",
+      "vivobook",
+      "thinkpad"
+     ]
+    },
+    {
+     "slug": "monitors",
+     "name": "Monitors",
+     "keywords": [
+      "monitor",
+      "display 24",
+      "display 27"
+     ]
+    },
+    {
+     "slug": "keyboards-mice",
+     "name": "Keyboards & mice",
+     "keywords": [
+      "keyboard",
+      "mouse",
+      "mousepad",
+      "combo"
+     ]
+    },
+    {
+     "slug": "storage",
+     "name": "Storage",
+     "keywords": [
+      "pen drive",
+      "pendrive",
+      "flash drive",
+      "ssd",
+      "hard disk",
+      "hdd",
+      "memory card",
+      "sd card",
+      "microsd"
+     ]
+    },
+    {
+     "slug": "networking",
+     "name": "Networking",
+     "keywords": [
+      "router",
+      "wifi",
+      "wi-fi",
+      "range extender",
+      "modem",
+      "lan cable",
+      "ethernet"
+     ]
+    },
+    {
+     "slug": "printers",
+     "name": "Printers",
+     "keywords": [
+      "printer",
+      "ink tank",
+      "toner",
+      "cartridge",
+      "scanner"
+     ]
+    },
+    {
+     "slug": "laptop-bags-cases",
+     "name": "Laptop bags & cases",
+     "keywords": [
+      "laptop bag",
+      "laptop sleeve",
+      "laptop backpack",
+      "laptop stand",
+      "cooling pad"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "large-appliances",
+   "name": "Large Appliances",
+   "icon": "🧊",
+   "categories": [
+    {
+     "slug": "acs",
+     "name": "ACs",
+     "keywords": [
+      "air conditioner",
+      " ac ",
+      "split ac",
+      "window ac",
+      "inverter ac"
+     ]
+    },
+    {
+     "slug": "refrigerators",
+     "name": "Refrigerators",
+     "keywords": [
+      "refrigerator",
+      "fridge",
+      "double door",
+      "single door"
+     ]
+    },
+    {
+     "slug": "washing-machines",
+     "name": "Washing machines",
+     "keywords": [
+      "washing machine",
+      "front load",
+      "top load",
+      "washer",
+      "dryer"
+     ]
+    },
+    {
+     "slug": "water-purifiers",
+     "name": "Water purifiers",
+     "keywords": [
+      "water purifier",
+      "ro water",
+      "uv water",
+      "aquaguard",
+      "kent",
+      "water filter"
+     ]
+    },
+    {
+     "slug": "chimneys",
+     "name": "Chimneys",
+     "keywords": [
+      "chimney",
+      "kitchen hob",
+      "gas stove",
+      "cooktop",
+      "hob"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "home-kitchen",
+   "name": "Home & Kitchen",
+   "icon": "🍳",
+   "categories": [
+    {
+     "slug": "cookware",
+     "name": "Cookware",
+     "keywords": [
+      "cookware",
+      "kadai",
+      "kadhai",
+      "frying pan",
+      "tawa",
+      "pressure cooker",
+      "non-stick",
+      "nonstick",
+      "saucepan",
+      "pan set",
+      "casserole",
+      "tiffin",
+      "lunch box"
+     ]
+    },
+    {
+     "slug": "kitchen-tools",
+     "name": "Kitchen tools",
+     "keywords": [
+      "knife",
+      "peeler",
+      "grater",
+      "chopper",
+      "spatula",
+      "ladle",
+      "whisk",
+      "cutting board",
+      "kitchen tool",
+      "scissors"
+     ]
+    },
+    {
+     "slug": "kitchen-appliances",
+     "name": "Kitchen appliances",
+     "keywords": [
+      "mixer grinder",
+      "juicer",
+      "blender",
+      "air fryer",
+      "induction",
+      "microwave",
+      "toaster",
+      "kettle",
+      "electric kettle",
+      "rice cooker",
+      "oven",
+      "sandwich maker",
+      "food processor",
+      "coffee maker",
+      "cooker"
+     ]
+    },
+    {
+     "slug": "storage-containers",
+     "name": "Storage & containers",
+     "keywords": [
+      "container",
+      "storage box",
+      "jar",
+      "bottle",
+      "organizer",
+      "organiser",
+      "dabba",
+      "airtight",
+      "flask",
+      "thermos",
+      "water bottle"
+     ]
+    },
+    {
+     "slug": "dining",
+     "name": "Dining",
+     "keywords": [
+      "dinner set",
+      "plate",
+      "bowl",
+      "cutlery",
+      "spoon set",
+      "glass set",
+      "mug",
+      "cup set",
+      "tea set",
+      "serving"
+     ]
+    },
+    {
+     "slug": "home-d-cor",
+     "name": "Home décor",
+     "keywords": [
+      "wall art",
+      "wall decor",
+      "painting",
+      "showpiece",
+      "vase",
+      "artificial plant",
+      "photo frame",
+      "clock",
+      "mirror",
+      "curtain",
+      "rug",
+      "carpet",
+      "doormat",
+      "candle",
+      "diya",
+      "rangoli",
+      "toran",
+      "decor",
+      "decoration"
+     ]
+    },
+    {
+     "slug": "lighting",
+     "name": "Lighting",
+     "keywords": [
+      "led bulb",
+      "string light",
+      "fairy light",
+      "lamp",
+      "night light",
+      "table lamp",
+      "ceiling light",
+      "panel light",
+      "tube light",
+      "lantern"
+     ]
+    },
+    {
+     "slug": "furniture",
+     "name": "Furniture",
+     "keywords": [
+      "sofa",
+      "bed",
+      "mattress",
+      "chair",
+      "table",
+      "shoe rack",
+      "wardrobe",
+      "bookshelf",
+      "desk",
+      "stool",
+      "dressing table",
+      "cabinet"
+     ]
+    },
+    {
+     "slug": "bedding-bath",
+     "name": "Bedding & bath",
+     "keywords": [
+      "bedsheet",
+      "bed sheet",
+      "pillow",
+      "comforter",
+      "blanket",
+      "quilt",
+      "towel",
+      "duvet",
+      "mattress protector",
+      "bath mat",
+      "shower"
+     ]
+    },
+    {
+     "slug": "cleaning",
+     "name": "Cleaning",
+     "keywords": [
+      "vacuum",
+      "mop",
+      "broom",
+      "detergent",
+      "cleaner",
+      "wiper",
+      "scrub",
+      "dustbin",
+      "robot vacuum",
+      "steam cleaner"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "fashion",
+   "name": "Fashion",
+   "icon": "👗",
+   "categories": [
+    {
+     "slug": "clothing",
+     "name": "Clothing",
+     "keywords": [
+      "t-shirt",
+      "tshirt",
+      "shirt",
+      "kurta",
+      "kurti",
+      "saree",
+      "jeans",
+      "trouser",
+      "dress",
+      "jacket",
+      "hoodie",
+      "sweatshirt",
+      "top ",
+      "legging",
+      "lehenga",
+      "shorts",
+      "innerwear",
+      "track pant",
+      "tracksuit",
+      "blazer",
+      "sweater",
+      "salwar",
+      "dupatta",
+      "ethnic"
+     ]
+    },
+    {
+     "slug": "footwear",
+     "name": "Footwear",
+     "keywords": [
+      "shoes",
+      "sneaker",
+      "sandal",
+      "slipper",
+      "flip flop",
+      "heels",
+      "boots",
+      "loafer",
+      "sports shoe",
+      "running shoe",
+      "flat",
+      "chappal",
+      "crocs"
+     ]
+    },
+    {
+     "slug": "watches",
+     "name": "Watches",
+     "keywords": [
+      "analog watch",
+      "wrist watch",
+      "chronograph",
+      "watch for men",
+      "watch for women",
+      "automatic watch"
+     ]
+    },
+    {
+     "slug": "bags-luggage",
+     "name": "Bags & luggage",
+     "keywords": [
+      "backpack",
+      "handbag",
+      "trolley",
+      "suitcase",
+      "duffle",
+      "sling bag",
+      "wallet",
+      "luggage",
+      "tote",
+      "clutch",
+      "school bag"
+     ]
+    },
+    {
+     "slug": "jewellery",
+     "name": "Jewellery",
+     "keywords": [
+      "necklace",
+      "earring",
+      "bracelet",
+      "ring",
+      "jewellery",
+      "jewelry",
+      "bangle",
+      "pendant",
+      "mangalsutra",
+      "anklet",
+      "silver",
+      "kundan",
+      "gold plated"
+     ]
+    },
+    {
+     "slug": "eyewear",
+     "name": "Eyewear",
+     "keywords": [
+      "sunglass",
+      "spectacle",
+      "eyeglass",
+      "frame",
+      "lens"
+     ]
+    },
+    {
+     "slug": "accessories",
+     "name": "Accessories",
+     "keywords": [
+      "belt",
+      "cap",
+      "scarf",
+      "gloves",
+      "socks",
+      "tie",
+      "hair accessor",
+      "muffler",
+      "stole"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "beauty-personal-care",
+   "name": "Beauty & Personal Care",
+   "icon": "💄",
+   "categories": [
+    {
+     "slug": "skincare",
+     "name": "Skincare",
+     "keywords": [
+      "face wash",
+      "moisturiser",
+      "moisturizer",
+      "sunscreen",
+      "serum",
+      "face cream",
+      "body lotion",
+      "face mask",
+      "cleanser",
+      "toner",
+      "lip balm",
+      "anti-ageing"
+     ]
+    },
+    {
+     "slug": "haircare",
+     "name": "Haircare",
+     "keywords": [
+      "shampoo",
+      "conditioner",
+      "hair oil",
+      "hair dryer",
+      "hair straightener",
+      "hair mask",
+      "hair serum",
+      "curler"
+     ]
+    },
+    {
+     "slug": "makeup",
+     "name": "Makeup",
+     "keywords": [
+      "lipstick",
+      "kajal",
+      "eyeliner",
+      "mascara",
+      "foundation",
+      "compact",
+      "nail polish",
+      "makeup",
+      "concealer",
+      "primer",
+      "eyeshadow"
+     ]
+    },
+    {
+     "slug": "fragrance",
+     "name": "Fragrance",
+     "keywords": [
+      "perfume",
+      "deodorant",
+      "deo ",
+      "body spray",
+      "eau de",
+      "attar",
+      "fragrance"
+     ]
+    },
+    {
+     "slug": "grooming-shaving",
+     "name": "Grooming & shaving",
+     "keywords": [
+      "trimmer",
+      "shaver",
+      "razor",
+      "beard",
+      "shaving",
+      "epilator",
+      "grooming",
+      "aftershave"
+     ]
+    },
+    {
+     "slug": "oral-care",
+     "name": "Oral care",
+     "keywords": [
+      "toothbrush",
+      "toothpaste",
+      "mouthwash",
+      "electric toothbrush",
+      "water flosser",
+      "floss"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "health-wellness",
+   "name": "Health & Wellness",
+   "icon": "💊",
+   "categories": [
+    {
+     "slug": "supplements",
+     "name": "Supplements",
+     "keywords": [
+      "protein",
+      "whey",
+      "vitamin",
+      "multivitamin",
+      "omega",
+      "supplement",
+      "creatine",
+      "collagen",
+      "ashwagandha",
+      "biotin",
+      "bcaa"
+     ]
+    },
+    {
+     "slug": "health-devices",
+     "name": "Health devices",
+     "keywords": [
+      "blood pressure",
+      "bp monitor",
+      "glucometer",
+      "thermometer",
+      "oximeter",
+      "nebuliser",
+      "nebulizer",
+      "weighing scale",
+      "massager",
+      "heating pad"
+     ]
+    },
+    {
+     "slug": "personal-care-appliances",
+     "name": "Personal care appliances",
+     "keywords": [
+      "steamer",
+      "humidifier",
+      "air purifier",
+      "foot massager",
+      "hot water bag"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "grocery-gourmet",
+   "name": "Grocery & Gourmet",
+   "icon": "🛒",
+   "categories": [
+    {
+     "slug": "beverages",
+     "name": "Beverages",
+     "keywords": [
+      "tea",
+      "coffee",
+      "green tea",
+      "juice",
+      "drink",
+      "energy drink",
+      "milk powder"
+     ]
+    },
+    {
+     "slug": "snacks",
+     "name": "Snacks",
+     "keywords": [
+      "chocolate",
+      "biscuit",
+      "cookies",
+      "namkeen",
+      "chips",
+      "snack",
+      "cadbury",
+      "candy",
+      "sweets",
+      "mithai",
+      "gift box",
+      "hamper"
+     ]
+    },
+    {
+     "slug": "staples",
+     "name": "Staples",
+     "keywords": [
+      "atta",
+      "rice",
+      "dal",
+      "oil",
+      "ghee",
+      "sugar",
+      "salt",
+      "masala",
+      "spice",
+      "honey",
+      "flour"
+     ]
+    },
+    {
+     "slug": "dry-fruits-nuts",
+     "name": "Dry fruits & nuts",
+     "keywords": [
+      "almond",
+      "cashew",
+      "pistachio",
+      "walnut",
+      "raisin",
+      "dry fruit",
+      "dates",
+      "makhana",
+      "mixed nuts"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "baby",
+   "name": "Baby",
+   "icon": "🍼",
+   "categories": [
+    {
+     "slug": "diapering",
+     "name": "Diapering",
+     "keywords": [
+      "diaper",
+      "pants",
+      "wipes",
+      "baby wipes",
+      "nappy"
+     ]
+    },
+    {
+     "slug": "feeding",
+     "name": "Feeding",
+     "keywords": [
+      "feeding bottle",
+      "sipper",
+      "breast pump",
+      "baby food",
+      "cerelac",
+      "formula"
+     ]
+    },
+    {
+     "slug": "baby-care",
+     "name": "Baby care",
+     "keywords": [
+      "baby lotion",
+      "baby oil",
+      "baby powder",
+      "baby shampoo",
+      "baby soap",
+      "baby cream"
+     ]
+    },
+    {
+     "slug": "baby-gear",
+     "name": "Baby gear",
+     "keywords": [
+      "stroller",
+      "pram",
+      "baby carrier",
+      "cradle",
+      "baby cot",
+      "car seat",
+      "walker"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "toys-games",
+   "name": "Toys & Games",
+   "icon": "🧸",
+   "categories": [
+    {
+     "slug": "remote-control-toys",
+     "name": "Remote control toys",
+     "keywords": [
+      "remote control",
+      "rc car",
+      "rc toy",
+      "drone",
+      "remote car",
+      "rc helicopter"
+     ]
+    },
+    {
+     "slug": "die-cast-vehicles",
+     "name": "Die-cast & vehicles",
+     "keywords": [
+      "die-cast",
+      "diecast",
+      "hot wheels",
+      "toy car",
+      "toy truck",
+      "train set",
+      "pull back"
+     ]
+    },
+    {
+     "slug": "board-games",
+     "name": "Board games",
+     "keywords": [
+      "board game",
+      "card game",
+      "chess",
+      "ludo",
+      "monopoly",
+      "puzzle",
+      "jigsaw",
+      "carrom"
+     ]
+    },
+    {
+     "slug": "learning-toys",
+     "name": "Learning toys",
+     "keywords": [
+      "learning",
+      "educational",
+      "building blocks",
+      "lego",
+      "montessori",
+      "stem",
+      "play dough",
+      "clay",
+      "art kit",
+      "colouring"
+     ]
+    },
+    {
+     "slug": "outdoor-play",
+     "name": "Outdoor play",
+     "keywords": [
+      "water gun",
+      "pichkari",
+      "swing",
+      "slide",
+      "bicycle for kids",
+      "cricket set",
+      "badminton set",
+      "bubble",
+      "skate"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "sports-fitness-outdoors",
+   "name": "Sports, Fitness & Outdoors",
+   "icon": "🏋️",
+   "categories": [
+    {
+     "slug": "gym-equipment",
+     "name": "Gym equipment",
+     "keywords": [
+      "dumbbell",
+      "barbell",
+      "kettlebell",
+      "treadmill",
+      "resistance band",
+      "gym",
+      "pull up",
+      "exercise bike",
+      "skipping rope",
+      "ab roller",
+      "weight plate",
+      "home gym"
+     ]
+    },
+    {
+     "slug": "yoga",
+     "name": "Yoga",
+     "keywords": [
+      "yoga mat",
+      "yoga",
+      "foam roller",
+      "exercise mat"
+     ]
+    },
+    {
+     "slug": "sports-gear",
+     "name": "Sports gear",
+     "keywords": [
+      "cricket bat",
+      "football",
+      "badminton",
+      "racket",
+      "tennis",
+      "basketball",
+      "shuttlecock",
+      "volleyball",
+      "sports gear",
+      "cricket ball"
+     ]
+    },
+    {
+     "slug": "camping",
+     "name": "Camping",
+     "keywords": [
+      "tent",
+      "sleeping bag",
+      "trekking",
+      "hiking",
+      "camping",
+      "torch",
+      "headlamp",
+      "binocular"
+     ]
+    },
+    {
+     "slug": "cycling",
+     "name": "Cycling",
+     "keywords": [
+      "bicycle",
+      "cycle",
+      "cycling",
+      "mtb",
+      "gear cycle"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "home-improvement-garden",
+   "name": "Home Improvement & Garden",
+   "icon": "🛠️",
+   "categories": [
+    {
+     "slug": "power-tools",
+     "name": "Power tools",
+     "keywords": [
+      "drill",
+      "grinder",
+      "cordless",
+      "power tool",
+      "jigsaw",
+      "rotary",
+      "impact",
+      "hammer drill",
+      "tool kit"
+     ]
+    },
+    {
+     "slug": "hand-tools",
+     "name": "Hand tools",
+     "keywords": [
+      "screwdriver",
+      "spanner",
+      "wrench",
+      "plier",
+      "hammer",
+      "tool set",
+      "measuring tape",
+      "toolbox"
+     ]
+    },
+    {
+     "slug": "electrical",
+     "name": "Electrical",
+     "keywords": [
+      "extension board",
+      "switch",
+      "socket",
+      "wire",
+      "mcb",
+      "led driver",
+      "ceiling fan",
+      "fan",
+      "exhaust fan",
+      "inverter",
+      "stabiliser",
+      "stabilizer",
+      "battery",
+      "smart plug"
+     ]
+    },
+    {
+     "slug": "bathroom-fittings",
+     "name": "Bathroom fittings",
+     "keywords": [
+      "faucet",
+      "tap",
+      "shower head",
+      "health faucet",
+      "towel rail",
+      "bathroom",
+      "commode",
+      "flush"
+     ]
+    },
+    {
+     "slug": "garden-plants",
+     "name": "Garden & plants",
+     "keywords": [
+      "planter",
+      "pot",
+      "seeds",
+      "plant",
+      "garden",
+      "sprinkler",
+      "fertiliser",
+      "fertilizer",
+      "grow bag",
+      "soil",
+      "hose"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "automotive",
+   "name": "Automotive",
+   "icon": "🚗",
+   "categories": [
+    {
+     "slug": "car-accessories",
+     "name": "Car accessories",
+     "keywords": [
+      "car seat cover",
+      "car mat",
+      "car cover",
+      "car perfume",
+      "car air freshener",
+      "car vacuum",
+      "steering cover",
+      "car organizer"
+     ]
+    },
+    {
+     "slug": "bike-accessories",
+     "name": "Bike accessories",
+     "keywords": [
+      "bike cover",
+      "bike mirror",
+      "bike mobile holder",
+      "bike lock",
+      "motorcycle",
+      "riding gloves",
+      "bike"
+     ]
+    },
+    {
+     "slug": "car-electronics",
+     "name": "Car electronics",
+     "keywords": [
+      "car charger",
+      "car mount",
+      "dash cam",
+      "car stereo",
+      "tyre inflator",
+      "jump starter",
+      "obd"
+     ]
+    },
+    {
+     "slug": "helmets",
+     "name": "Helmets",
+     "keywords": [
+      "helmet"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "books-media",
+   "name": "Books & Media",
+   "icon": "📚",
+   "categories": [
+    {
+     "slug": "books",
+     "name": "Books",
+     "keywords": [
+      "paperback",
+      "hardcover",
+      "novel",
+      "book",
+      "guide",
+      "textbook",
+      "cookbook",
+      "diary"
+     ]
+    },
+    {
+     "slug": "kindle-e-readers",
+     "name": "Kindle & e-readers",
+     "keywords": [
+      "kindle",
+      "e-reader",
+      "ereader"
+     ]
+    },
+    {
+     "slug": "musical-instruments",
+     "name": "Musical instruments",
+     "keywords": [
+      "guitar",
+      "ukulele",
+      "keyboard piano",
+      "harmonium",
+      "flute",
+      "tabla",
+      "drum",
+      "violin",
+      "microphone",
+      "mic"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "office-stationery",
+   "name": "Office & Stationery",
+   "icon": "✏️",
+   "categories": [
+    {
+     "slug": "stationery",
+     "name": "Stationery",
+     "keywords": [
+      "pen",
+      "pencil",
+      "notebook",
+      "marker",
+      "highlighter",
+      "gel pen",
+      "sketch",
+      "eraser",
+      "sharpener",
+      "geometry",
+      "diary"
+     ]
+    },
+    {
+     "slug": "office-supplies",
+     "name": "Office supplies",
+     "keywords": [
+      "stapler",
+      "file folder",
+      "paper",
+      "printer paper",
+      "tape",
+      "glue",
+      "whiteboard",
+      "calculator",
+      "label",
+      "envelope"
+     ]
+    },
+    {
+     "slug": "office-furniture",
+     "name": "Office furniture",
+     "keywords": [
+      "office chair",
+      "ergonomic",
+      "standing desk",
+      "computer table",
+      "study table"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  },
+  {
+   "slug": "pet-supplies",
+   "name": "Pet Supplies",
+   "icon": "🐾",
+   "categories": [
+    {
+     "slug": "pet-food",
+     "name": "Pet food",
+     "keywords": [
+      "dog food",
+      "cat food",
+      "pet food",
+      "pedigree",
+      "whiskas",
+      "royal canin",
+      "treats",
+      "kibble"
+     ]
+    },
+    {
+     "slug": "pet-accessories",
+     "name": "Pet accessories",
+     "keywords": [
+      "dog collar",
+      "leash",
+      "pet bed",
+      "cat litter",
+      "dog toy",
+      "pet bowl",
+      "pet shampoo",
+      "aquarium",
+      "fish tank",
+      "cat scratcher"
+     ]
+    },
+    {
+     "slug": "other",
+     "name": "Other",
+     "keywords": []
+    }
+   ]
+  }
+ ]
+}

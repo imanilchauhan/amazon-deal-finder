@@ -167,16 +167,19 @@
   }
 }
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
 }
 .card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow);
 }
 .cardMedia {
@@ -282,4 +285,429 @@
   color: var(--muted);
   padding: 40px 0;
   text-align: center;
+}
+
+/* ---------- motion ---------- */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+.cardMedia img {
+  transition: transform 0.35s ease;
+}
+.card:hover .cardMedia img {
+  transform: scale(1.06);
+}
+.badge {
+  animation: pulse 2.6s ease-in-out infinite;
+}
+.brandTag {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.quick {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  opacity: 0;
+  background: var(--ink);
+  color: var(--bg);
+  border: 0;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transform: translateY(-6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.card:hover .quick,
+.quick:focus-visible {
+  opacity: 1;
+  transform: none;
+}
+@media (hover: none) {
+  .quick {
+    display: none;
+  }
+}
+
+/* ---------- category nav ---------- */
+.catNav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding: 4px 2px 12px;
+  margin: 0 -2px;
+  scrollbar-width: thin;
+}
+.catPill {
+  flex: none;
+  scroll-snap-align: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  text-decoration: none;
+  font-size: 14.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  animation: rise 0.45s ease both;
+  animation-delay: calc(var(--i, 0) * 30ms);
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.catPill small {
+  color: var(--muted);
+}
+.catPill:hover {
+  transform: translateY(-2px);
+  border-color: var(--brand);
+}
+.catPill[aria-current="page"] {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  text-decoration: none;
+  animation: rise 0.5s ease both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.tile:hover {
+  transform: translateY(-4px) rotate(-0.5deg);
+  box-shadow: var(--shadow);
+}
+.tile span:first-child {
+  font-size: 30px;
+}
+.tile b {
+  font-family: var(--font-display), sans-serif;
+}
+.tile small {
+  color: var(--muted);
+}
+
+.shelf {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 12px;
+}
+.shelf > * {
+  flex: none;
+  width: 220px;
+  scroll-snap-align: start;
+}
+
+/* ---------- catalog: sidebar, toolbar, filters ---------- */
+.catalog {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+.sidebar {
+  position: sticky;
+  top: 72px;
+  max-height: calc(100vh - 90px);
+  overflow-y: auto;
+  padding-right: 8px;
+}
+.sideHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.sideHead h2 {
+  font-size: 18px;
+}
+.linkBtn {
+  background: none;
+  border: 0;
+  color: var(--brand-deep);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 6px;
+  text-decoration: underline;
+}
+.filters fieldset {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 0;
+  padding: 14px 0;
+}
+.filters legend {
+  font-weight: 600;
+  font-size: 14px;
+  padding: 0 0 8px;
+  float: left;
+  width: 100%;
+}
+.filters fieldset > * {
+  clear: both;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 14.5px;
+  cursor: pointer;
+}
+.check input {
+  accent-color: var(--brand);
+  width: 17px;
+  height: 17px;
+}
+.check span {
+  flex: 1;
+}
+.check small {
+  color: var(--muted);
+}
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.search {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+.filterBtn {
+  display: none;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+}
+.count {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 4px 0 14px;
+}
+.muted {
+  color: var(--muted);
+  font-size: 14px;
+}
+@media (max-width: 860px) {
+  .catalog {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    display: none;
+  }
+  .filterBtn {
+    display: inline-block;
+  }
+}
+
+/* bottom sheet (phones) */
+.sheetWrap {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+}
+.sheetBackdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgb(0 0 0 / 50%);
+  animation: fade 0.2s ease both;
+}
+.sheet {
+  position: relative;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  padding: 18px 18px 24px;
+  animation: slideUp 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- quick view ---------- */
+.qv {
+  border: 0;
+  padding: 0;
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--ink);
+  width: min(820px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+}
+.qv[open] {
+  animation: pop 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.qv::backdrop {
+  background: rgb(0 0 0 / 55%);
+  backdrop-filter: blur(3px);
+}
+.qvBody {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.qvMedia {
+  position: relative;
+  background: #fff;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+}
+.qvMedia img {
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  object-fit: contain;
+}
+.qvInfo {
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.qvInfo h2 {
+  font-size: 22px;
+}
+.qvPrice {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 32px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.qvPrice s {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.qvMore {
+  color: var(--brand-deep);
+  font-weight: 600;
+  text-decoration: none;
+}
+.qvClose {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+@media (max-width: 640px) {
+  .qvBody {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .catPill,
+  .tile,
+  .qv[open],
+  .sheet,
+  .sheetBackdrop {
+    animation: none;
+  }
+  .badge {
+    animation: none;
+  }
+  .card:hover,
+  .tile:hover,
+  .catPill:hover {
+    transform: none;
+  }
+  .cardMedia img,
+  .card:hover .cardMedia img {
+    transition: none;
+    transform: none;
+  }
 }

@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Iterable
 
+from .categorize import classify
 from .models import Deal
 
 log = logging.getLogger(__name__)
@@ -73,6 +74,9 @@ def needs_post(doc: dict, platform: str, now: datetime) -> bool:
     return doc["price"] <= last_price * (1 - REPOST_DROP_PCT / 100)
 
 
+MANUAL_MAX_AGE_HOURS = 24 * 7
+
+
 class DealStore:
     def __init__(self, db, *, clock=lambda: datetime.now(timezone.utc)):
         self._db = db
@@ -96,14 +100,17 @@ class DealStore:
         for deal, ref in zip(deals, refs):
             snap = snaps.get(deal.asin)
             fields = deal.to_dict()
+            cats = classify(deal.title)
             if snap is None or not snap.exists:
-                doc = {**fields, "active": True, "first_seen_at": now, "updated_at": now, "posted": {}, "x_status": "unposted"}
+                doc = {**fields, "active": True, "first_seen_at": now, "updated_at": now, "posted": {}, "x_status": "unposted", **cats}
                 batch.set(ref, doc)
                 results.append(UpsertResult(deal, "new", doc))
                 continue
             old = snap.to_dict() or {}
             changed = any(old.get(k) != fields[k] for k in ("price", "original_price", "discount_pct", "title", "image_url"))
             update = {**fields, "active": True, "updated_at": now}
+            if old.get("category_source") != "manual":  # manual overrides always win
+                update.update(cats)
             if "x_status" not in old:  # backfill docs created before the marker existed
                 update["x_status"] = "posted" if (old.get("posted") or {}).get("x") else "unposted"
             if old.get("price") and deal.price < old["price"]:
@@ -119,13 +126,16 @@ class DealStore:
     def deactivate_stale(self, max_age_hours: int) -> int:
         """Hide deals not seen recently (Amazon prices shouldn't be shown when >24h old)."""
         cutoff = self._now() - timedelta(hours=max_age_hours)
+        manual_cutoff = self._now() - timedelta(hours=max(max_age_hours, MANUAL_MAX_AGE_HOURS))
         query = self._db.collection("deals").where(filter=_field_filter("active", "==", True))
         batch = self._db.batch()
         count = 0
         for snap in query.stream():
             data = snap.to_dict() or {}
             updated = data.get("updated_at")
-            if updated is not None and updated < cutoff:
+            # Hand-added (manual) products are curated: they stay up for a week, not a day.
+            limit = manual_cutoff if data.get("source") == "manual" else cutoff
+            if updated is not None and updated < limit:
                 batch.update(snap.reference, {"active": False})
                 count += 1
         if count:

@@ -11,7 +11,7 @@ import { AMAZON_DISCLOSURE, PRICE_DISCLAIMER, SITE } from "@/lib/site";
 import s from "./deal.module.css";
 
 export async function generateStaticParams() {
-  const deals = await getDeals(100);
+  const deals = await getDeals();
   return deals.map((d) => ({ slug: d.slug }));
 }
 
@@ -43,7 +43,7 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
   const deal = await dealFromParams(params);
   if (!deal) notFound();
 
-  const related = (await getDeals(100)).filter((d) => d.asin !== deal.asin).slice(0, 8);
+  const related = (await getDeals()).filter((d) => d.asin !== deal.asin).slice(0, 8);
   const pageUrl = `${SITE.url}/deals/${deal.slug}`;
 
   return (
