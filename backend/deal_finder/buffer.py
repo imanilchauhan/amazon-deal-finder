@@ -33,8 +33,16 @@ def _gql_str(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)
 
 
-def build_create_post_mutation(text: str, channel_id: str, due_at: str, image_url: str | None) -> str:
+# Buffer requires a post type for Facebook channels (post | story | reel).
+FACEBOOK_METADATA = "{ facebook: { type: post } }"
+
+
+def build_create_post_mutation(text: str, channel_id: str, due_at: str, image_url: str | None,
+                               metadata: str | None = None) -> str:
+    """`metadata` is a GraphQL PostInputMetaData literal, e.g. FACEBOOK_METADATA."""
     assets = f", assets: [{{ image: {{ url: {_gql_str(image_url)} }} }}]" if image_url else ""
+    if metadata:
+        assets += f", metadata: {metadata}"
     return (
         "mutation CreateDealPost { createPost(input: { "
         f"text: {_gql_str(text)}, channelId: {_gql_str(channel_id)}, "
@@ -51,7 +59,8 @@ class BufferPoster:
 
     def __init__(self, api_key: str, channel_id: str, session=None, *, max_retries: int = 2,
                  sleep=time.sleep, clock=lambda: datetime.now(timezone.utc), delay_minutes: int = 2,
-                 attach_image: bool = True, text_builder=build_tweet):
+                 attach_image: bool = True, text_builder=build_tweet,
+                 metadata: str | None = None):
         import requests
 
         self._key = api_key
@@ -63,6 +72,7 @@ class BufferPoster:
         self._delay = delay_minutes
         self._attach_image = attach_image
         self._text = text_builder
+        self._metadata = metadata
 
     @classmethod
     def from_config(cls, cfg) -> "BufferPoster":
@@ -71,7 +81,8 @@ class BufferPoster:
     def post(self, deal: Deal) -> str:
         due = (self._clock() + timedelta(minutes=self._delay)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
         query = build_create_post_mutation(
-            self._text(deal), self._channel, due, deal.image_url if self._attach_image else None
+            self._text(deal), self._channel, due, deal.image_url if self._attach_image else None,
+            self._metadata,
         )
         body = self._call(query)
         result = (body.get("data") or {}).get("createPost") or {}

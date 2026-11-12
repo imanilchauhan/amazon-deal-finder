@@ -102,11 +102,19 @@ def test_unexpected_shape():
 
 
 def test_custom_text_builder_for_facebook_channel():
+    from deal_finder.buffer import FACEBOOK_METADATA
     from deal_finder.captions import build_facebook_post
 
     s = FakeSession([ok("fb_1")])
     p = BufferPoster("KEY", "FBCHAN", session=s, sleep=lambda x: None, clock=lambda: NOW,
-                     text_builder=build_facebook_post)
+                     text_builder=build_facebook_post, metadata=FACEBOOK_METADATA)
     assert p.post(make_deal()) == "fb_1"
     q = s.calls[0].json["query"]
     assert 'channelId: "FBCHAN"' in q and "Buy on Amazon" in q
+    assert "metadata: { facebook: { type: post } }" in q
+
+
+def test_x_posts_carry_no_metadata():
+    s = FakeSession([ok("x_1")])
+    BufferPoster("KEY", "XCHAN", session=s, sleep=lambda x: None, clock=lambda: NOW).post(make_deal())
+    assert "metadata" not in s.calls[0].json["query"]

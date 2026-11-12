@@ -94,7 +94,7 @@ def run_once(store: DealStore, posters: dict[str, object], now: datetime, dry_ru
 
 
 def build_posters(env_bool: Callable[[str], bool] = _bool) -> dict[str, object]:
-    from .buffer import BufferPoster
+    from .buffer import FACEBOOK_METADATA, BufferPoster
 
     key = _str("BUFFER_API_KEY")
     posters: dict[str, object] = {}
@@ -107,7 +107,8 @@ def build_posters(env_bool: Callable[[str], bool] = _bool) -> dict[str, object]:
         chan = _str("BUFFER_FB_CHANNEL_ID")
         if not (key and chan):
             raise ConfigError("FB_ENABLED=true needs BUFFER_API_KEY and BUFFER_FB_CHANNEL_ID")
-        posters["facebook"] = BufferPoster(key, chan, text_builder=build_facebook_post)
+        posters["facebook"] = BufferPoster(key, chan, text_builder=build_facebook_post,
+                                           metadata=FACEBOOK_METADATA)
     return posters
 
 
