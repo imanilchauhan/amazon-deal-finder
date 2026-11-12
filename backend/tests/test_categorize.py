@@ -51,3 +51,8 @@ def test_backfill_tags_everything_but_manual(fake_db):
     assert fake_db.data["deals"]["A"]["department"] == "home-kitchen"
     assert fake_db.data["deals"]["A"]["x_status"] == "unposted"
     assert fake_db.data["deals"]["B"]["department"] == "fashion"
+
+
+def test_mouse_pad_and_phone_case_land_in_the_right_shelf():
+    assert classify("Ant Esports Prism Mouse Pad Gaming")["category"] == "keyboards-mice"
+    assert classify("DIZORO Samsung S26 Ultra Case")["category"] == "mobile-accessories"
