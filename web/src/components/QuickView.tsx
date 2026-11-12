@@ -9,11 +9,11 @@ import s from "./ui.module.css";
 /** Counts from ~60% of the price up to the price, once, unless the visitor prefers reduced motion. */
 function useCountUp(target: number, key: string) {
   const [value, setValue] = useState(target);
+  const [animate, setAnimate] = useState(false);
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setValue(target);
-      return;
-    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- opt in to the animation after hydration
+    setAnimate(true);
     const start = performance.now();
     const from = target * 1.6;
     let raf = 0;
@@ -26,7 +26,7 @@ function useCountUp(target: number, key: string) {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [target, key]);
-  return Math.round(value);
+  return Math.round(animate ? value : target);
 }
 
 export function QuickView({ deal, onClose }: { deal: Deal | null; onClose: () => void }) {
