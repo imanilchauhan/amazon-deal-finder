@@ -119,3 +119,11 @@ def test_source_urls_expand_only_for_bulk_runs():
     bulk = source_urls("amazon.in", 150)
     assert bulk[0] == "https://amazon.in/deals" and len(bulk) > 20
     assert "https://amazon.in/gp/bestsellers/kitchen" in bulk
+
+
+def test_interleave_is_round_robin_unique_and_capped():
+    from deal_finder.scraper import interleave
+
+    out = interleave([["A", "B", "C"], ["D", "A", "E"], ["F"]], 6)
+    assert out == ["A", "D", "F", "B", "C", "E"]
+    assert interleave([["A", "B"], ["C", "D"]], 3) == ["A", "C", "B"]

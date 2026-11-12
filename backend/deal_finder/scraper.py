@@ -100,11 +100,27 @@ EXTRACT_PRODUCT_JS = """
 # Extra ASIN sources for large (festive) runs: Amazon.in category bestseller / movers pages.
 # Every candidate still has to pass the product-page discount check, so only real deals are kept.
 CATEGORY_SLUGS = [
-    "electronics", "computers", "kitchen", "home-improvement", "apparel", "shoes", "jewelry",
-    "watches", "luggage", "beauty", "health", "toys", "sports", "grocery", "furniture",
-    "lawn-garden", "baby", "books", "office", "musical-instruments",
+    # Weighted to who actually buys: Tier 2/3 value shoppers (85% of festive orders were under ₹1,000),
+    # beauty and personal care, fashion, footwear, kitchen and home, everyday gadgets and small appliances.
+    "beauty", "hpc", "apparel", "shoes", "kitchen", "home-improvement", "electronics", "jewelry",
+    "grocery", "appliances", "watches", "luggage", "toys", "sports", "baby", "office", "computers",
+    "furniture", "lawn-garden", "books", "automotive", "pet-supplies", "musical-instruments",
 ]
 BULK_RUN_THRESHOLD = 30
+
+
+def interleave(lists: list[list[str]], limit: int) -> list[str]:
+    """Round-robin across sources so one busy category cannot crowd out the others; unique, capped."""
+    seen: dict[str, None] = {}
+    depth = 0
+    while len(seen) < limit and any(depth < len(x) for x in lists):
+        for x in lists:
+            if depth < len(x) and x[depth] not in seen:
+                seen[x[depth]] = None
+                if len(seen) >= limit:
+                    break
+        depth += 1
+    return list(seen)
 
 
 def source_urls(domain: str, max_products: int) -> list[str]:
@@ -224,24 +240,28 @@ def scrape_deals(
         page = context.new_page()
         page.set_default_timeout(30_000)
         try:
-            hrefs: list[str] = []
             wanted = max_products * 2  # extra: many candidates fail the discount check
-            for url in source_urls(domain, max_products):
+            sources = source_urls(domain, max_products)
+            per_source: list[list[str]] = []
+            for url in sources:
                 try:
                     page.goto(url, wait_until="domcontentloaded")
                 except PlaywrightError as exc:
                     log.warning("source %s failed: %s", url, str(exc).splitlines()[0])
                     continue
-                _raise_if_captcha(page)
+                try:
+                    _raise_if_captcha(page)
+                except CaptchaEncountered:
+                    log.warning("robot check on %s; using the %d sources collected so far", url, len(per_source))
+                    break
                 for _ in range(max(4, min(max_products // 6, 25)) if url.endswith("/deals") else 3):
                     page.mouse.wheel(0, 2500)
                     page.wait_for_timeout(1200)
-                hrefs += page.evaluate(COLLECT_LINKS_JS)
-                if len(collect_asins(hrefs, wanted)) >= wanted:
-                    break
+                per_source.append(collect_asins(page.evaluate(COLLECT_LINKS_JS), 1000))
                 if not url.endswith("/deals"):
                     _polite_pause()
-            asins = collect_asins(hrefs, wanted)
+            hrefs = interleave(per_source, wanted)
+            asins = hrefs
             log.info("collected %d candidate ASINs", len(asins))
 
             for asin in asins:
