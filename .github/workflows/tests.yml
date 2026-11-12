@@ -37,6 +37,18 @@ jobs:
           node-version: 22
       - run: npm test
 
+  scheduler:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scheduler
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm test
+
   flutter:
     runs-on: ubuntu-latest
     defaults:

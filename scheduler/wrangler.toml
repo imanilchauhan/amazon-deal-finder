@@ -1,0 +1,16 @@
+# CartCrush clock: GitHub's own cron never fired on this repo, so Cloudflare starts the jobs.
+# Deploy:  cd scheduler && npx wrangler deploy
+# Secret (set in the Cloudflare dashboard or `npx wrangler secret put GH_TOKEN`):
+#   GH_TOKEN = fine-grained GitHub token, this repo only, "Actions: Read and write".
+name = "cartcrush-scheduler"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = false   # no public URL: the Worker only runs on its cron triggers
+
+[triggers]
+# UTC. Posts at :11 IST every 2 hours; scrapes at :47 IST every 4 hours.
+crons = ["41 */2 * * *", "17 */4 * * *"]
+
+[vars]
+GH_REPO = "imanilchauhan3/amazon-deal-finder"
+GH_REF = "main"
