@@ -35,6 +35,8 @@ export const metadata: Metadata = {
     images: ["/og.png"],
   },
   robots: { index: true, follow: true },
+  // Google Search Console ownership (public by design: it appears in the page head).
+  verification: { google: "f4J5jy714hQbYwgNYIr-thm-04zeb2r6kesYM2vxf9c" },
   category: "shopping",
 };
 

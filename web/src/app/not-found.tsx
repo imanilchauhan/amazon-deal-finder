@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+// A gone deal must not inherit the home page's canonical or "index" robots tag.
+export const metadata: Metadata = {
+  title: "Deal not found",
+  robots: { index: false, follow: true },
+  alternates: { canonical: null },
+};
 
 export default function NotFound() {
   return (

@@ -5,7 +5,7 @@ export const SITE = {
   xHandle: "@cartcrushdeals",
   xUrl: "https://x.com/cartcrushdeals",
   description:
-    "Today's best Amazon deals in India, checked every few hours. Big price drops, loot deals and discount offers on electronics, fashion, home and kitchen, with the real price history shown.",
+    "Today's best Amazon deals in India, checked every few hours. Big price drops, loot deals and discount offers on electronics, fashion, beauty, home and kitchen, with the original price and your savings on every deal.",
   keywords: [
     "amazon deals today",
     "best deals india",
