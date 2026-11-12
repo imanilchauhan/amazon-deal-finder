@@ -113,6 +113,15 @@ jobs:
           FB_POST_MODE: ${{ vars.FB_POST_MODE || 'photo' }}
         run: python -m deal_finder
 
+      # The website is a static export, so rebuild it to pick up the new deals.
+      - name: Rebuild website on Cloudflare Pages
+        if: ${{ !inputs.dry_run }}
+        continue-on-error: true
+        env:
+          HOOK: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$HOOK" ]; then curl -fsS -X POST "$HOOK" -d ""; else echo "CLOUDFLARE_DEPLOY_HOOK not set; skipping"; fi
+
       - name: Upload run output (summary + rendered media)
         if: always()
         uses: actions/upload-artifact@v4
