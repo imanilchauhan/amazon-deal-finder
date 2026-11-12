@@ -10,6 +10,14 @@ on:
         description: "Scrape + validate only (no Firestore writes, no posts)"
         type: boolean
         default: false
+      max_products:
+        description: "Festive run: how many deals to collect and save to Firestore (blank = repo default)"
+        type: string
+        default: ""
+      x_max_posts:
+        description: "How many of them to post to X via Buffer (blank = repo default; weekly Buffer cap is 100)"
+        type: string
+        default: ""
 
 # Never let two runs overlap (prevents double posting).
 concurrency:
@@ -76,7 +84,7 @@ jobs:
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
           AMAZON_MARKETPLACE: ${{ vars.AMAZON_MARKETPLACE || 'in' }}
           AMAZON_ASSOCIATE_TAG: ${{ vars.AMAZON_ASSOCIATE_TAG }}   # not secret: it appears in every link
-          MAX_PRODUCTS: ${{ vars.MAX_PRODUCTS || '15' }}
+          MAX_PRODUCTS: ${{ inputs.max_products || vars.MAX_PRODUCTS || '15' }}
           MIN_DISCOUNT_PCT: ${{ vars.MIN_DISCOUNT_PCT || '20' }}
           MAX_POSTS_PER_RUN: ${{ vars.MAX_POSTS_PER_RUN || '3' }}
           DM_KEYWORD: ${{ vars.DM_KEYWORD || 'DEAL' }}
@@ -87,7 +95,7 @@ jobs:
           X_PUBLISHER: ${{ vars.X_PUBLISHER || 'buffer' }}
           BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
           BUFFER_CHANNEL_ID: ${{ vars.BUFFER_CHANNEL_ID }}
-          X_MAX_POSTS_PER_RUN: ${{ vars.X_MAX_POSTS_PER_RUN || '2' }}
+          X_MAX_POSTS_PER_RUN: ${{ inputs.x_max_posts || vars.X_MAX_POSTS_PER_RUN || '2' }}
           X_API_KEY: ${{ secrets.X_API_KEY }}
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}

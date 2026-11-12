@@ -208,7 +208,7 @@ def scrape_deals(
         try:
             page.goto(f"https://{domain}/deals", wait_until="domcontentloaded")
             _raise_if_captcha(page)
-            for _ in range(4):  # trigger lazy-loaded deal cards
+            for _ in range(max(4, min(max_products // 6, 25))):  # trigger lazy-loaded deal cards
                 page.mouse.wheel(0, 2500)
                 page.wait_for_timeout(1200)
             hrefs = page.evaluate(COLLECT_LINKS_JS)
