@@ -196,7 +196,9 @@ def _write_summary(cfg: Config, summary: RunSummary) -> None:
             fh.write(
                 f"### Deal run\n- scraped: {summary.scraped}\n- valid: {summary.valid}\n"
                 f"- new: {summary.new} · updated: {summary.updated} · deactivated: {summary.deactivated}\n"
-                f"- posts: {len(summary.posts)} · errors: {len(summary.errors)}\n"
+                f"- posts: {sum(p['platform'] != 'dry-run' for p in summary.posts)}"
+                f" · dry-run previews: {sum(p['platform'] == 'dry-run' for p in summary.posts)}"
+                f" · errors: {len(summary.errors)}\n"
             )
             for e in summary.errors:
                 fh.write(f"  - `{e['asin']}` {e['stage']}: {e['error'][:200]}\n")
