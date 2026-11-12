@@ -97,6 +97,24 @@ EXTRACT_PRODUCT_JS = """
 """
 
 
+# Extra ASIN sources for large (festive) runs: Amazon.in category bestseller / movers pages.
+# Every candidate still has to pass the product-page discount check, so only real deals are kept.
+CATEGORY_SLUGS = [
+    "electronics", "computers", "kitchen", "home-improvement", "apparel", "shoes", "jewelry",
+    "watches", "luggage", "beauty", "health", "toys", "sports", "grocery", "furniture",
+    "lawn-garden", "baby", "books", "office", "musical-instruments",
+]
+BULK_RUN_THRESHOLD = 30
+
+
+def source_urls(domain: str, max_products: int) -> list[str]:
+    urls = [f"https://{domain}/deals"]
+    if max_products > BULK_RUN_THRESHOLD:
+        for kind in ("movers-and-shakers", "bestsellers"):
+            urls += [f"https://{domain}/gp/{kind}/{slug}" for slug in CATEGORY_SLUGS]
+    return urls
+
+
 class CaptchaEncountered(RuntimeError):
     pass
 
@@ -206,13 +224,24 @@ def scrape_deals(
         page = context.new_page()
         page.set_default_timeout(30_000)
         try:
-            page.goto(f"https://{domain}/deals", wait_until="domcontentloaded")
-            _raise_if_captcha(page)
-            for _ in range(max(4, min(max_products // 6, 25))):  # trigger lazy-loaded deal cards
-                page.mouse.wheel(0, 2500)
-                page.wait_for_timeout(1200)
-            hrefs = page.evaluate(COLLECT_LINKS_JS)
-            asins = collect_asins(hrefs, max_products * 2)  # extra, many will be filtered
+            hrefs: list[str] = []
+            wanted = max_products * 2  # extra: many candidates fail the discount check
+            for url in source_urls(domain, max_products):
+                try:
+                    page.goto(url, wait_until="domcontentloaded")
+                except PlaywrightError as exc:
+                    log.warning("source %s failed: %s", url, str(exc).splitlines()[0])
+                    continue
+                _raise_if_captcha(page)
+                for _ in range(max(4, min(max_products // 6, 25)) if url.endswith("/deals") else 3):
+                    page.mouse.wheel(0, 2500)
+                    page.wait_for_timeout(1200)
+                hrefs += page.evaluate(COLLECT_LINKS_JS)
+                if len(collect_asins(hrefs, wanted)) >= wanted:
+                    break
+                if not url.endswith("/deals"):
+                    _polite_pause()
+            asins = collect_asins(hrefs, wanted)
             log.info("collected %d candidate ASINs", len(asins))
 
             for asin in asins:

@@ -110,3 +110,12 @@ def test_captcha_page_is_detected(page):
     page.set_content('<form action="/errors/validateCaptcha"><input name="field-keywords"></form>')
     assert page.evaluate(EXTRACT_PRODUCT_JS)["captcha"] is True
     assert re.search("validateCaptcha", page.content())
+
+
+def test_source_urls_expand_only_for_bulk_runs():
+    from deal_finder.scraper import source_urls
+
+    assert source_urls("amazon.in", 15) == ["https://amazon.in/deals"]
+    bulk = source_urls("amazon.in", 150)
+    assert bulk[0] == "https://amazon.in/deals" and len(bulk) > 20
+    assert "https://amazon.in/gp/bestsellers/kitchen" in bulk
