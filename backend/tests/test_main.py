@@ -101,9 +101,9 @@ def test_one_platform_failing_does_not_block_others(fake_db):
 
 def test_per_platform_budget_and_best_discount_first(fake_db):
     deals = [
-        make_deal(asin="B0AAAAAAAA", price=900, original=1000),    # 10%
-        make_deal(asin="B0BBBBBBBB", price=500, original=1000),    # 50%
-        make_deal(asin="B0CCCCCCCC", price=700, original=1000),    # 30%
+        make_deal(asin="B0AAAAAAAA", price=900, original=1000, title="Prestige Induction Cooktop"),  # 10%
+        make_deal(asin="B0BBBBBBBB", price=500, original=1000, title="Boat Rockerz 450 Headphones"),  # 50%
+        make_deal(asin="B0CCCCCCCC", price=700, original=1000, title="Milton Thermosteel Flask 1L"),  # 30%
     ]
     x = FakeX()
     s = run(cfg(meta=MetaConfig(enabled=False)), deps(fake_db, deals, x=x))
@@ -140,3 +140,15 @@ def test_ig_modes(fake_db, mode, expected):
     assert [c_[0] for c_ in meta.calls] == [expected]
     if mode == "image":
         assert meta.calls[0][1].startswith("https://m.media-amazon.com/")
+
+
+def test_colour_variants_are_not_posted_together(fake_db):
+    deals = [
+        make_deal(asin="B0AAAAAAAA", price=500, original=1000, title="EooCoo Clear Case for MacBook Neo 13 inch Blush"),
+        make_deal(asin="B0BBBBBBBB", price=520, original=1000, title="EooCoo Clear Case for MacBook Neo 13 inch Indigo"),
+        make_deal(asin="B0CCCCCCCC", price=700, original=1000, title="Milton Thermosteel Flask 1L"),
+    ]
+    x = FakeX()
+    s = run(cfg(meta=MetaConfig(enabled=False)), deps(fake_db, deals, x=x))
+    assert x.posted == ["B0AAAAAAAA", "B0CCCCCCCC"]
+    assert s.skipped_duplicates == 1

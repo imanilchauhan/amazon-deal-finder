@@ -1,7 +1,9 @@
 """Post text for X, Facebook and Instagram, with mandatory affiliate disclosures."""
 from __future__ import annotations
 
+import re
 import unicodedata
+from difflib import SequenceMatcher
 
 from .models import Deal
 
@@ -61,6 +63,39 @@ def _truncate(title: str, max_chars: int) -> str:
     return title[: max(0, max_chars - 1)].rstrip(" ,-|") + "…"
 
 
+_TITLE_SPLIT = re.compile(r"\s*[|(\[,–—:]\s*|\s+-\s+")
+_DANGLING = {"for", "with", "and", "&", "of", "in", "to", "the", "a", "-", "|"}
+
+
+def short_title(title: str, max_chars: int = 70, min_chars: int = 25) -> str:
+    """Drop Amazon keyword-stuffing: keep leading segments until the name reads as a product,
+    then cut at a word boundary (no ellipsis)."""
+    parts = [p.strip() for p in _TITLE_SPLIT.split(title) if p and p.strip()]
+    out = ""
+    for p in parts:
+        out = f"{out} {p}".strip()
+        if len(out) >= min_chars:
+            break
+    if not out:
+        out = title.strip()
+    if len(out) > max_chars:
+        words, out = out.split(), ""
+        for w in words:
+            if len(out) + len(w) + 1 > max_chars:
+                break
+            out = f"{out} {w}".strip()
+    words = out.split()
+    while len(words) > 1 and words[-1].lower() in _DANGLING:
+        words.pop()
+    return " ".join(words)
+
+
+def is_near_duplicate(a: str, b: str, threshold: float = 0.8) -> bool:
+    """Same product family (colour/size/pack variants of one listing)."""
+    x, y = short_title(a).lower(), short_title(b).lower()
+    return SequenceMatcher(None, x, y).ratio() >= threshold
+
+
 def build_tweet(deal: Deal) -> str:
     """'🔥 46% OFF: <title>\n💰 ₹1,299 (was ₹2,399) — save ₹1,100\n<url>\n#Ad #AmazonDeals'"""
     price_line = (
@@ -68,7 +103,7 @@ def build_tweet(deal: Deal) -> str:
         f" · save {money(deal.savings, deal.currency)}"
     )
     tags = "#Ad #AmazonDeals"
-    title = deal.title
+    title = short_title(deal.title)
     while True:
         text = f"🔥 {deal.discount_pct}% OFF: {title}\n{price_line}\n{deal.url}\n{tags}"
         if x_weighted_length(text, [deal.url]) <= X_MAX_WEIGHT:

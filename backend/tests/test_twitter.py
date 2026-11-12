@@ -48,7 +48,7 @@ def test_long_titles_are_truncated_to_fit():
     d = make_deal(title="Ultra Premium " * 40)
     text = build_tweet(d)
     assert x_weighted_length(text, [d.url]) <= 280
-    assert "…" in text and d.url in text and "#Ad" in text
+    assert d.url in text and "#Ad" in text
 
 
 def test_url_counts_as_23():

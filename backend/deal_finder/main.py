@@ -13,11 +13,11 @@ import logging
 import os
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable
 
-from .captions import build_meta_caption
+from .captions import build_meta_caption, is_near_duplicate
 from .config import Config, ConfigError, load_config
 from .models import Deal, schema_errors
 from .store import DealStore, StoreError, UpsertResult, needs_post
@@ -32,6 +32,7 @@ class RunSummary:
     new: int = 0
     updated: int = 0
     deactivated: int = 0
+    skipped_duplicates: int = 0
     posts: list = field(default_factory=list)
     errors: list = field(default_factory=list)
 
@@ -89,7 +90,21 @@ def run(cfg: Config, deps: Deps) -> RunSummary:
 
     # Best discounts first; a deal enters the queue if any platform still needs it.
     ranked = sorted(results, key=lambda r: r.deal.discount_pct, reverse=True)
-    queue = [r for r in ranked if any(needs_post(r.doc, p, now) for p, _ in platforms)][: cfg.max_posts_per_run]
+    # Skip colour/pack variants of a product already picked this run or posted in the last 24h.
+    recent = [
+        r.deal.title for r in results
+        if any(v.get("at") and now - v["at"] < timedelta(hours=24) for v in (r.doc.get("posted") or {}).values())
+    ]
+    queue = []
+    for r in ranked:
+        if len(queue) >= cfg.max_posts_per_run:
+            break
+        if not any(needs_post(r.doc, p, now) for p, _ in platforms):
+            continue
+        if any(is_near_duplicate(r.deal.title, t) for t in recent + [q.deal.title for q in queue]):
+            s.skipped_duplicates += 1
+            continue
+        queue.append(r)
     budget = {p: cap for p, cap in platforms}
 
     for r in queue:
