@@ -1,69 +1,88 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import Link from "next/link";
+import { DealGrid } from "@/components/DealGrid";
+import { JsonLd } from "@/components/SiteChrome";
+import { getDeals, lastChecked } from "@/lib/deals";
+import { istDateTime } from "@/lib/format";
+import { PRICE_DISCLAIMER, SITE } from "@/lib/site";
+import s from "./page.module.css";
 
-export default function Home() {
+export default async function Home() {
+  const deals = await getDeals(100);
+  const top = deals.slice(0, 12);
+  const best = deals[0]?.discountPct ?? 0;
+  const checked = lastChecked(deals);
+
+  const itemList = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Today's best Amazon deals in India",
+    itemListElement: top.map((d, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `${SITE.url}/deals/${d.slug}`,
+      name: d.shortTitle,
+    })),
+  };
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.tsx</code> file.
-          </h1>
+    <main>
+      <JsonLd data={itemList} />
+      <section className={s.hero}>
+        <p className={s.eyebrow}>
+          <span className={s.dot} aria-hidden /> Updated every few hours
+        </p>
+        <h1>
+          Today&apos;s best Amazon deals, <em>crushed</em> down to the lowest price
+        </h1>
+        <p className={s.lead}>
+          CartCrush tracks Amazon India around the clock and lists only real price drops: loot deals, lightning offers and
+          big discounts on electronics, fashion, home and kitchen. No fake MRPs, no spam.
+        </p>
+        <ul className={s.stats}>
+          <li>
+            <b>{deals.length}</b> live deals
+          </li>
+          <li>
+            Up to <b>{best}% off</b>
+          </li>
+          {checked && (
+            <li>
+              Last checked <b>{istDateTime(checked)}</b>
+            </li>
+          )}
+        </ul>
+      </section>
+
+      <div className={s.sectionHead}>
+        <h2>Top deals right now</h2>
+        <Link href="/deals">See all {deals.length} deals →</Link>
+      </div>
+      <DealGrid deals={top} showControls={false} />
+      <p className={s.note}>{PRICE_DISCLAIMER}</p>
+
+      <div className={s.seo}>
+        <section>
+          <h2>Amazon deals today, checked every 4 hours</h2>
           <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
+            Our deal finder scans Amazon.in for the biggest price drops of the day, so you can see today&apos;s offers in
+            one place instead of scrolling through sale pages.
           </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        </section>
+        <section>
+          <h2>Real discounts, not inflated MRPs</h2>
+          <p>
+            Every deal shows the current price, the regular price and exactly how much you save. Deals that end are
+            removed automatically.
+          </p>
+        </section>
+        <section>
+          <h2>Never miss a loot deal</h2>
+          <p>
+            Follow <a href={SITE.xUrl}>{SITE.xHandle}</a> on X and turn on notifications to get price drop alerts the
+            moment we find them.
+          </p>
+        </section>
+      </div>
+    </main>
   );
 }

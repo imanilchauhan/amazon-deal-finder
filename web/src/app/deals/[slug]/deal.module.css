@@ -1,0 +1,125 @@
+.crumbs {
+  font-size: 14px;
+  color: var(--muted);
+  padding: 20px 0 12px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.crumbs a {
+  color: var(--muted);
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+.media {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+}
+.media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: var(--brand-deep);
+  color: #fff;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+.info {
+  display: grid;
+  gap: 14px;
+}
+.info h1 {
+  font-size: clamp(24px, 3.4vw, 34px);
+}
+.fullTitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+.priceBox {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px;
+  display: grid;
+  gap: 6px;
+}
+.price {
+  font-size: 34px;
+  font-weight: 700;
+  font-family: var(--font-display), sans-serif;
+}
+.was {
+  color: var(--muted);
+  font-size: 15px;
+}
+.save {
+  color: var(--good);
+  font-weight: 600;
+}
+.asOf {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+.buy {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 17px;
+  padding: 15px 18px;
+  border-radius: 14px;
+  background: var(--brand);
+  color: #fff;
+}
+.buy:hover {
+  background: var(--brand-deep);
+}
+.ended {
+  background: var(--surface-2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 0;
+}
+.small {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0;
+}
+.related {
+  margin-top: 48px;
+}
+.related h2 {
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+.skeleton {
+  min-height: 60vh;
+  border-radius: 20px;
+  background: var(--surface-2);
+  margin-top: 20px;
+}
