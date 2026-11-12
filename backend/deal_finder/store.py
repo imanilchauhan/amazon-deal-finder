@@ -97,13 +97,15 @@ class DealStore:
             snap = snaps.get(deal.asin)
             fields = deal.to_dict()
             if snap is None or not snap.exists:
-                doc = {**fields, "active": True, "first_seen_at": now, "updated_at": now, "posted": {}}
+                doc = {**fields, "active": True, "first_seen_at": now, "updated_at": now, "posted": {}, "x_status": "unposted"}
                 batch.set(ref, doc)
                 results.append(UpsertResult(deal, "new", doc))
                 continue
             old = snap.to_dict() or {}
             changed = any(old.get(k) != fields[k] for k in ("price", "original_price", "discount_pct", "title", "image_url"))
             update = {**fields, "active": True, "updated_at": now}
+            if "x_status" not in old:  # backfill docs created before the marker existed
+                update["x_status"] = "posted" if (old.get("posted") or {}).get("x") else "unposted"
             if old.get("price") and deal.price < old["price"]:
                 update["last_drop_at"] = now
             batch.set(ref, update, merge=True)
@@ -135,10 +137,10 @@ class DealStore:
         if platform not in PLATFORMS:
             raise ValueError(platform)
         ref = self._db.collection("deals").document(deal.asin)
-        ref.set(
-            {"posted": {platform: {"at": self._now(), "price": deal.price, "id": str(post_id)}}},
-            merge=True,
-        )
+        data = {"posted": {platform: {"at": self._now(), "price": deal.price, "id": str(post_id)}}}
+        if platform == "x":
+            data["x_status"] = "posted"
+        ref.set(data, merge=True)
 
     def map_social_post(self, collection: str, post_id: str, deal: Deal) -> None:
         if collection not in {"ig_media", "fb_posts"}:

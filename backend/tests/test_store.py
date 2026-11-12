@@ -104,3 +104,19 @@ def test_needs_post(posted, price, hours_ago, expected):
         posted = {**posted, "at": NOW - timedelta(hours=hours_ago)}
     doc = {"price": price, "posted": {"x": posted} if posted else {}}
     assert needs_post(doc, "x", NOW) is expected
+
+
+def test_x_status_starts_unposted_and_flips_when_posted(store, fake_db, deal):
+    store.upsert_deals([deal])
+    assert fake_db.data["deals"][deal.asin]["x_status"] == "unposted"
+    store.mark_posted(deal, "x", "111")
+    assert fake_db.data["deals"][deal.asin]["x_status"] == "posted"
+    store.upsert_deals([deal])  # a later scrape must not reset it
+    assert fake_db.data["deals"][deal.asin]["x_status"] == "posted"
+
+
+def test_x_status_backfilled_for_old_docs(store, fake_db, deal):
+    store.upsert_deals([deal])
+    del fake_db.data["deals"][deal.asin]["x_status"]
+    store.upsert_deals([deal])
+    assert fake_db.data["deals"][deal.asin]["x_status"] == "unposted"

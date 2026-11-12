@@ -14,6 +14,10 @@ on:
         description: "Festive run: how many deals to collect and save to Firestore (blank = repo default)"
         type: string
         default: ""
+      skip_x_posting:
+        description: "Save deals to Firestore only; do not post to X (they stay x_status=unposted)"
+        type: boolean
+        default: false
       x_max_posts:
         description: "How many of them to post to X via Buffer (blank = repo default; weekly Buffer cap is 100)"
         type: string
@@ -91,7 +95,7 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}   # optional fallback to keyless auth
           # X: "buffer" = free via Buffer's API; "api" = X API pay-per-use ($0.20 per post with a link).
-          X_ENABLED: ${{ vars.X_ENABLED || 'false' }}
+          X_ENABLED: ${{ inputs.skip_x_posting == true && 'false' || vars.X_ENABLED || 'false' }}
           X_PUBLISHER: ${{ vars.X_PUBLISHER || 'buffer' }}
           BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
           BUFFER_CHANNEL_ID: ${{ vars.BUFFER_CHANNEL_ID }}
