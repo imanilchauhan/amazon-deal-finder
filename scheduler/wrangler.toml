@@ -14,3 +14,7 @@ crons = ["41 */2 * * *", "17 */4 * * *"]
 [vars]
 GH_REPO = "imanilchauhan3/amazon-deal-finder"
 GH_REF = "main"
+
+# Keep invocation logs in the dashboard so a missed run can be diagnosed.
+[observability]
+enabled = true
