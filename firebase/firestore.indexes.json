@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "deals",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "active", "order": "ASCENDING" },
+        { "fieldPath": "discount_pct", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

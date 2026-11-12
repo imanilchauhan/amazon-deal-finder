@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// Clients (Flutter app, Cloudflare Worker) are READ-ONLY.
+// All writes come from the backend's service account (Admin SDK bypasses these rules).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /deals/{asin} {
+      allow get: if true;
+      // The app may only run the feed query (active deals), max 100 at a time.
+      allow list: if resource.data.active == true && request.query.limit <= 100;
+      allow write: if false;
+    }
+
+    // Post-id -> deal link lookups for the comment-to-DM worker.
+    // Single-document reads only, no listing/enumeration.
+    match /ig_media/{mediaId} {
+      allow get: if true;
+      allow list, write: if false;
+    }
+    match /fb_posts/{postId} {
+      allow get: if true;
+      allow list, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

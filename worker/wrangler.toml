@@ -1,0 +1,23 @@
+name = "deal-comment-to-dm"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+KEYWORD = "DEAL"
+GRAPH_VERSION = "v26.0"
+IG_USER_ID = "REPLACE_WITH_IG_USER_ID"
+PAGE_ID = "REPLACE_WITH_PAGE_ID"
+FIREBASE_PROJECT_ID = "REPLACE_WITH_FIREBASE_PROJECT_ID"
+FALLBACK_URL = "https://REPLACE-WITH-YOUR-APP.web.app"
+
+# Optional: create with `npx wrangler kv namespace create DEDUPE` and paste the id.
+# Free tier = 1,000 KV writes/day, i.e. up to 1,000 DM'd comments/day.
+# [[kv_namespaces]]
+# binding = "DEDUPE"
+# id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Secrets — never put these in this file:
+#   npx wrangler secret put APP_SECRET
+#   npx wrangler secret put VERIFY_TOKEN
+#   npx wrangler secret put PAGE_ACCESS_TOKEN
+#   npx wrangler secret put FIREBASE_WEB_API_KEY
