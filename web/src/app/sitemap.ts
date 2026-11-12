@@ -3,6 +3,8 @@ import { getDeals, lastChecked } from "@/lib/deals";
 import { SITE } from "@/lib/site";
 import { DEPARTMENTS } from "@/lib/taxonomy";
 
+export const dynamic = "force-static";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const deals = await getDeals();
   // Cache Components disallows reading the clock during prerender; use the data's own timestamp.

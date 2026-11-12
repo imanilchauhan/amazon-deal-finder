@@ -10,8 +10,6 @@ const nextConfig: NextConfig = {
   output: "export",
   images: { unoptimized: true },
   trailingSlash: false,
-  cacheComponents: true,
-  partialPrefetching: true,
 };
 
 export default nextConfig;
