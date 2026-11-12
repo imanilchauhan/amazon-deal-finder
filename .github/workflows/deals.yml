@@ -14,14 +14,6 @@ on:
         description: "Festive run: how many deals to collect and save to Firestore (blank = repo default)"
         type: string
         default: ""
-      skip_x_posting:
-        description: "Save deals to Firestore only; do not post to X (they stay x_status=unposted)"
-        type: boolean
-        default: false
-      x_max_posts:
-        description: "How many of them to post to X via Buffer (blank = repo default; weekly Buffer cap is 100)"
-        type: string
-        default: ""
 
 # Never let two runs overlap (prevents double posting).
 concurrency:
@@ -95,16 +87,17 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}   # optional fallback to keyless auth
           # X: "buffer" = free via Buffer's API; "api" = X API pay-per-use ($0.20 per post with a link).
-          X_ENABLED: ${{ inputs.skip_x_posting == true && 'false' || vars.X_ENABLED || 'false' }}
+          # Posting moved to post.yml (one deal per run from the Firestore queue); this job only scrapes.
+          X_ENABLED: "false"
           X_PUBLISHER: ${{ vars.X_PUBLISHER || 'buffer' }}
           BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
           BUFFER_CHANNEL_ID: ${{ vars.BUFFER_CHANNEL_ID }}
-          X_MAX_POSTS_PER_RUN: ${{ inputs.x_max_posts || vars.X_MAX_POSTS_PER_RUN || '2' }}
+          X_MAX_POSTS_PER_RUN: "0"
           X_API_KEY: ${{ secrets.X_API_KEY }}
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
-          META_ENABLED: ${{ vars.META_ENABLED || 'false' }}
+          META_ENABLED: "false"
           META_PAGE_ID: ${{ secrets.META_PAGE_ID }}
           META_IG_USER_ID: ${{ secrets.META_IG_USER_ID }}
           META_PAGE_ACCESS_TOKEN: ${{ secrets.META_PAGE_ACCESS_TOKEN }}

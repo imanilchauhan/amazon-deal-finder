@@ -133,3 +133,25 @@ def build_meta_caption(deal: Deal, keyword: str, *, platform: str) -> str:
     limit = 2200 if platform == "instagram" else 60000
     return caption[:limit]
 
+
+
+def build_facebook_post(deal: Deal) -> str:
+    """Facebook Page post with the affiliate link in the text.
+
+    No "comment DEAL" prompt: Meta treats comment-baiting as engagement bait and cuts
+    the Page's reach. Price wording stays soft because Amazon prices change quickly."""
+    lines = [
+        f"🔥 {deal.discount_pct}% OFF — {short_title(deal.title, max_chars=110)}",
+        "",
+        f"💰 {money(deal.price, deal.currency)} (MRP {money(deal.original_price, deal.currency)})"
+        if deal.currency == "INR"
+        else f"💰 {money(deal.price, deal.currency)} (was {money(deal.original_price, deal.currency)})",
+        f"✅ You save {money(deal.savings, deal.currency)}",
+        "",
+        f"🛒 Buy on Amazon: {deal.url}",
+        "⏳ Price at the time of posting; Amazon prices change fast.",
+        "",
+        f"#ad {AMAZON_DISCLOSURE}",
+        "#amazondeals #dealsoftheday #cartcrush",
+    ]
+    return "\n".join(lines)

@@ -142,6 +142,24 @@ class DealStore:
             batch.commit()
         return count
 
+    def post_candidates(self, limit: int = 300) -> list[dict]:
+        """Active deals, best discount first (uses the active+discount_pct index)."""
+        try:
+            from google.cloud.firestore_v1 import Query
+            desc = Query.DESCENDING
+        except ImportError:  # unit tests
+            desc = "DESCENDING"
+        query = (
+            self._db.collection("deals")
+            .where(filter=_field_filter("active", "==", True))
+            .order_by("discount_pct", direction=desc)
+            .limit(limit)
+        )
+        try:
+            return [{**(snap.to_dict() or {}), "asin": snap.id} for snap in query.stream()]
+        except Exception as exc:  # noqa: BLE001
+            raise StoreError(f"Firestore read failed: {exc}") from exc
+
     # ---- posting state -----------------------------------------------------
     def mark_posted(self, deal: Deal, platform: str, post_id: str) -> None:
         if platform not in PLATFORMS:

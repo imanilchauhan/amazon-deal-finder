@@ -99,3 +99,14 @@ def test_unexpected_shape():
     p, _ = poster([Resp(200, {"data": {"createPost": {}}})])
     with pytest.raises(BufferError, match="unexpected"):
         p.post(make_deal())
+
+
+def test_custom_text_builder_for_facebook_channel():
+    from deal_finder.captions import build_facebook_post
+
+    s = FakeSession([ok("fb_1")])
+    p = BufferPoster("KEY", "FBCHAN", session=s, sleep=lambda x: None, clock=lambda: NOW,
+                     text_builder=build_facebook_post)
+    assert p.post(make_deal()) == "fb_1"
+    q = s.calls[0].json["query"]
+    assert 'channelId: "FBCHAN"' in q and "Buy on Amazon" in q

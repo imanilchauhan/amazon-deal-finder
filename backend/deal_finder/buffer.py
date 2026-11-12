@@ -44,11 +44,14 @@ def build_create_post_mutation(text: str, channel_id: str, due_at: str, image_ur
 
 
 class BufferPoster:
-    """Same interface as twitter.XPoster: post(deal) -> post id."""
+    """Same interface as twitter.XPoster: post(deal) -> post id.
+
+    One class serves every Buffer channel; only the channel id and the text builder
+    differ (build_tweet for X, build_facebook_post for a Facebook Page)."""
 
     def __init__(self, api_key: str, channel_id: str, session=None, *, max_retries: int = 2,
                  sleep=time.sleep, clock=lambda: datetime.now(timezone.utc), delay_minutes: int = 2,
-                 attach_image: bool = True):
+                 attach_image: bool = True, text_builder=build_tweet):
         import requests
 
         self._key = api_key
@@ -59,6 +62,7 @@ class BufferPoster:
         self._clock = clock
         self._delay = delay_minutes
         self._attach_image = attach_image
+        self._text = text_builder
 
     @classmethod
     def from_config(cls, cfg) -> "BufferPoster":
@@ -67,7 +71,7 @@ class BufferPoster:
     def post(self, deal: Deal) -> str:
         due = (self._clock() + timedelta(minutes=self._delay)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
         query = build_create_post_mutation(
-            build_tweet(deal), self._channel, due, deal.image_url if self._attach_image else None
+            self._text(deal), self._channel, due, deal.image_url if self._attach_image else None
         )
         body = self._call(query)
         result = (body.get("data") or {}).get("createPost") or {}

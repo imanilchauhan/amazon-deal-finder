@@ -1,0 +1,55 @@
+name: post
+
+# Posts ONE deal per run from the Firestore queue to X and the Facebook Page (via Buffer).
+# No browser, no scraping: ~1 minute per run. Every 2 hours = 84 posts/week per channel,
+# under Buffer's free cap of 100/week per channel.
+on:
+  schedule:
+    - cron: "41 */2 * * *"   # UTC; :41 avoids the top-of-hour queue spike
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Pick the next deal but do not post it"
+        type: boolean
+        default: false
+
+concurrency:
+  group: post
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  post:
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.POSTING_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+      - name: Authenticate to Google Cloud (keyless)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+      - name: Post next deal
+        env:
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+          BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
+          X_ENABLED: ${{ vars.X_ENABLED || 'false' }}
+          BUFFER_CHANNEL_ID: ${{ vars.BUFFER_CHANNEL_ID }}
+          FB_ENABLED: ${{ vars.FB_ENABLED || 'false' }}
+          BUFFER_FB_CHANNEL_ID: ${{ vars.BUFFER_FB_CHANNEL_ID }}
+        run: python -m deal_finder.post_queue
