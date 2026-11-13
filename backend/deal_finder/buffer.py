@@ -78,8 +78,10 @@ class BufferPoster:
     def from_config(cls, cfg) -> "BufferPoster":
         return cls(cfg.buffer_api_key, cfg.buffer_channel_id)
 
-    def post(self, deal: Deal) -> str:
-        due = (self._clock() + timedelta(minutes=self._delay)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    def post(self, deal: Deal, due_at: datetime | None = None) -> str:
+        """Schedule `deal`; at `due_at` (UTC) when given, else a couple of minutes from now."""
+        when = due_at if due_at is not None else self._clock() + timedelta(minutes=self._delay)
+        due = when.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
         query = build_create_post_mutation(
             self._text(deal), self._channel, due, deal.image_url if self._attach_image else None,
             self._metadata,

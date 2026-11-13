@@ -170,6 +170,19 @@ class DealStore:
             data["x_status"] = "posted"
         ref.set(data, merge=True)
 
+    # ---- posting slots (meta/post_slots.slots = ISO UTC times already booked) --
+    def booked_slots(self) -> set[str]:
+        snap = self._db.collection("meta").document("post_slots").get()
+        if not getattr(snap, "exists", False):
+            return set()
+        return set((snap.to_dict() or {}).get("slots", []))
+
+    def save_booked_slots(self, slots: set[str], now: datetime) -> None:
+        """Keep the last 2 days of bookings; older ones can never matter again."""
+        cutoff = (now - timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        keep = sorted(x for x in slots if x >= cutoff)
+        self._db.collection("meta").document("post_slots").set({"slots": keep, "updated_at": now})
+
     def map_social_post(self, collection: str, post_id: str, deal: Deal) -> None:
         if collection not in {"ig_media", "fb_posts"}:
             raise ValueError(collection)

@@ -1,6 +1,7 @@
 name: post
 
-# Posts ONE deal per run from the Firestore queue to X and the Facebook Page (via Buffer).
+# Fills every free hourly slot (9 AM-10 PM IST) in the next 6 hours with its own deal,
+# scheduled in Buffer for that time (X + Facebook). Booked slots live in Firestore.
 # No browser, no scraping: ~1 minute per run. Every 2 hours = 84 posts/week per channel,
 # under Buffer's free cap of 100/week per channel.
 on:

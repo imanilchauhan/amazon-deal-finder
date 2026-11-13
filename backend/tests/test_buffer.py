@@ -118,3 +118,11 @@ def test_x_posts_carry_no_metadata():
     s = FakeSession([ok("x_1")])
     BufferPoster("KEY", "XCHAN", session=s, sleep=lambda x: None, clock=lambda: NOW).post(make_deal())
     assert "metadata" not in s.calls[0].json["query"]
+
+
+def test_post_at_a_given_slot_time():
+    from datetime import datetime, timezone
+    s = FakeSession([ok("x_9")])
+    slot = datetime(2026, 11, 13, 7, 30, tzinfo=timezone.utc)
+    BufferPoster("KEY", "XCHAN", session=s, sleep=lambda x: None, clock=lambda: NOW).post(make_deal(), due_at=slot)
+    assert 'dueAt: "2026-11-13T07:30:00.000Z"' in s.calls[0].json["query"]
