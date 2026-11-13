@@ -39,3 +39,9 @@ test('missing secret fails loudly', async () => {
 test('public URL returns 404', async () => {
   assert.equal((await worker.fetch()).status, 404);
 });
+
+test('trims whitespace around the token', async () => {
+  let auth;
+  await dispatch('post.yml', { ...env, GH_TOKEN: '  t\n' }, async (url, init) => { auth = init.headers.Authorization; return reply(204); });
+  assert.equal(auth, 'Bearer t');
+});
