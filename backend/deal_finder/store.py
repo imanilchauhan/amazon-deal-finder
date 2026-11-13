@@ -75,6 +75,7 @@ def needs_post(doc: dict, platform: str, now: datetime) -> bool:
 
 
 MANUAL_MAX_AGE_HOURS = 24 * 7
+CURATED_SOURCES = {"manual", "trending"}
 
 
 class DealStore:
@@ -123,6 +124,34 @@ class DealStore:
             raise StoreError(f"Firestore write failed: {exc}") from exc
         return results
 
+    def mark_trending(self, asins: Iterable[str]) -> int:
+        """Tag scraped products as part of the trending list (stays up 7 days, posted first)."""
+        asins = list(asins)
+        if not asins:
+            return 0
+        now = self._now()
+        batch = self._db.batch()
+        for a in asins:
+            batch.set(self._db.collection("deals").document(a), {"source": "trending", "trending_at": now}, merge=True)
+        try:
+            batch.commit()
+        except Exception as exc:  # noqa: BLE001
+            raise StoreError(f"Firestore write failed: {exc}") from exc
+        return len(asins)
+
+    def trending_to_refresh(self, limit: int, older_than_hours: int = 16) -> list[str]:
+        """Active trending products whose price is the oldest, so each run re-checks a few."""
+        if limit <= 0:
+            return []
+        cutoff = self._now() - timedelta(hours=older_than_hours)
+        query = self._db.collection("deals").where(filter=_field_filter("source", "==", "trending"))
+        try:
+            docs = [(s.id, s.to_dict() or {}) for s in query.stream()]
+        except Exception as exc:  # noqa: BLE001
+            raise StoreError(f"Firestore read failed: {exc}") from exc
+        stale = [(d.get("updated_at"), a) for a, d in docs if d.get("active") and d.get("updated_at") and d["updated_at"] < cutoff]
+        return [a for _, a in sorted(stale)[:limit]]
+
     def deactivate_stale(self, max_age_hours: int) -> int:
         """Hide deals not seen recently (Amazon prices shouldn't be shown when >24h old)."""
         cutoff = self._now() - timedelta(hours=max_age_hours)
@@ -133,8 +162,8 @@ class DealStore:
         for snap in query.stream():
             data = snap.to_dict() or {}
             updated = data.get("updated_at")
-            # Hand-added (manual) products are curated: they stay up for a week, not a day.
-            limit = manual_cutoff if data.get("source") == "manual" else cutoff
+            # Curated products (hand-added or the trending list) stay up for a week, not a day.
+            limit = manual_cutoff if data.get("source") in CURATED_SOURCES else cutoff
             if updated is not None and updated < limit:
                 batch.update(snap.reference, {"active": False})
                 count += 1

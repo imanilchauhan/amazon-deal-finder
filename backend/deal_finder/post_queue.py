@@ -79,6 +79,8 @@ def pick_deal(docs: list[dict], platforms: list[str], now: datetime,
     variants of anything posted in the last 24h (or picked earlier in this run).
     `docs` is already sorted best discount first."""
     skip = skip or set()
+    # The trending list goes first (best discount first within it), then everything else.
+    docs = sorted(docs, key=lambda d: d.get("source") != "trending")
     recent = [
         d.get("title", "") for d in docs
         if any(v.get("at") and now - v["at"] < timedelta(hours=24) for v in (d.get("posted") or {}).values())

@@ -14,6 +14,10 @@ on:
         description: "Festive run: how many deals to collect and save to Firestore (blank = repo default)"
         type: string
         default: ""
+      asins:
+        description: "Scrape exactly these ASINs (comma or space separated), save them and tag them trending"
+        type: string
+        default: ""
 
 # Never let two runs overlap (prevents double posting).
 concurrency:
@@ -81,6 +85,7 @@ jobs:
           AMAZON_MARKETPLACE: ${{ vars.AMAZON_MARKETPLACE || 'in' }}
           AMAZON_ASSOCIATE_TAG: ${{ vars.AMAZON_ASSOCIATE_TAG }}   # not secret: it appears in every link
           MAX_PRODUCTS: ${{ inputs.max_products || vars.MAX_PRODUCTS || '15' }}
+          ASINS: ${{ inputs.asins }}
           MIN_DISCOUNT_PCT: ${{ vars.MIN_DISCOUNT_PCT || '20' }}
           MAX_POSTS_PER_RUN: ${{ vars.MAX_POSTS_PER_RUN || '3' }}
           DM_KEYWORD: ${{ vars.DM_KEYWORD || 'DEAL' }}

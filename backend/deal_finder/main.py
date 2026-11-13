@@ -35,6 +35,7 @@ class RunSummary:
     skipped_duplicates: int = 0
     posts: list = field(default_factory=list)
     errors: list = field(default_factory=list)
+    extra: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return self.__dict__.copy()
@@ -72,6 +73,11 @@ def run(cfg: Config, deps: Deps) -> RunSummary:
         return s
 
     results: list[UpsertResult] = deps.store.upsert_deals(valid)
+    if cfg.asins:
+        saved = {d.asin for d in valid}
+        deps.store.mark_trending([a for a in cfg.asins if a in saved])
+        s.extra["trending_saved"] = len(saved & set(cfg.asins))
+        s.extra["trending_skipped"] = [a for a in cfg.asins if a not in saved]
     s.new = sum(r.status == "new" for r in results)
     s.updated = sum(r.status == "updated" for r in results)
     s.deactivated = deps.store.deactivate_stale(cfg.stale_after_hours)
@@ -163,7 +169,7 @@ def build_deps(cfg: Config) -> Deps:
     from . import graphics
     from .scraper import scrape_deals
 
-    scrape = partial(
+    base_scrape = partial(
         scrape_deals,
         marketplace=cfg.marketplace,
         domain=cfg.domain,
@@ -177,6 +183,14 @@ def build_deps(cfg: Config) -> Deps:
         from .store import init_firestore
 
         store = DealStore(init_firestore(cfg.firebase_credentials, cfg.firebase_project_id))
+
+    def scrape() -> list[Deal]:
+        if cfg.asins:
+            return base_scrape(asins=list(cfg.asins))
+        refresh = store.trending_to_refresh(cfg.trending_refresh_per_run) if store else []
+        if refresh:
+            log.info("re-checking %d trending products", len(refresh))
+        return base_scrape(extra_asins=refresh)
     x = meta = None
     if cfg.x.enabled and not cfg.dry_run:
         if cfg.x.publisher == "buffer":
@@ -217,6 +231,11 @@ def _write_summary(cfg: Config, summary: RunSummary) -> None:
             )
             for e in summary.errors:
                 fh.write(f"  - `{e['asin']}` {e['stage']}: {e['error'][:200]}\n")
+            if "trending_saved" in summary.extra:
+                fh.write(f"- trending saved: {summary.extra['trending_saved']}\n")
+                skipped = summary.extra.get("trending_skipped") or []
+                if skipped:
+                    fh.write(f"- trending skipped (no discount, no page or robot check): {', '.join(skipped)}\n")
 
 
 def main(argv: list[str] | None = None) -> int:

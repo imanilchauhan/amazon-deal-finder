@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+import re
 import json
 import os
 from dataclasses import dataclass, field
@@ -78,6 +79,9 @@ class Config:
     meta: MetaConfig
     out_dir: str = "out"
     firebase_project_id: str = ""
+    # Explicit products to scrape (e.g. the trending list); when set, discovery is skipped.
+    asins: tuple = ()
+    trending_refresh_per_run: int = 15
     extra: dict = field(default_factory=dict)
 
     @property
@@ -105,6 +109,22 @@ def _load_firebase_credentials() -> dict | None:
     if data.get("type") != "service_account":
         raise ConfigError("FIREBASE_SERVICE_ACCOUNT_JSON must be a service-account key")
     return data
+
+
+ASIN_RE = re.compile(r"^[A-Z0-9]{10}$")
+
+
+def parse_asins(raw: str) -> tuple:
+    """'B01CCGW4OE, B07VKM2HR5 ...' -> unique ASINs in order; anything else is an error."""
+    out: list[str] = []
+    for tok in re.split(r"[\s,]+", (raw or "").strip().upper()):
+        if not tok:
+            continue
+        if not ASIN_RE.match(tok):
+            raise ConfigError(f"ASINS: {tok!r} is not a 10-character ASIN")
+        if tok not in out:
+            out.append(tok)
+    return tuple(out)
 
 
 def load_config() -> Config:
@@ -175,6 +195,8 @@ def load_config() -> Config:
         max_posts_per_run=_int("MAX_POSTS_PER_RUN", 3),
         dm_keyword=_str("DM_KEYWORD", "DEAL").upper(),
         stale_after_hours=_int("STALE_AFTER_HOURS", 24),
+        asins=parse_asins(_str("ASINS")),
+        trending_refresh_per_run=_int("TRENDING_REFRESH_PER_RUN", 15),
         dry_run=dry_run,
         firebase_credentials=creds,
         x=x,

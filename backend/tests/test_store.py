@@ -129,3 +129,22 @@ def test_manual_products_survive_a_day_but_not_a_week(store, fake_db, clock, dea
     assert store.deactivate_stale(24) == 0
     clock["now"] = NOW + timedelta(days=8)
     assert store.deactivate_stale(24) == 1
+
+
+def test_trending_products_are_tagged_kept_a_week_and_refreshed_oldest_first(store, fake_db, clock, deal):
+    from datetime import timedelta
+
+    from tests.conftest import make_deal
+    other = make_deal("B0OTHER000", title="Philips Air Fryer HD9200")
+    store.upsert_deals([deal, other])
+    assert store.mark_trending([deal.asin]) == 1
+    doc = fake_db.data["deals"][deal.asin]
+    assert doc["source"] == "trending" and "trending_at" in doc
+
+    clock["now"] = NOW + timedelta(hours=20)
+    assert store.trending_to_refresh(15) == [deal.asin]   # old enough, and only trending ones
+    assert store.trending_to_refresh(0) == []
+    assert store.deactivate_stale(24) == 0
+    clock["now"] = NOW + timedelta(hours=30)               # 30 h: normal deal goes, trending stays
+    assert store.deactivate_stale(24) == 1
+    assert fake_db.data["deals"][deal.asin]["active"] is True

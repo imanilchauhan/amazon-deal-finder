@@ -215,8 +215,15 @@ def scrape_deals(
     max_products: int,
     min_discount_pct: int,
     headless: bool = True,
+    asins: list[str] | None = None,
+    extra_asins: list[str] | None = None,
 ) -> list[Deal]:
-    """Launch headless Chromium, collect deal ASINs, extract product details."""
+    """Launch headless Chromium, collect deal ASINs, extract product details.
+
+    `asins`: scrape exactly these products and skip discovery (the trending list).
+    `extra_asins`: products to re-check first on a normal run (stale trending items).
+    Both accept any real discount (>= 1%): they were chosen because they sell, not
+    because of the size of the drop."""
     from playwright.sync_api import Error as PlaywrightError
     from playwright.sync_api import TimeoutError as PlaywrightTimeout
     from playwright.sync_api import sync_playwright
@@ -241,7 +248,8 @@ def scrape_deals(
         page.set_default_timeout(30_000)
         try:
             wanted = max_products * 2  # extra: many candidates fail the discount check
-            sources = source_urls(domain, max_products)
+            explicit = list(asins or [])
+            sources = [] if explicit else source_urls(domain, max_products)
             per_source: list[list[str]] = []
             for url in sources:
                 try:
@@ -260,12 +268,14 @@ def scrape_deals(
                 per_source.append(collect_asins(page.evaluate(COLLECT_LINKS_JS), 1000))
                 if not url.endswith("/deals"):
                     _polite_pause()
-            hrefs = interleave(per_source, wanted)
-            asins = hrefs
-            log.info("collected %d candidate ASINs", len(asins))
+            pinned = explicit or list(extra_asins or [])
+            discovered = [a for a in interleave(per_source, wanted) if a not in pinned]
+            queue = pinned + discovered
+            log.info("collected %d candidate ASINs (%d pinned)", len(queue), len(pinned))
+            limit = len(explicit) if explicit else max_products + len(pinned)
 
-            for asin in asins:
-                if len(deals) >= max_products:
+            for asin in queue:
+                if len(deals) >= limit:
                     break
                 _polite_pause()
                 try:
@@ -288,7 +298,7 @@ def scrape_deals(
                     domain=domain,
                     currency=currency,
                     tag=tag,
-                    min_discount_pct=min_discount_pct,
+                    min_discount_pct=1 if asin in pinned else min_discount_pct,
                 )
                 if deal:
                     deals.append(deal)

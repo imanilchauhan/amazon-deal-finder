@@ -140,3 +140,11 @@ def test_facebook_post_has_link_disclosure_and_no_comment_bait():
     assert d.url in text
     assert "#ad As an Amazon Associate I earn from qualifying purchases." in text
     assert "Comment" not in text and "DM" not in text
+
+
+def test_trending_products_are_posted_first():
+    big = make_deal("B0BIGDROP0", title="Philips Air Fryer HD9200")
+    hot = make_deal("B0TRENDING", title="Cetaphil Gentle Skin Hydrating Face Wash")
+    docs = [doc(big), {**doc(hot), "source": "trending"}]
+    deal, _ = pick_deal(docs, ["x"], MORNING)
+    assert deal.asin == "B0TRENDING"
