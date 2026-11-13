@@ -249,7 +249,9 @@ def scrape_deals(
         try:
             wanted = max_products * 2  # extra: many candidates fail the discount check
             explicit = list(asins or [])
-            sources = [] if explicit else source_urls(domain, max_products)
+            # Explicit lists still browse like a shopper first: going straight to /dp pages
+            # from a fresh session is what trips Amazon's robot check.
+            sources = [f"https://{domain}/deals", f"https://{domain}/gp/bestsellers"] if explicit else source_urls(domain, max_products)
             per_source: list[list[str]] = []
             for url in sources:
                 try:
