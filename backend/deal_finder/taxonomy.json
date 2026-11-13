@@ -54,7 +54,10 @@
       "case",
       "ultra case",
       "magsafe",
-      "phone cover"
+      "phone cover",
+      "adaptor",
+      "travel adapter",
+      "travel adaptor"
      ]
     },
     {
@@ -202,7 +205,10 @@
       "hdd",
       "memory card",
       "sd card",
-      "microsd"
+      "microsd",
+      "dual drive",
+      "usb drive",
+      "otg drive"
      ]
     },
     {
@@ -308,6 +314,26 @@
      ]
     },
     {
+     "slug": "heaters-geysers",
+     "name": "Heaters & geysers",
+     "keywords": [
+      "room heater",
+      "fan heater",
+      "quartz heater",
+      "oil heater",
+      "halogen heater",
+      "heat convector",
+      "convector heater",
+      "immersion heater",
+      "immersion rod",
+      "water heater",
+      "geyser",
+      "instant water heater",
+      "storage water heater",
+      "heater"
+     ]
+    },
+    {
      "slug": "other",
      "name": "Other",
      "keywords": []
@@ -351,7 +377,12 @@
       "whisk",
       "cutting board",
       "kitchen tool",
-      "scissors"
+      "scissors",
+      "kitchen weighing scale",
+      "kitchen scale",
+      "weighing machine",
+      "weight machine",
+      "digital scale"
      ]
     },
     {
@@ -497,7 +528,13 @@
       "scrub",
       "dustbin",
       "robot vacuum",
-      "steam cleaner"
+      "steam cleaner",
+      "garbage bag",
+      "dustbin bag",
+      "magic eraser",
+      "sponge",
+      "fabric conditioner",
+      "fabric softener"
      ]
     },
     {
@@ -570,7 +607,11 @@
       "chronograph",
       "watch for men",
       "watch for women",
-      "automatic watch"
+      "automatic watch",
+      "digital watch",
+      "unisex watch",
+      "women's watch",
+      " watch"
      ]
     },
     {
@@ -606,7 +647,11 @@
       "anklet",
       "silver",
       "kundan",
-      "gold plated"
+      "gold plated",
+      "ear chain",
+      "earchain",
+      "kan chain",
+      "nose pin"
      ]
     },
     {
@@ -662,7 +707,12 @@
       "cleanser",
       "toner",
       "lip balm",
-      "anti-ageing"
+      "anti-ageing",
+      "body milk",
+      "facial wash",
+      "bath bar",
+      "bath soap",
+      "soap"
      ]
     },
     {
@@ -706,7 +756,9 @@
       "body spray",
       "eau de",
       "attar",
-      "fragrance"
+      "fragrance",
+      "roll-on",
+      "roll on"
      ]
     },
     {
@@ -1005,7 +1057,10 @@
       "cricket set",
       "badminton set",
       "bubble",
-      "skate"
+      "skate",
+      "kick scooter",
+      "scooter for kids",
+      "tricycle"
      ]
     },
     {

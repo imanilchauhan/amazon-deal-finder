@@ -56,3 +56,20 @@ def test_backfill_tags_everything_but_manual(fake_db):
 def test_mouse_pad_and_phone_case_land_in_the_right_shelf():
     assert classify("Ant Esports Prism Mouse Pad Gaming")["category"] == "keyboards-mice"
     assert classify("DIZORO Samsung S26 Ultra Case")["category"] == "mobile-accessories"
+
+
+def test_winter_and_trending_products_are_categorised():
+    from deal_finder.categorize import classify
+    cases = {
+        "Havells Zeta 1500 watt Immersion Heater | ISI Mark": ("large-appliances", "heaters-geysers"),
+        "Orpat OEH-1220 2000-Watt Fan Heater (White)": ("large-appliances", "heaters-geysers"),
+        "Havells Instanio 3L Instant Water Heater(Geyser)": ("large-appliances", "heaters-geysers"),
+        "NIVEA Nourishing Body Milk 600ml Body Lotion": ("beauty-personal-care", "skincare"),
+        "MEENAZ Brass copper Gold kanchain 3 layer long bridal wedding ear kan chain": ("fashion", "jewellery"),
+        "Casio Vintage A-158WA-1Q Digital Grey Dial Unisex Watch": ("fashion", "watches"),
+        "Comfort Morning Fresh Fabric Conditioner 2 L Refill Pack": ("home-kitchen", "cleaning"),
+        "Lifelong LLKS03 Foldable Kick Skating Cycle| Skate Scooter for Kids": ("toys-games", "outdoor-play"),
+    }
+    for title, (dept, cat) in cases.items():
+        c = classify(title)
+        assert (c["department"], c["category"]) == (dept, cat), title
