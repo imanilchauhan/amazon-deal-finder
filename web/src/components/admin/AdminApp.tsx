@@ -20,6 +20,7 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  deleteField,
 } from "firebase/firestore";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { classify } from "@/lib/classify";
@@ -27,7 +28,8 @@ import { toDeal, type Deal } from "@/lib/deal-model";
 import { firebaseApp } from "@/lib/firebase";
 import { dealSlug, money } from "@/lib/format";
 import { DEPARTMENTS, getDepartment } from "@/lib/taxonomy";
-import { affiliateUrl, buildPostText, parseAsin, xIntentUrl } from "@/lib/xshare";
+import { affiliateUrl, parseAsin } from "@/lib/xshare";
+import { ShareKit } from "./ShareKit";
 import s from "./admin.module.css";
 
 const OWNER = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || "imanilchauhan3@gmail.com").toLowerCase();
@@ -323,7 +325,6 @@ function Library() {
   const [rows, setRows] = useState<Row[]>([]);
   const [filter, setFilter] = useState<"all" | "unposted" | "posted">("unposted");
   const [q, setQ] = useState("");
-  const [pending, setPending] = useState<string | null>(null); // asin whose X window was opened
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -380,7 +381,6 @@ function Library() {
       {loading && <p className={s.muted}>Loading…</p>}
       <ul className={s.list}>
         {shown.map((r) => {
-          const text = buildPostText(r);
           return (
             <li key={r.asin} className={s.item}>
               <img src={r.imageUrl} alt="" width={64} height={64} />
@@ -391,37 +391,31 @@ function Library() {
                   {!r.active && " · hidden"}
                   {r.source === "manual" && " · manual"}
                 </span>
-                <span className={r.xStatus === "posted" ? s.posted : s.unposted}>{r.xStatus === "posted" ? "Posted on X" : "Not posted"}</span>
+                <span className={r.postedOn.length ? s.posted : s.unposted}>
+                  {r.postedOn.length ? `Posted on ${r.postedOn.join(", ")}` : "Not posted anywhere"}
+                </span>
               </div>
               <div className={s.itemActions}>
-                <a
-                  className={s.primary}
-                  href={xIntentUrl(text)}
-                  target="_blank"
-                  rel="noopener"
-                  onClick={() => setPending(r.asin)}
-                >
-                  Share on X
-                </a>
-                {pending === r.asin && r.xStatus !== "posted" && (
-                  <button type="button" className={s.secondary} onClick={() => patch(r.asin, { x_status: "posted", "posted.x_manual_at": serverTimestamp() }).then(() => setPending(null))}>
-                    I posted it ✓
+                <ShareKit
+                  deal={r}
+                  onTogglePosted={(platform, on) =>
+                    patch(r.asin, {
+                      [`posted.${platform}`]: on ? { at: serverTimestamp(), price: r.price, id: "manual" } : deleteField(),
+                      ...(platform === "x" ? { x_status: on ? "posted" : "unposted" } : {}),
+                    })
+                  }
+                />
+                <div className={s.actions}>
+                  <button type="button" className={s.linkBtn} onClick={() => navigator.clipboard.writeText(r.url)}>
+                    Copy link
                   </button>
-                )}
-                {pending !== r.asin && (
-                  <button type="button" className={s.secondary} onClick={() => patch(r.asin, { x_status: r.xStatus === "posted" ? "unposted" : "posted" })}>
-                    {r.xStatus === "posted" ? "Mark unposted" : "Mark posted"}
+                  <button type="button" className={s.linkBtn} onClick={() => patch(r.asin, { active: !r.active })}>
+                    {r.active ? "Hide" : "Show"}
                   </button>
-                )}
-                <button type="button" className={s.linkBtn} onClick={() => navigator.clipboard.writeText(r.url)}>
-                  Copy link
-                </button>
-                <button type="button" className={s.linkBtn} onClick={() => patch(r.asin, { active: !r.active })}>
-                  {r.active ? "Hide" : "Show"}
-                </button>
-                <a className={s.linkBtn} href={`/deals/${dealSlug(r.title, r.asin)}`} target="_blank" rel="noopener">
-                  View
-                </a>
+                  <a className={s.linkBtn} href={`/deals/${dealSlug(r.title, r.asin)}`} target="_blank" rel="noopener">
+                    View
+                  </a>
+                </div>
               </div>
             </li>
           );
