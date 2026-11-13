@@ -14,8 +14,9 @@ service cloud.firestore {
 
     match /deals/{asin} {
       allow get: if true;
-      // Public feed query: active deals only, max 500 at a time. The owner can list everything.
-      allow list: if (resource.data.active == true && request.query.limit <= 500) || isOwner();
+      // Public queries: max 500 at a time (live deals, and recently ended ones the site keeps for
+      // 30 days). Every deal is already readable one by one, so listing exposes nothing new.
+      allow list: if request.query.limit <= 500 || isOwner();
       allow create, update, delete: if isOwner();
     }
 

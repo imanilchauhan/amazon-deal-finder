@@ -17,6 +17,39 @@ export const getDeals = cache(async (max = 500): Promise<Deal[]> => {
   return snap.docs.map((s) => toDeal(s.id, s.data()));
 });
 
+/** Ended deal pages stay up this long (marked noindex) so a page Google crawled does not turn into a 404 overnight. */
+export const ENDED_PAGE_DAYS = 30;
+
+/**
+ * Deals that ended within the last ENDED_PAGE_DAYS, newest first. The cutoff is measured from the
+ * latest live price check, because the build can't read the clock during prerender.
+ * Returns [] if the query is refused (e.g. older security rules) so the build never fails on it.
+ */
+export const getEndedDeals = cache(async (): Promise<Deal[]> => {
+  const live = await getDeals();
+  const ref = Date.parse(lastChecked(live));
+  if (!Number.isFinite(ref)) return [];
+  const cutoff = ref - ENDED_PAGE_DAYS * 24 * 3600 * 1000;
+  try {
+    const q = query(collection(db(), "deals"), where("active", "==", false), orderBy("updated_at", "desc"), limit(500));
+    const snap = await getDocs(q);
+    const liveAsins = new Set(live.map((d) => d.asin));
+    return snap.docs
+      .map((s) => toDeal(s.id, s.data()))
+      .filter((d) => !liveAsins.has(d.asin) && Date.parse(d.checkedAt) >= cutoff);
+  } catch (err) {
+    console.warn("ended deals unavailable:", err instanceof Error ? err.message : err);
+    return [];
+  }
+});
+
+/** Live deals most like this one: same category, then same department, then the rest. */
+export async function similarDeals(deal: Deal, count: number): Promise<Deal[]> {
+  const live = (await getDeals()).filter((d) => d.asin !== deal.asin);
+  const rank = (d: Deal) => (d.category === deal.category && d.department === deal.department ? 0 : d.department === deal.department ? 1 : 2);
+  return [...live].sort((a, b) => rank(a) - rank(b)).slice(0, count);
+}
+
 export const getDeal = cache(async (asin: string): Promise<Deal | null> => {
   const snap = await getDoc(doc(db(), "deals", asin));
   return snap.exists() ? toDeal(snap.id, snap.data()) : null;

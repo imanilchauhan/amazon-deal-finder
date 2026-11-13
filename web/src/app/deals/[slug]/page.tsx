@@ -5,14 +5,14 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { DealGrid } from "@/components/DealGrid";
 import { JsonLd } from "@/components/SiteChrome";
-import { getDeal, getDeals, type Deal } from "@/lib/deals";
+import { getDeal, getDeals, getEndedDeals, similarDeals, type Deal } from "@/lib/deals";
 import { asinFromSlug, istDateTime, money } from "@/lib/format";
 import { AMAZON_DISCLOSURE, PRICE_DISCLAIMER, SITE } from "@/lib/site";
 import s from "./deal.module.css";
 
 export async function generateStaticParams() {
-  const deals = await getDeals();
-  return deals.map((d) => ({ slug: d.slug }));
+  const [live, ended] = await Promise.all([getDeals(), getEndedDeals()]);
+  return [...live, ...ended].map((d) => ({ slug: d.slug }));
 }
 
 async function dealFromParams(params: PageProps<"/deals/[slug]">["params"]): Promise<Deal | null> {
@@ -43,7 +43,7 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
   const deal = await dealFromParams(params);
   if (!deal) notFound();
 
-  const related = (await getDeals()).filter((d) => d.asin !== deal.asin).slice(0, 8);
+  const related = await similarDeals(deal, deal.active ? 8 : 6);
   const pageUrl = `${SITE.url}/deals/${deal.slug}`;
 
   return (
@@ -105,10 +105,13 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
           </div>
 
           {!deal.active && (
-            <p className={s.ended}>This deal may have ended. Check Amazon for the current price.</p>
+            <p className={s.ended}>
+              <strong>This deal has ended.</strong> The last price we saw was {money(deal.price, deal.currency)} on{" "}
+              {istDateTime(deal.checkedAt)}. Check Amazon for today&apos;s price, or see similar live deals below.
+            </p>
           )}
           <a className={s.buy} href={deal.url} target="_blank" rel="sponsored nofollow noopener">
-            {deal.active ? "Buy on Amazon" : "Check price on Amazon"}
+            {deal.active ? "Buy on Amazon" : "Check today's price on Amazon"}
           </a>
           <p className={s.small}>{PRICE_DISCLAIMER}</p>
           <p className={s.small}>{AMAZON_DISCLOSURE}</p>
@@ -117,7 +120,7 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
 
       {related.length > 0 && (
         <section className={s.related}>
-          <h2>More deals you might like</h2>
+          <h2>{deal.active ? "More deals you might like" : "Similar deals live right now"}</h2>
           <DealGrid deals={related} showControls={false} />
         </section>
       )}
