@@ -24,6 +24,18 @@ log = logging.getLogger(__name__)
 PLATFORMS = ("x", "facebook", "instagram")
 REPOST_DROP_PCT = 5  # re-post a deal only if the price fell at least this much since last post
 REPOST_MIN_HOURS = 24
+IST = timezone(timedelta(hours=5, minutes=30))
+
+
+def price_day(now: datetime) -> str:
+    """Day key (India time) for the price_history map, e.g. '2026-11-14'."""
+    return now.astimezone(IST).strftime("%Y-%m-%d")
+
+
+def history_entry(old: dict, day: str, price: float) -> dict:
+    """{'price_history': {day: lowest price seen that day}} to merge into the deal."""
+    prev = (old.get("price_history") or {}).get(day)
+    return {"price_history": {day: price if prev is None else min(prev, price)}}
 
 
 class StoreError(RuntimeError):
@@ -89,6 +101,7 @@ class DealStore:
         if not deals:
             return []
         now = self._now()
+        day = price_day(now)
         coll = self._db.collection("deals")
         refs = [coll.document(d.asin) for d in deals]
         try:
@@ -103,13 +116,22 @@ class DealStore:
             fields = deal.to_dict()
             cats = classify(deal.title)
             if snap is None or not snap.exists:
-                doc = {**fields, "active": True, "first_seen_at": now, "updated_at": now, "posted": {}, "x_status": "unposted", **cats}
+                doc = {
+                    **fields,
+                    "active": True,
+                    "first_seen_at": now,
+                    "updated_at": now,
+                    "posted": {},
+                    "x_status": "unposted",
+                    **cats,
+                    **history_entry({}, day, deal.price),
+                }
                 batch.set(ref, doc)
                 results.append(UpsertResult(deal, "new", doc))
                 continue
             old = snap.to_dict() or {}
             changed = any(old.get(k) != fields[k] for k in ("price", "original_price", "discount_pct", "title", "image_url"))
-            update = {**fields, "active": True, "updated_at": now}
+            update = {**fields, "active": True, "updated_at": now, **history_entry(old, day, deal.price)}
             if old.get("category_source") != "manual":  # manual overrides always win
                 update.update(cats)
             if "x_status" not in old:  # backfill docs created before the marker existed

@@ -148,3 +148,24 @@ def test_trending_products_are_tagged_kept_a_week_and_refreshed_oldest_first(sto
     clock["now"] = NOW + timedelta(hours=30)               # 30 h: normal deal goes, trending stays
     assert store.deactivate_stale(24) == 1
     assert fake_db.data["deals"][deal.asin]["active"] is True
+
+
+def test_price_history_keeps_lowest_price_per_india_day(store, fake_db, clock):
+    from deal_finder.store import price_day
+
+    day1 = price_day(NOW)
+    store.upsert_deals([make_deal(price=1299)])
+    store.upsert_deals([make_deal(price=999)])
+    store.upsert_deals([make_deal(price=1099)])  # later the same day: lowest stays
+    clock["now"] = NOW + timedelta(days=1)
+    store.upsert_deals([make_deal(price=1199)])
+    hist = fake_db.data["deals"]["B0TESTASIN"]["price_history"]
+    assert hist == {day1: 999, price_day(NOW + timedelta(days=1)): 1199}
+
+
+def test_price_day_uses_india_time():
+    from datetime import datetime, timezone
+
+    from deal_finder.store import price_day
+
+    assert price_day(datetime(2026, 11, 13, 19, 0, tzinfo=timezone.utc)) == "2026-11-14"

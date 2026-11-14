@@ -104,6 +104,8 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
             <p className={s.asOf}>Price checked {istDateTime(deal.checkedAt)}</p>
           </div>
 
+          <PriceHistory deal={deal} />
+
           {!deal.active && (
             <p className={s.ended}>
               <strong>This deal has ended.</strong> The last price we saw was {money(deal.price, deal.currency)} on{" "}
@@ -125,6 +127,39 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
         </section>
       )}
     </>
+  );
+}
+
+function dayLabel(day: string): string {
+  return new Date(`${day}T00:00:00+05:30`).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+/** "Lowest price we've seen" summary, once a deal has two or more days of history. */
+function PriceHistory({ deal }: { deal: Deal }) {
+  const h = deal.priceHistory;
+  if (h.length < 2) return null;
+  const [lowDay, low] = h.reduce((m, e) => (e[1] < m[1] ? e : m));
+  const [highDay, high] = h.reduce((m, e) => (e[1] > m[1] ? e : m));
+  const atLow = deal.active && deal.price <= low;
+  return (
+    <div className={s.history}>
+      <p>
+        <strong>Price history</strong> ({h.length} days tracked since {dayLabel(h[0][0])}):{" "}
+        {atLow ? (
+          <>today&apos;s price is the lowest we have seen.</>
+        ) : (
+          <>
+            lowest {money(low, deal.currency)} on {dayLabel(lowDay)}
+          </>
+        )}
+        {high > low && (
+          <>
+            {" "}
+            · highest {money(high, deal.currency)} on {dayLabel(highDay)}
+          </>
+        )}
+      </p>
+    </div>
   );
 }
 

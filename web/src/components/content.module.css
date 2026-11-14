@@ -1,0 +1,124 @@
+/* Shared styles for guide, event and intro content. */
+.article {
+  max-width: 760px;
+  padding-top: 24px;
+}
+.article h1 {
+  font-size: clamp(28px, 4.4vw, 44px);
+  margin: 8px 0 14px;
+}
+.article h2 {
+  font-size: 22px;
+  margin: 32px 0 8px;
+}
+.article p,
+.article li {
+  color: var(--muted);
+  font-size: 16.5px;
+  line-height: 1.65;
+}
+.article ul {
+  padding-left: 20px;
+  display: grid;
+  gap: 6px;
+}
+.article a {
+  color: var(--brand-deep);
+}
+.meta {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin: 0;
+}
+.crumbs {
+  padding: 16px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.crumbs a {
+  color: var(--brand-deep);
+  text-decoration: none;
+}
+.deals {
+  margin-top: 36px;
+}
+.deals h2 {
+  font-size: 22px;
+  margin-bottom: 14px;
+}
+.empty {
+  background: var(--surface-2);
+  border-radius: 14px;
+  padding: 16px 18px;
+  color: var(--muted);
+}
+.faq {
+  margin-top: 8px;
+  display: grid;
+  gap: 10px;
+}
+.faq details {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.faq summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text, inherit);
+}
+.faq details p {
+  margin: 10px 0 0;
+}
+.intro {
+  max-width: 78ch;
+  margin: 0 0 18px;
+}
+.intro p {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 15.5px;
+  line-height: 1.65;
+}
+.guideLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 20px;
+  font-size: 14.5px;
+}
+.guideLinks a {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--brand-deep);
+  text-decoration: none;
+  font-weight: 600;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+.card {
+  display: grid;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px;
+  text-decoration: none;
+  color: inherit;
+}
+.card h2 {
+  font-size: 18px;
+  margin: 0;
+}
+.card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14.5px;
+}

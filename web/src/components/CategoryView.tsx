@@ -7,6 +7,9 @@ import { getDeals, lastChecked } from "@/lib/deals";
 import { istDateTime } from "@/lib/format";
 import { PRICE_DISCLAIMER, SITE } from "@/lib/site";
 import { getCategory, getDepartment } from "@/lib/taxonomy";
+import { introFor } from "@/data/intros";
+import { guidesFor } from "@/data/guides";
+import c from "@/components/content.module.css";
 import s from "@/app/page.module.css";
 
 export async function CategoryView({ department, category }: { department: string; category?: string }) {
@@ -23,6 +26,8 @@ export async function CategoryView({ department, category }: { department: strin
   const path = cat ? `/c/${department}/${category}` : `/c/${department}`;
   const best = deals.reduce((m, d) => Math.max(m, d.discountPct), 0);
   const checked = lastChecked(deals);
+  const intro = introFor(department, category);
+  const guides = guidesFor(department, category);
 
   return (
     <main>
@@ -67,6 +72,22 @@ export async function CategoryView({ department, category }: { department: strin
           {checked && <> Prices last checked {istDateTime(checked)}.</>}
         </p>
       </section>
+      {intro && (
+        <section className={c.intro} aria-label={`About ${name.toLowerCase()} deals`}>
+          {intro.map((p) => (
+            <p key={p}>{p}</p>
+          ))}
+        </section>
+      )}
+      {guides.length > 0 && (
+        <p className={c.guideLinks}>
+          {guides.map((g) => (
+            <Link key={g.slug} href={`/guides/${g.slug}`}>
+              📖 {g.h1}
+            </Link>
+          ))}
+        </p>
+      )}
       <CategoryNav counts={counts} active={department} />
       {!cat && dep.categories.length > 1 && (
         <p className={s.subcats}>

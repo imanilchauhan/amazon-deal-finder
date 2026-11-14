@@ -196,3 +196,14 @@
     transform: none;
   }
 }
+
+.history {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+.history p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}

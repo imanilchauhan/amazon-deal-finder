@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { getDeals, lastChecked } from "@/lib/deals";
 import { SITE } from "@/lib/site";
 import { DEPARTMENTS } from "@/lib/taxonomy";
+import { GUIDES } from "@/data/guides";
 
 export const dynamic = "force-static";
 
@@ -12,6 +13,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pages: MetadataRoute.Sitemap = [
     { url: SITE.url, lastModified: now, changeFrequency: "hourly", priority: 1 },
     { url: `${SITE.url}/deals`, lastModified: now, changeFrequency: "hourly", priority: 0.9 },
+    { url: `${SITE.url}/black-friday`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
+    { url: `${SITE.url}/guides`, changeFrequency: "weekly", priority: 0.6 },
+    ...GUIDES.map((g) => ({
+      url: `${SITE.url}/guides/${g.slug}`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.7,
+    })),
     { url: `${SITE.url}/about`, changeFrequency: "monthly", priority: 0.3 },
     { url: `${SITE.url}/affiliate-disclosure`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${SITE.url}/privacy`, changeFrequency: "yearly", priority: 0.2 },
