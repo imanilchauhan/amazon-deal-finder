@@ -131,7 +131,8 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
 }
 
 function dayLabel(day: string): string {
-  return new Date(`${day}T00:00:00+05:30`).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  const [, m, d] = day.split("-").map(Number);
+  return `${d} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1]}`;
 }
 
 /** "Lowest price we've seen" summary, once a deal has two or more days of history. */

@@ -9,6 +9,14 @@ import { istDateTime } from "@/lib/format";
 import { PRICE_DISCLAIMER, SITE } from "@/lib/site";
 import c from "@/components/content.module.css";
 
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+/** "2026-11-14" -> "14 November 2026", without time zones getting in the way. */
+function longDate(day: string): string {
+  const [y, m, d] = day.split("-").map(Number);
+  return `${d} ${MONTHS[m - 1]} ${y}`;
+}
+
 export function generateStaticParams() {
   return GUIDES.map((g) => ({ slug: g.slug }));
 }
@@ -68,7 +76,7 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
         <h1>{g.h1}</h1>
         <p className={c.meta}>
           By the {SITE.name} team · Reviewed{" "}
-          {new Date(`${g.reviewed}T00:00:00+05:30`).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+          {longDate(g.reviewed)}
         </p>
         {g.intro.map((p) => (
           <p key={p}>{p}</p>
