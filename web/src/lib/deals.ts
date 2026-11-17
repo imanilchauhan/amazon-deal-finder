@@ -1,5 +1,16 @@
 import { cache } from "react";
-import { collection, doc, getDoc, getDocs, limit, orderBy, query, where } from "firebase/firestore/lite";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  startAfter,
+  where,
+  type QueryDocumentSnapshot,
+} from "firebase/firestore/lite";
 import { db } from "./firebase";
 import { toDeal, type Deal } from "./deal-model";
 
@@ -31,12 +42,28 @@ export const getEndedDeals = cache(async (): Promise<Deal[]> => {
   if (!Number.isFinite(ref)) return [];
   const cutoff = ref - ENDED_PAGE_DAYS * 24 * 3600 * 1000;
   try {
-    const q = query(collection(db(), "deals"), where("active", "==", false), orderBy("updated_at", "desc"), limit(500));
-    const snap = await getDocs(q);
+    // Page through every deal that ended inside the window. Each ended URL must keep being built:
+    // when a page disappears, Cloudflare Pages keeps serving its last copy (old price included)
+    // for up to a week, so every deal needs a price-free "ended" version before it drops out.
     const liveAsins = new Set(live.map((d) => d.asin));
-    return snap.docs
-      .map((s) => toDeal(s.id, s.data()))
-      .filter((d) => !liveAsins.has(d.asin) && Date.parse(d.checkedAt) >= cutoff);
+    const out: Deal[] = [];
+    let last: QueryDocumentSnapshot | undefined;
+    for (let page = 0; page < 10; page++) {
+      const parts = [where("active", "==", false), orderBy("updated_at", "desc"), ...(last ? [startAfter(last)] : []), limit(500)];
+      const snap = await getDocs(query(collection(db(), "deals"), ...parts));
+      let reachedCutoff = false;
+      for (const s of snap.docs) {
+        const d = toDeal(s.id, s.data());
+        if (Date.parse(d.checkedAt) < cutoff) {
+          reachedCutoff = true;
+          break;
+        }
+        if (!liveAsins.has(d.asin)) out.push(d);
+      }
+      if (reachedCutoff || snap.docs.length < 500) break;
+      last = snap.docs[snap.docs.length - 1];
+    }
+    return out;
   } catch (err) {
     console.warn("ended deals unavailable:", err instanceof Error ? err.message : err);
     return [];
