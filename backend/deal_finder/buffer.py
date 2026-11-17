@@ -35,6 +35,8 @@ def _gql_str(value: str) -> str:
 
 # Buffer requires a post type for Facebook channels (post | story | reel).
 FACEBOOK_METADATA = "{ facebook: { type: post } }"
+# Instagram feed post (not a story or reel), shown on the profile grid.
+INSTAGRAM_METADATA = "{ instagram: { type: post, shouldShareToFeed: true } }"
 
 
 def build_create_post_mutation(text: str, channel_id: str, due_at: str, image_url: str | None,
@@ -78,12 +80,14 @@ class BufferPoster:
     def from_config(cls, cfg) -> "BufferPoster":
         return cls(cfg.buffer_api_key, cfg.buffer_channel_id)
 
-    def post(self, deal: Deal, due_at: datetime | None = None) -> str:
-        """Schedule `deal`; at `due_at` (UTC) when given, else a couple of minutes from now."""
+    def post(self, deal: Deal, due_at: datetime | None = None, *, image_url: str | None = None) -> str:
+        """Schedule `deal`; at `due_at` (UTC) when given, else a couple of minutes from now.
+        `image_url` replaces the product photo (Instagram uses a rendered deal card)."""
         when = due_at if due_at is not None else self._clock() + timedelta(minutes=self._delay)
         due = when.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
         query = build_create_post_mutation(
-            self._text(deal), self._channel, due, deal.image_url if self._attach_image else None,
+            self._text(deal), self._channel, due,
+            image_url or (deal.image_url if self._attach_image else None),
             self._metadata,
         )
         body = self._call(query)

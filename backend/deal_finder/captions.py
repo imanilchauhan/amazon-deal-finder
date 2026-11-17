@@ -127,7 +127,7 @@ def build_meta_caption(deal: Deal, keyword: str, *, platform: str) -> str:
         "⏳ Prices change fast — grab it before it's gone.",
         "",
         f"#ad {AMAZON_DISCLOSURE}",
-        "#amazondeals #dealsoftheday #lootdeals" if deal.marketplace == "in" else "#amazondeals #dealsoftheday #savings",
+        "#dealsoftheday #lootdeals #dealsindia" if deal.marketplace == "in" else "#dealsoftheday #savings",
     ]
     caption = "\n".join(lines)
     limit = 2200 if platform == "instagram" else 60000
@@ -152,6 +152,32 @@ def build_facebook_post(deal: Deal) -> str:
         "⏳ Price at the time of posting; Amazon prices change fast.",
         "",
         f"#ad {AMAZON_DISCLOSURE}",
-        "#amazondeals #dealsoftheday #cartcrush",
+        "#dealsoftheday #dealsindia #cartcrush",
     ]
     return "\n".join(lines)
+
+
+IG_CAPTION_MAX = 2200
+
+
+def build_instagram_post(deal: Deal, *, category_tag: str = "") -> str:
+    """Instagram caption. Links aren't clickable in captions, so it points to the link in bio
+    and names the product so people can find it on the site. No Amazon trademarks in hashtags."""
+    tags = ["#dealsoftheday", "#dealsindia", "#lootdeals", "#onlineshopping", "#savemoney", "#cartcrush"]
+    if category_tag:
+        tags.insert(0, "#" + re.sub(r"[^a-z0-9]", "", category_tag.lower()))
+    name = short_title(deal.title, max_chars=110)
+    lines = [
+        f"🔥 {deal.discount_pct}% OFF: {name}",
+        "",
+        f"💰 {money(deal.price, deal.currency)} (MRP {money(deal.original_price, deal.currency)})"
+        f" · you save {money(deal.savings, deal.currency)}",
+        "",
+        "👉 Tap the link in our bio, then search for this product on cartcrush.pages.dev",
+        "⏳ Price at the time of posting; Amazon prices change fast.",
+        "",
+        f"#ad {AMAZON_DISCLOSURE}",
+        "",
+        " ".join(tags),
+    ]
+    return "\n".join(lines)[:IG_CAPTION_MAX]

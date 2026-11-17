@@ -32,7 +32,7 @@ export function facebookText(d: Shareable): string {
     "⏳ Price at the time of posting; Amazon prices change fast.",
     "",
     `#ad ${DISCLOSURE}`,
-    "#amazondeals #dealsoftheday #cartcrush",
+    "#dealsoftheday #dealsindia #cartcrush",
   ].join("\n");
 }
 
@@ -49,7 +49,7 @@ export function instagramText(d: Shareable): string {
     "",
     `#ad ${DISCLOSURE}`,
     "",
-    "#amazondeals #amazonindia #dealsoftheday #cartcrush",
+    "#dealsoftheday #dealsindia #lootdeals #cartcrush",
   ].join("\n");
 }
 

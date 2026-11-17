@@ -148,3 +148,19 @@ def test_trending_products_are_posted_first():
     docs = [doc(big), {**doc(hot), "source": "trending"}]
     deal, _ = pick_deal(docs, ["x"], MORNING)
     assert deal.asin == "B0TRENDING"
+
+
+def test_instagram_poster_gets_the_firestore_doc():
+    class DocPoster(Poster):
+        wants_doc = True
+
+        def post(self, deal, due_at=None, doc=None):
+            self.docs = getattr(self, "docs", []) + [doc]
+            return super().post(deal, due_at)
+
+    d = deals(1)[0]
+    store = Store([{**doc(d), "brand": "Philips"}])
+    ig, x = DocPoster("ig"), Poster("x")
+    run_once(store, {"x": x, "instagram": ig}, MORNING)
+    assert ig.docs[0]["brand"] == "Philips"
+    assert ("B0TEST0000", "instagram", "ig-1") in store.marked

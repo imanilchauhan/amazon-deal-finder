@@ -2,7 +2,7 @@
 
 The scrape workflow only fills Firestore. This lightweight job (no browser, ~1 min)
 runs on its own schedule, picks the single best deal that still needs posting, and
-sends it to every enabled Buffer channel (X, Facebook Page). Steady one-at-a-time
+sends it to every enabled Buffer channel (X, Facebook Page, Instagram). Steady one-at-a-time
 posting keeps us inside Buffer's free cap and avoids looking like a spam burst.
 """
 from __future__ import annotations
@@ -139,7 +139,8 @@ def run_once(store: DealStore, posters: dict[str, object], now: datetime, dry_ru
                 sent += 1
                 continue
             try:
-                post_id = poster.post(deal, due_at=slot)
+                extra = {"doc": doc} if getattr(poster, "wants_doc", False) else {}
+                post_id = poster.post(deal, due_at=slot, **extra)
             except Exception as exc:  # noqa: BLE001 - one channel failing must not block the other
                 log.error("%s post failed for %s at %s: %s", platform, deal.asin, slot_key(slot), exc)
                 out.errors.append({"slot": slot_key(slot), "asin": deal.asin, "platform": platform, "error": str(exc)})
@@ -170,6 +171,15 @@ def build_posters(env_bool: Callable[[str], bool] = _bool) -> dict[str, object]:
             raise ConfigError("FB_ENABLED=true needs BUFFER_API_KEY and BUFFER_FB_CHANNEL_ID")
         posters["facebook"] = BufferPoster(key, chan, text_builder=build_facebook_post,
                                            metadata=FACEBOOK_METADATA)
+    if env_bool("IG_ENABLED"):
+        from .instagram import build_instagram_poster
+
+        chan = _str("BUFFER_IG_CHANNEL_ID")
+        cards_url, cards_secret = _str("CARDS_BASE_URL"), _str("CARDS_UPLOAD_SECRET")
+        if not (key and chan and cards_url and cards_secret):
+            raise ConfigError("IG_ENABLED=true needs BUFFER_API_KEY, BUFFER_IG_CHANNEL_ID, CARDS_BASE_URL "
+                              "and CARDS_UPLOAD_SECRET")
+        posters["instagram"] = build_instagram_poster(key, chan, cards_url, cards_secret)
     return posters
 
 

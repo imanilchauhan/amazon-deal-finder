@@ -1,7 +1,7 @@
 name: post
 
 # Fills every free hourly slot (9 AM-10 PM IST) in the next 6 hours with its own deal,
-# scheduled in Buffer for that time (X + Facebook). Booked slots live in Firestore.
+# scheduled in Buffer for that time (X + Facebook + Instagram). Booked slots live in Firestore.
 # No browser, no scraping: ~1 minute per run. Every 2 hours = 84 posts/week per channel,
 # under Buffer's free cap of 100/week per channel.
 on:
@@ -53,4 +53,8 @@ jobs:
           BUFFER_CHANNEL_ID: ${{ vars.BUFFER_CHANNEL_ID }}
           FB_ENABLED: ${{ vars.FB_ENABLED || 'false' }}
           BUFFER_FB_CHANNEL_ID: ${{ vars.BUFFER_FB_CHANNEL_ID }}
+          IG_ENABLED: ${{ vars.IG_ENABLED || 'false' }}
+          BUFFER_IG_CHANNEL_ID: ${{ vars.BUFFER_IG_CHANNEL_ID }}
+          CARDS_BASE_URL: ${{ vars.CARDS_BASE_URL }}
+          CARDS_UPLOAD_SECRET: ${{ secrets.CARDS_UPLOAD_SECRET }}
         run: python -m deal_finder.post_queue
