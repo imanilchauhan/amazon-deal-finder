@@ -164,3 +164,14 @@ def test_instagram_poster_gets_the_firestore_doc():
     run_once(store, {"x": x, "instagram": ig}, MORNING)
     assert ig.docs[0]["brand"] == "Philips"
     assert ("B0TEST0000", "instagram", "ig-1") in store.marked
+
+
+def test_run_test_posts_one_deal_to_one_channel_soon():
+    from deal_finder.post_queue import run_test
+
+    store = Store([doc(d) for d in deals(3)])
+    ig = Poster("ig")
+    res = run_test(store, "instagram", ig, MORNING)
+    assert len(ig.sent) == 1 and ig.sent[0][1] == MORNING + timedelta(minutes=10)
+    assert store.marked == [(ig.sent[0][0], "instagram", "ig-1")]
+    assert store.saved is None  # slot plan untouched

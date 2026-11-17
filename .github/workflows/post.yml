@@ -13,6 +13,10 @@ on:
         description: "Pick the next deal but do not post it"
         type: boolean
         default: false
+      test_platform:
+        description: "Send one deal now to just this channel (x, facebook or instagram); leave empty for the normal run"
+        type: string
+        default: ""
 
 concurrency:
   group: post
@@ -47,6 +51,7 @@ jobs:
       - name: Post next deal
         env:
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          TEST_PLATFORM: ${{ inputs.test_platform || '' }}
           FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
           BUFFER_API_KEY: ${{ secrets.BUFFER_API_KEY }}
           X_ENABLED: ${{ vars.X_ENABLED || 'false' }}

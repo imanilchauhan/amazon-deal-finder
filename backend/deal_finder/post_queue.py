@@ -155,6 +155,27 @@ def run_once(store: DealStore, posters: dict[str, object], now: datetime, dry_ru
     return out
 
 
+def run_test(store: DealStore, platform: str, poster, now: datetime, lead_minutes: int = 10) -> QueueResult:
+    """Send the next fresh deal to one channel, due in a few minutes, outside the slot plan.
+    Used to check a newly connected channel without waiting for a free slot."""
+    out = QueueResult()
+    picked = pick_deal(store.post_candidates(), [platform], now)
+    if picked is None:
+        out.skipped_slots.append("test")
+        return out
+    deal, doc = picked
+    due = now + timedelta(minutes=lead_minutes)
+    extra = {"doc": doc} if getattr(poster, "wants_doc", False) else {}
+    try:
+        post_id = poster.post(deal, due_at=due, **extra)
+    except Exception as exc:  # noqa: BLE001
+        out.errors.append({"slot": slot_key(due), "asin": deal.asin, "platform": platform, "error": str(exc)})
+        return out
+    store.mark_posted(deal, platform, post_id)
+    out.posts.append({"slot": slot_key(due), "asin": deal.asin, "platform": platform, "id": post_id})
+    return out
+
+
 def build_posters(env_bool: Callable[[str], bool] = _bool) -> dict[str, object]:
     from .buffer import FACEBOOK_METADATA, BufferPoster
 
@@ -198,8 +219,15 @@ def main() -> int:
     from .store import init_firestore
 
     store = DealStore(init_firestore(None, project))
+    test_platform = _str("TEST_PLATFORM")
     try:
-        result = run_once(store, posters, datetime.now(timezone.utc), dry_run=_bool("DRY_RUN"))
+        if test_platform:
+            if test_platform not in posters:
+                log.error("TEST_PLATFORM=%s is not enabled", test_platform)
+                return 2
+            result = run_test(store, test_platform, posters[test_platform], datetime.now(timezone.utc))
+        else:
+            result = run_once(store, posters, datetime.now(timezone.utc), dry_run=_bool("DRY_RUN"))
     except StoreError as exc:
         log.error("%s", exc)
         return 3
