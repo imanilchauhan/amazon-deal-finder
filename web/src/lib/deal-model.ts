@@ -23,8 +23,6 @@ export type Deal = {
   xStatus: "posted" | "unposted";
   /** Platforms this deal has gone out on (x, facebook, instagram, whatsapp) */
   postedOn: string[];
-  /** Lowest price seen per India day, oldest first: [["2026-11-14", 640], ...] */
-  priceHistory: [string, number][];
 };
 
 function iso(v: unknown): string {
@@ -60,10 +58,6 @@ export function toDeal(asin: string, d: Record<string, unknown>): Deal {
     brand: String(d.brand ?? ""),
     gender: String(d.gender ?? ""),
     xStatus: d.x_status === "posted" ? "posted" : "unposted",
-    priceHistory: Object.entries((d.price_history as Record<string, unknown>) ?? {})
-      .map(([day, p]) => [day, Number(p)] as [string, number])
-      .filter(([, p]) => Number.isFinite(p) && p > 0)
-      .sort(([a], [b]) => a.localeCompare(b)),
     postedOn: Object.keys((d.posted as Record<string, unknown>) ?? {}).filter((k) => !k.endsWith("_manual_at")),
   };
 }

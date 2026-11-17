@@ -122,16 +122,16 @@ def test_x_status_backfilled_for_old_docs(store, fake_db, deal):
     assert fake_db.data["deals"][deal.asin]["x_status"] == "unposted"
 
 
-def test_manual_products_survive_a_day_but_not_a_week(store, fake_db, clock, deal):
+def test_manual_products_also_hide_after_24_hours(store, fake_db, clock, deal):
     store.upsert_deals([deal])
     fake_db.data["deals"][deal.asin]["source"] = "manual"
-    clock["now"] = NOW + timedelta(hours=48)
+    clock["now"] = NOW + timedelta(hours=20)
     assert store.deactivate_stale(24) == 0
-    clock["now"] = NOW + timedelta(days=8)
+    clock["now"] = NOW + timedelta(hours=25)
     assert store.deactivate_stale(24) == 1
 
 
-def test_trending_products_are_tagged_kept_a_week_and_refreshed_oldest_first(store, fake_db, clock, deal):
+def test_trending_products_are_tagged_and_refreshed_oldest_first(store, fake_db, clock, deal):
     from datetime import timedelta
 
     from tests.conftest import make_deal
@@ -145,27 +145,6 @@ def test_trending_products_are_tagged_kept_a_week_and_refreshed_oldest_first(sto
     assert store.trending_to_refresh(15) == [deal.asin]   # old enough, and only trending ones
     assert store.trending_to_refresh(0) == []
     assert store.deactivate_stale(24) == 0
-    clock["now"] = NOW + timedelta(hours=30)               # 30 h: normal deal goes, trending stays
-    assert store.deactivate_stale(24) == 1
-    assert fake_db.data["deals"][deal.asin]["active"] is True
+    clock["now"] = NOW + timedelta(hours=30)               # 30 h without a refresh: both go
+    assert store.deactivate_stale(24) == 2
 
-
-def test_price_history_keeps_lowest_price_per_india_day(store, fake_db, clock):
-    from deal_finder.store import price_day
-
-    day1 = price_day(NOW)
-    store.upsert_deals([make_deal(price=1299)])
-    store.upsert_deals([make_deal(price=999)])
-    store.upsert_deals([make_deal(price=1099)])  # later the same day: lowest stays
-    clock["now"] = NOW + timedelta(days=1)
-    store.upsert_deals([make_deal(price=1199)])
-    hist = fake_db.data["deals"]["B0TESTASIN"]["price_history"]
-    assert hist == {day1: 999, price_day(NOW + timedelta(days=1)): 1199}
-
-
-def test_price_day_uses_india_time():
-    from datetime import datetime, timezone
-
-    from deal_finder.store import price_day
-
-    assert price_day(datetime(2026, 11, 13, 19, 0, tzinfo=timezone.utc)) == "2026-11-14"

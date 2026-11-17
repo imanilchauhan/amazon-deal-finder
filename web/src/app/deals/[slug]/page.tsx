@@ -24,6 +24,15 @@ async function dealFromParams(params: PageProps<"/deals/[slug]">["params"]): Pro
 export async function generateMetadata({ params }: PageProps<"/deals/[slug]">): Promise<Metadata> {
   const deal = await dealFromParams(params);
   if (!deal) return { title: "Deal not found", robots: { index: false } };
+  if (!deal.active) {
+    // Ended: no old price in the title or snippet (Amazon prices may only be shown when under 24 hours old).
+    return {
+      title: `${deal.shortTitle} – deal ended`,
+      description: `The ${deal.shortTitle} deal has ended. See similar live Amazon deals on CartCrush, checked every few hours.`,
+      alternates: { canonical: `/deals/${deal.slug}` },
+      robots: { index: false, follow: true },
+    };
+  }
   const title = `${deal.shortTitle} at ${money(deal.price, deal.currency)} (${deal.discountPct}% off)`;
   const description = `${deal.shortTitle} is ${deal.discountPct}% off on Amazon: ${money(deal.price, deal.currency)} instead of ${money(
     deal.originalPrice,
@@ -33,7 +42,6 @@ export async function generateMetadata({ params }: PageProps<"/deals/[slug]">): 
     title,
     description,
     alternates: { canonical: `/deals/${deal.slug}` },
-    robots: deal.active ? undefined : { index: false, follow: true },
     openGraph: { type: "website", url: `/deals/${deal.slug}`, title, description, images: [{ url: deal.imageUrl, alt: deal.shortTitle }] },
     twitter: { card: "summary_large_image", title, description, images: [deal.imageUrl] },
   };
@@ -59,14 +67,16 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
               image: deal.imageUrl,
               sku: deal.asin,
               url: pageUrl,
-              offers: {
-                "@type": "Offer",
-                price: deal.price,
-                priceCurrency: deal.currency,
-                availability: deal.active ? "https://schema.org/InStock" : "https://schema.org/Discontinued",
-                url: pageUrl,
-                seller: { "@type": "Organization", name: "Amazon.in" },
-              },
+              ...(deal.active && {
+                offers: {
+                  "@type": "Offer",
+                  price: deal.price,
+                  priceCurrency: deal.currency,
+                  availability: "https://schema.org/InStock",
+                  url: pageUrl,
+                  seller: { "@type": "Organization", name: "Amazon.in" },
+                },
+              }),
             },
             {
               "@type": "BreadcrumbList",
@@ -85,7 +95,7 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
 
       <div className={s.layout}>
         <div className={s.media}>
-          <span className={s.badge}>-{deal.discountPct}%</span>
+          {deal.active && <span className={s.badge}>-{deal.discountPct}%</span>}
           <img src={deal.imageUrl} alt={deal.shortTitle} width={600} height={600} />
         </div>
 
@@ -93,6 +103,7 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
           <h1>{deal.shortTitle}</h1>
           {deal.title !== deal.shortTitle && <p className={s.fullTitle}>{deal.title}</p>}
 
+          {deal.active && (
           <div className={s.priceBox}>
             <span className={s.price}>{money(deal.price, deal.currency)}</span>
             <span className={s.was}>
@@ -103,13 +114,11 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
             </span>
             <p className={s.asOf}>Price checked {istDateTime(deal.checkedAt)}</p>
           </div>
-
-          <PriceHistory deal={deal} />
+          )}
 
           {!deal.active && (
             <p className={s.ended}>
-              <strong>This deal has ended.</strong> The last price we saw was {money(deal.price, deal.currency)} on{" "}
-              {istDateTime(deal.checkedAt)}. Check Amazon for today&apos;s price, or see similar live deals below.
+              <strong>This deal has ended.</strong> Check Amazon for today&apos;s price, or see similar live deals below.
             </p>
           )}
           <a className={s.buy} href={deal.url} target="_blank" rel="sponsored nofollow noopener">
@@ -127,40 +136,6 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
         </section>
       )}
     </>
-  );
-}
-
-function dayLabel(day: string): string {
-  const [, m, d] = day.split("-").map(Number);
-  return `${d} ${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1]}`;
-}
-
-/** "Lowest price we've seen" summary, once a deal has two or more days of history. */
-function PriceHistory({ deal }: { deal: Deal }) {
-  const h = deal.priceHistory;
-  if (h.length < 2) return null;
-  const [lowDay, low] = h.reduce((m, e) => (e[1] < m[1] ? e : m));
-  const [highDay, high] = h.reduce((m, e) => (e[1] > m[1] ? e : m));
-  const atLow = deal.active && deal.price <= low;
-  return (
-    <div className={s.history}>
-      <p>
-        <strong>Price history</strong> ({h.length} days tracked since {dayLabel(h[0][0])}):{" "}
-        {atLow ? (
-          <>today&apos;s price is the lowest we have seen.</>
-        ) : (
-          <>
-            lowest {money(low, deal.currency)} on {dayLabel(lowDay)}
-          </>
-        )}
-        {high > low && (
-          <>
-            {" "}
-            · highest {money(high, deal.currency)} on {dayLabel(highDay)}
-          </>
-        )}
-      </p>
-    </div>
   );
 }
 

@@ -10,7 +10,6 @@ export const SITE = {
     "amazon deals today",
     "best deals india",
     "amazon offers today",
-    "price drop alert",
     "loot deals",
     "discount offers",
     "today's deals",

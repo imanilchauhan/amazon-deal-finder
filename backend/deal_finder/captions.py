@@ -97,12 +97,12 @@ def is_near_duplicate(a: str, b: str, threshold: float = 0.8) -> bool:
 
 
 def build_tweet(deal: Deal) -> str:
-    """'🔥 46% OFF: <title>\n💰 ₹1,299 (was ₹2,399) — save ₹1,100\n<url>\n#Ad #AmazonDeals'"""
+    """'🔥 46% OFF: <title>\n💰 ₹1,299 (was ₹2,399) — save ₹1,100\n<url>\n#Ad #Deals'"""
     price_line = (
         f"💰 {money(deal.price, deal.currency)} (was {money(deal.original_price, deal.currency)})"
         f" · save {money(deal.savings, deal.currency)}"
     )
-    tags = "#Ad #AmazonDeals"
+    tags = "#Ad #Deals"
     title = short_title(deal.title)
     while True:
         text = f"🔥 {deal.discount_pct}% OFF: {title}\n{price_line}\n{deal.url}\n{tags}"

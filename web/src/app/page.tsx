@@ -101,8 +101,8 @@ export default async function Home() {
         <section>
           <h2>Never miss a loot deal</h2>
           <p>
-            Follow <a href={SITE.xUrl}>{SITE.xHandle}</a> on X and turn on notifications to get price drop alerts the
-            moment we find them.
+            Follow <a href={SITE.xUrl}>{SITE.xHandle}</a> on X and turn on notifications to see new deals the moment we
+            post them.
           </p>
         </section>
       </div>
