@@ -41,7 +41,7 @@ export const GUIDES: Guide[] = [
       "How to choose a budget room heater for an Indian winter: fan vs halogen vs carbon vs oil-filled, safety features, power use, and today's live Amazon deals under ₹2,000.",
     reviewed: "2026-11-14",
     intro: [
-      "A room heater under ₹2,000 can keep a small bedroom or study comfortable through a North Indian winter, as long as you pick the right type for the room. This guide explains the four common types, the safety features worth insisting on, and what a heater costs to run. Below it, you will find every room heater deal under ₹2,000 that CartCrush is tracking on Amazon India right now.",
+      "A room heater under ₹2,000 can keep a small bedroom or study comfortable through a North Indian winter, as long as you pick the right type for the room. This guide explains the four common types, the safety features worth insisting on, and what a heater costs to run. Below it, you will find every room heater deal under ₹2,000 that CartCrush has found on Amazon India right now.",
     ],
     sections: [
       {
@@ -101,7 +101,7 @@ export const GUIDES: Guide[] = [
       "Instant geyser, storage geyser or immersion rod? Compare cost, safety and convenience for an Indian home, with today's live Amazon deals on geysers and immersion rods.",
     reviewed: "2026-11-14",
     intro: [
-      "Hot water is the first thing most Indian homes shop for when winter arrives. The choice usually comes down to three options: an immersion rod, an instant geyser or a storage geyser. They differ a lot in price, safety and convenience, and the cheapest one to buy is not always the cheapest to live with. Here is how to decide, followed by the geyser and immersion rod deals CartCrush is tracking on Amazon India right now.",
+      "Hot water is the first thing most Indian homes shop for when winter arrives. The choice usually comes down to three options: an immersion rod, an instant geyser or a storage geyser. They differ a lot in price, safety and convenience, and the cheapest one to buy is not always the cheapest to live with. Here is how to decide, followed by the geyser and immersion rod deals CartCrush has found on Amazon India right now.",
     ],
     sections: [
       {
@@ -159,7 +159,7 @@ export const GUIDES: Guide[] = [
       "Look festive for less: how to pick imitation earrings, necklace sets, bangles and maang tikkas for the wedding season, plus live Amazon jewellery deals under ₹500.",
     reviewed: "2026-11-14",
     intro: [
-      "Wedding season means several functions and several outfits, and few people want to buy real gold for every look. Imitation and fashion jewellery under ₹500 can look rich in photos and on the day, if you know what to check. This guide covers the materials, finishes and sets that hold up best, and below it you will find the jewellery deals under ₹500 that CartCrush is tracking on Amazon India right now.",
+      "Wedding season means several functions and several outfits, and few people want to buy real gold for every look. Imitation and fashion jewellery under ₹500 can look rich in photos and on the day, if you know what to check. This guide covers the materials, finishes and sets that hold up best, and below it you will find the jewellery deals under ₹500 that CartCrush has found on Amazon India right now.",
     ],
     sections: [
       {
@@ -209,7 +209,7 @@ export const GUIDES: Guide[] = [
       "How to pick a warm, good-value winter jacket, sweatshirt or hoodie on a budget, what fabrics and fills to look for, and live Amazon India deals under ₹1,000.",
     reviewed: "2026-11-14",
     intro: [
-      "You do not need to spend a lot to stay warm in an Indian winter. Below ₹1,000 you can find puffer jackets, fleece jackets, sweatshirts and hoodies that are warm enough for most cities, as long as you pick the right fabric and fit. This guide explains what to look for, and below it are the winter wear deals under ₹1,000 that CartCrush is tracking on Amazon India right now.",
+      "You do not need to spend a lot to stay warm in an Indian winter. Below ₹1,000 you can find puffer jackets, fleece jackets, sweatshirts and hoodies that are warm enough for most cities, as long as you pick the right fabric and fit. This guide explains what to look for, and below it are the winter wear deals under ₹1,000 that CartCrush has found on Amazon India right now.",
     ],
     sections: [
       {

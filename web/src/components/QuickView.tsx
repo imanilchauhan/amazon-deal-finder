@@ -67,11 +67,9 @@ export function QuickView({ deal, onClose }: { deal: Deal | null; onClose: () =>
               <s>{money(deal.originalPrice, deal.currency)}</s>
             </p>
             <p className={s.save}>You save {money(deal.savings, deal.currency)}</p>
-            <a className={s.buy} href={deal.url} target="_blank" rel="sponsored nofollow noopener">
-              Buy on Amazon
-            </a>
-            <Link className={s.qvMore} href={`/deals/${deal.slug}`}>
-              Full details →
+            {/* No affiliate link inside the overlay: Amazon bans Special Links in pop-ups and layers. */}
+            <Link className={s.buy} href={`/deals/${deal.slug}`}>
+              See deal details
             </Link>
           </div>
         </div>

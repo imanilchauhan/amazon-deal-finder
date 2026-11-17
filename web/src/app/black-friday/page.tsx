@@ -98,7 +98,7 @@ export default async function BlackFridayPage() {
           {EVENT.amazonWindow
             ? `Amazon India's Black Friday sale runs ${EVENT.amazonWindow}.`
             : "Amazon India has not announced its sale dates yet. Its first Black Friday sale ran in 2024, and in 2025 the sale ran from 28 November to 1 December, so a similar long weekend is likely."}{" "}
-          This page lists every Amazon deal CartCrush is tracking at {EVENT.minDiscount}% off or more, re-checked every few hours, so you
+          This page lists every Amazon deal CartCrush has found at {EVENT.minDiscount}% off or more, re-checked every few hours, so you
           can see real price drops without scrolling through the sale pages.
         </p>
         <p>

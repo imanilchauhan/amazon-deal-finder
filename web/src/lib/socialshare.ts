@@ -142,7 +142,7 @@ export async function renderDealCard(d: Shareable): Promise<Blob> {
   ctx.textBaseline = "middle";
   ctx.fillText("CartCrush", 100, 86);
   ctx.font = `700 24px ${FONT}`;
-  const pill = "AMAZON DEAL";
+  const pill = "TODAY'S DEAL";
   const pw = ctx.measureText(pill).width + 48;
   roundRect(ctx, W - 64 - pw, 60, pw, 52, 26);
   ctx.fillStyle = "#ffffff";

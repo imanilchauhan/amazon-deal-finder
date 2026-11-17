@@ -10,7 +10,7 @@ import s from "../page.module.css";
 export const metadata: Metadata = {
   title: "All Amazon Deals Today – Biggest Discounts & Price Drops",
   description:
-    "Every live Amazon India deal we're tracking right now, sorted by biggest discount. Filter loot deals by 50% or 70% off, or find deals under ₹500 and ₹1,000.",
+    "Every live Amazon India deal we've found right now, sorted by biggest discount. Filter loot deals by 50% or 70% off, or find deals under ₹500 and ₹1,000.",
   alternates: { canonical: "/deals" },
   openGraph: { url: "/deals" },
 };

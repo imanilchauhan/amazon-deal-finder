@@ -12,9 +12,9 @@ class UrlLauncherLinkLauncher implements LinkLauncher {
   @override
   Future<bool> open(String url) {
     final uri = Uri.parse(url);
-    // Mobile: in-app browser (Custom Tabs / SFSafariViewController) keeps users in the app
-    // and preserves the ?tag= affiliate parameter. Web: new browser tab.
-    final mode = kIsWeb ? LaunchMode.platformDefault : LaunchMode.inAppBrowserView;
+    // Mobile: hand the link to the Amazon app or the phone's browser. Amazon's Associates
+    // mobile rules forbid showing Amazon pages inside the app (WebViews). Web: new browser tab.
+    final mode = kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication;
     return launchUrl(uri, mode: mode, webOnlyWindowName: '_blank');
   }
 }
