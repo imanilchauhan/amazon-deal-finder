@@ -66,6 +66,49 @@ export function whatsappText(d: Shareable): string {
   ].join("\n");
 }
 
+const NUMBER_EMOJI = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"];
+
+/**
+ * One WhatsApp Channel message with the day's best deals. Channels have no posting API,
+ * so the admin prepares this and the owner pastes it once a day.
+ */
+export function whatsappDigestText(deals: Shareable[], checkedLabel: string, siteUrl = SITE): string {
+  const lines = ["🛒 *CartCrush: today's top price drops*", ""];
+  deals.forEach((d, i) => {
+    const cur = d.currency ?? "INR";
+    lines.push(`${NUMBER_EMOJI[i] ?? `${i + 1}.`} *${d.discountPct}% OFF* ${shortTitle(d.title, 70)}`);
+    lines.push(`💰 *${money(d.price, cur)}* (MRP ${money(d.originalPrice, cur)})`);
+    lines.push(`🛒 ${d.url}`);
+    lines.push("");
+  });
+  lines.push(`⏳ Prices checked ${checkedLabel}; Amazon prices change fast.`);
+  lines.push(`👉 More deals: ${siteUrl.replace(/^https?:\/\//, "")}`);
+  lines.push("");
+  lines.push(`_#ad ${DISCLOSURE}_`);
+  return lines.join("\n");
+}
+
+/** Pick the digest: fresh live deals not yet sent to WhatsApp, best discount, no near-repeats. */
+export function pickDigest<T extends Shareable & { asin: string; active: boolean; checkedAt: string; postedOn: string[] }>(
+  rows: T[],
+  nowMs: number,
+  count = 5,
+): T[] {
+  const fresh = rows
+    .filter((r) => r.active && !r.postedOn.includes("whatsapp") && nowMs - Date.parse(r.checkedAt) < 20 * 3600 * 1000)
+    .sort((a, b) => b.discountPct - a.discountPct);
+  const out: T[] = [];
+  const seen = new Set<string>();
+  for (const r of fresh) {
+    const key = shortTitle(r.title, 40).toLowerCase().split(/\s+/).slice(0, 3).join(" ");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(r);
+    if (out.length === count) break;
+  }
+  return out;
+}
+
 export const whatsappUrl = (text: string) => `https://wa.me/?text=${encodeURIComponent(text)}`;
 /** Meta Business Suite composer: one post to the Facebook Page and the linked Instagram account. */
 export const BUSINESS_SUITE_COMPOSER = "https://business.facebook.com/latest/composer";

@@ -21,6 +21,7 @@ import {
   setDoc,
   updateDoc,
   deleteField,
+  writeBatch,
 } from "firebase/firestore";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { classify } from "@/lib/classify";
@@ -30,6 +31,7 @@ import { dealSlug, money } from "@/lib/format";
 import { DEPARTMENTS, getDepartment } from "@/lib/taxonomy";
 import { affiliateUrl, parseAsin } from "@/lib/xshare";
 import { ShareKit } from "./ShareKit";
+import { WhatsAppDigest } from "./WhatsAppDigest";
 import s from "./admin.module.css";
 
 const OWNER = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || "imanilchauhan3@gmail.com").toLowerCase();
@@ -355,6 +357,21 @@ function Library() {
     }
   }
 
+  async function markWhatsAppSent(asins: string[]) {
+    try {
+      const db = getFirestore(firebaseApp());
+      const batch = writeBatch(db);
+      for (const asin of asins) {
+        const r = rows.find((x) => x.asin === asin);
+        batch.update(doc(db, "deals", asin), { "posted.whatsapp": { at: serverTimestamp(), price: r?.price ?? null, id: "digest" } });
+      }
+      await batch.commit();
+      await load();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Update failed");
+    }
+  }
+
   const shown = rows.filter(
     (r) =>
       (filter === "all" || r.xStatus === filter) &&
@@ -364,6 +381,7 @@ function Library() {
 
   return (
     <section>
+      {!loading && <WhatsAppDigest rows={rows} onMarkSent={markWhatsAppSent} />}
       <div className={s.libHead}>
         <div className={s.tabs} role="group" aria-label="Filter by posted status">
           {(["unposted", "posted", "all"] as const).map((f) => (

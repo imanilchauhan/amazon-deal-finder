@@ -38,3 +38,6 @@
 .chipOn { border: 1px solid transparent; background: var(--good-soft, #e7f4ec); color: var(--good, #137a3e); border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 .chip:focus-visible, .chipOn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 a.secondary { display: inline-block; text-decoration: none; }
+
+.digest { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; margin-bottom: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.digestText { width: 100%; font: inherit; font-size: 14px; line-height: 1.5; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--ink); resize: vertical; box-sizing: border-box; }
