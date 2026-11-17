@@ -1,0 +1,14 @@
+# CartCrush card host: serves the deal card images that Instagram posts use.
+# Deploy:  cd cards && npx wrangler deploy
+# Secret:  npx wrangler secret put UPLOAD_SECRET   (same value as the GitHub secret CARDS_UPLOAD_SECRET)
+name = "cartcrush-cards"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true   # public https://cartcrush-cards.<account>.workers.dev URL for Buffer/Instagram
+
+[[kv_namespaces]]
+binding = "CARDS"
+id = "183a81fae1af4cdaba87e98f22153ee4"
+
+[observability]
+enabled = true
