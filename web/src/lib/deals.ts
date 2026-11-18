@@ -16,8 +16,11 @@ import { toDeal, type Deal } from "./deal-model";
 
 export type { Deal };
 
-/** Active deals, biggest discount first. Security rules cap list queries at 500. */
-export const getDeals = cache(async (max = 500): Promise<Deal[]> => {
+/**
+ * Every live product, biggest discount first: deals plus full-price collection picks
+ * (discount 0, at the end). Security rules cap list queries at 500.
+ */
+export const getActiveProducts = cache(async (max = 500): Promise<Deal[]> => {
   const q = query(
     collection(db(), "deals"),
     where("active", "==", true),
@@ -26,6 +29,27 @@ export const getDeals = cache(async (max = 500): Promise<Deal[]> => {
   );
   const snap = await getDocs(q);
   return snap.docs.map((s) => toDeal(s.id, s.data()));
+});
+
+/** Live deals only (a real discount), biggest first. Collection picks at full price are left out. */
+export const getDeals = cache(async (max = 500): Promise<Deal[]> => {
+  return (await getActiveProducts(max)).filter((d) => d.discountPct > 0);
+});
+
+/** Hand-picked ASINs per collection slug, edited in /admin (collections/{slug}.asins). */
+export const getCollectionPicks = cache(async (): Promise<Record<string, string[]>> => {
+  try {
+    const snap = await getDocs(collection(db(), "collections"));
+    const out: Record<string, string[]> = {};
+    for (const d of snap.docs) {
+      const asins = (d.data().asins as unknown[] | undefined)?.filter((a): a is string => typeof a === "string") ?? [];
+      out[d.id] = asins;
+    }
+    return out;
+  } catch (err) {
+    console.warn("collection picks unavailable:", err instanceof Error ? err.message : err);
+    return {};
+  }
 });
 
 /** Ended deal pages stay up this long (marked noindex) so a page Google crawled does not turn into a 404 overnight. */
@@ -37,7 +61,7 @@ export const ENDED_PAGE_DAYS = 30;
  * Returns [] if the query is refused (e.g. older security rules) so the build never fails on it.
  */
 export const getEndedDeals = cache(async (): Promise<Deal[]> => {
-  const live = await getDeals();
+  const live = await getActiveProducts();
   const ref = Date.parse(lastChecked(live));
   if (!Number.isFinite(ref)) return [];
   const cutoff = ref - ENDED_PAGE_DAYS * 24 * 3600 * 1000;

@@ -1,13 +1,14 @@
 import type { MetadataRoute } from "next";
-import { getDeals, lastChecked } from "@/lib/deals";
+import { getActiveProducts, getCollectionPicks, getDeals, lastChecked } from "@/lib/deals";
 import { SITE } from "@/lib/site";
 import { DEPARTMENTS } from "@/lib/taxonomy";
 import { GUIDES } from "@/data/guides";
+import { COLLECTIONS, buildCollection } from "@/data/collections";
 
 export const dynamic = "force-static";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const deals = await getDeals();
+  const [deals, products, picks] = await Promise.all([getDeals(), getActiveProducts(), getCollectionPicks()]);
   // Cache Components disallows reading the clock during prerender; use the data's own timestamp.
   const now = lastChecked(deals) || undefined;
   const pages: MetadataRoute.Sitemap = [
@@ -15,6 +16,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE.url}/deals`, lastModified: now, changeFrequency: "hourly", priority: 0.9 },
     { url: `${SITE.url}/black-friday`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE.url}/guides`, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${SITE.url}/collections`, lastModified: now, changeFrequency: "daily", priority: 0.7 },
+    ...COLLECTIONS.filter((col) => {
+      const r = buildCollection(col, products, picks[col.slug] ?? []);
+      return r.picks.length + r.sections.length > 0; // empty collections are noindex
+    }).map((col) => ({
+      url: `${SITE.url}/collections/${col.slug}`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+    })),
     ...GUIDES.map((g) => ({
       url: `${SITE.url}/guides/${g.slug}`,
       lastModified: now,
@@ -37,7 +48,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]);
   return pages.concat(
     categories,
-    deals.map((d) => ({
+    products.map((d) => ({
       url: `${SITE.url}/deals/${d.slug}`,
       lastModified: d.checkedAt || now,
       changeFrequency: "daily" as const,

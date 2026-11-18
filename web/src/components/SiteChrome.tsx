@@ -13,6 +13,7 @@ export function Header() {
         </Link>
         <nav className={s.nav} aria-label="Main">
           <Link href="/deals">All deals</Link>
+          <Link href="/collections">Collections</Link>
           <Link href="/guides">Guides</Link>
           <Link href="/about">About</Link>
           <a href={SITE.xUrl} target="_blank" rel="noopener">
@@ -34,6 +35,7 @@ export function Footer() {
         </div>
         <nav className={s.footerNav} aria-label="Footer">
           <Link href="/deals">All deals</Link>
+          <Link href="/collections">Collections</Link>
           <Link href="/guides">Buying guides</Link>
           <Link href="/black-friday">Black Friday deals</Link>
           <Link href="/about">About</Link>

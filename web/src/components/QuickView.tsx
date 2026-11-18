@@ -56,7 +56,7 @@ export function QuickView({ deal, onClose }: { deal: Deal | null; onClose: () =>
             ×
           </button>
           <div className={s.qvMedia}>
-            <span className={s.badge}>-{deal.discountPct}%</span>
+            {deal.discountPct > 0 && <span className={s.badge}>-{deal.discountPct}%</span>}
             <img src={deal.imageUrl} alt={deal.shortTitle} width={420} height={420} />
           </div>
           <div className={s.qvInfo}>
@@ -64,12 +64,12 @@ export function QuickView({ deal, onClose }: { deal: Deal | null; onClose: () =>
             <h2>{deal.shortTitle}</h2>
             <p className={s.qvPrice}>
               {money(price, deal.currency)}
-              <s>{money(deal.originalPrice, deal.currency)}</s>
+              {deal.discountPct > 0 && <s>{money(deal.originalPrice, deal.currency)}</s>}
             </p>
-            <p className={s.save}>You save {money(deal.savings, deal.currency)}</p>
+            {deal.discountPct > 0 && <p className={s.save}>You save {money(deal.savings, deal.currency)}</p>}
             {/* No affiliate link inside the overlay: Amazon bans Special Links in pop-ups and layers. */}
             <Link className={s.buy} href={`/deals/${deal.slug}`}>
-              See deal details
+              See details
             </Link>
           </div>
         </div>

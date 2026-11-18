@@ -9,6 +9,7 @@ import { PRICE_DISCLAIMER, SITE } from "@/lib/site";
 import { getCategory, getDepartment } from "@/lib/taxonomy";
 import { introFor } from "@/data/intros";
 import { guidesFor } from "@/data/guides";
+import { collectionsFor } from "@/data/collections";
 import c from "@/components/content.module.css";
 import s from "@/app/page.module.css";
 
@@ -28,6 +29,7 @@ export async function CategoryView({ department, category }: { department: strin
   const checked = lastChecked(deals);
   const intro = introFor(department, category);
   const guides = guidesFor(department, category);
+  const cols = collectionsFor(department, category).slice(0, 4);
 
   return (
     <main>
@@ -79,11 +81,16 @@ export async function CategoryView({ department, category }: { department: strin
           ))}
         </section>
       )}
-      {guides.length > 0 && (
+      {(guides.length > 0 || cols.length > 0) && (
         <p className={c.guideLinks}>
           {guides.map((g) => (
             <Link key={g.slug} href={`/guides/${g.slug}`}>
               📖 {g.h1}
+            </Link>
+          ))}
+          {cols.map((col) => (
+            <Link key={col.slug} href={`/collections/${col.slug}`}>
+              🧺 {col.h1}
             </Link>
           ))}
         </p>

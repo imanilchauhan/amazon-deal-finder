@@ -17,7 +17,7 @@ export function DealCard({ deal, priority = false, index = 0, onQuickView }: Pro
   return (
     <article className={s.card} style={{ ["--i" as string]: Math.min(index, 11) }}>
       <Link href={`/deals/${deal.slug}`} className={s.cardMedia} aria-label={deal.shortTitle}>
-        <span className={s.badge}>-{deal.discountPct}%</span>
+        {deal.discountPct > 0 && <span className={s.badge}>-{deal.discountPct}%</span>}
         <img
           src={deal.imageUrl}
           alt={deal.shortTitle}
@@ -39,9 +39,13 @@ export function DealCard({ deal, priority = false, index = 0, onQuickView }: Pro
         </h3>
         <p className={s.priceRow}>
           <span className={s.price}>{money(deal.price, deal.currency)}</span>
-          <s className={s.mrp}>{money(deal.originalPrice, deal.currency)}</s>
+          {deal.discountPct > 0 && <s className={s.mrp}>{money(deal.originalPrice, deal.currency)}</s>}
         </p>
-        <p className={s.save}>You save {money(deal.savings, deal.currency)}</p>
+        {deal.discountPct > 0 ? (
+          <p className={s.save}>You save {money(deal.savings, deal.currency)}</p>
+        ) : (
+          <p className={s.save}>Our pick</p>
+        )}
         <a
           className={s.buy}
           href={deal.url}

@@ -5,13 +5,13 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { DealGrid } from "@/components/DealGrid";
 import { JsonLd } from "@/components/SiteChrome";
-import { getDeal, getDeals, getEndedDeals, similarDeals, type Deal } from "@/lib/deals";
+import { getActiveProducts, getDeal, getEndedDeals, similarDeals, type Deal } from "@/lib/deals";
 import { asinFromSlug, istDateTime, money } from "@/lib/format";
 import { AMAZON_DISCLOSURE, PRICE_DISCLAIMER, SITE } from "@/lib/site";
 import s from "./deal.module.css";
 
 export async function generateStaticParams() {
-  const [live, ended] = await Promise.all([getDeals(), getEndedDeals()]);
+  const [live, ended] = await Promise.all([getActiveProducts(), getEndedDeals()]);
   return [...live, ...ended].map((d) => ({ slug: d.slug }));
 }
 
@@ -33,8 +33,13 @@ export async function generateMetadata({ params }: PageProps<"/deals/[slug]">): 
       robots: { index: false, follow: true },
     };
   }
-  const title = `${deal.shortTitle} at ${money(deal.price, deal.currency)} (${deal.discountPct}% off)`;
-  const description = `${deal.shortTitle} is ${deal.discountPct}% off on Amazon: ${money(deal.price, deal.currency)} instead of ${money(
+  const onSale = deal.discountPct > 0;
+  const title = onSale
+    ? `${deal.shortTitle} at ${money(deal.price, deal.currency)} (${deal.discountPct}% off)`
+    : `${deal.shortTitle} – ${money(deal.price, deal.currency)} on Amazon`;
+  const description = !onSale
+    ? `${deal.shortTitle} is one of our picks on Amazon India at ${money(deal.price, deal.currency)}. Price checked ${istDateTime(deal.checkedAt)}.`
+    : `${deal.shortTitle} is ${deal.discountPct}% off on Amazon: ${money(deal.price, deal.currency)} instead of ${money(
     deal.originalPrice,
     deal.currency,
   )}. You save ${money(deal.savings, deal.currency)}. Price checked ${istDateTime(deal.checkedAt)}.`;
@@ -95,7 +100,7 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
 
       <div className={s.layout}>
         <div className={s.media}>
-          {deal.active && <span className={s.badge}>-{deal.discountPct}%</span>}
+          {deal.active && deal.discountPct > 0 && <span className={s.badge}>-{deal.discountPct}%</span>}
           <img src={deal.imageUrl} alt={deal.shortTitle} width={600} height={600} />
         </div>
 
@@ -106,12 +111,16 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
           {deal.active && (
           <div className={s.priceBox}>
             <span className={s.price}>{money(deal.price, deal.currency)}</span>
-            <span className={s.was}>
-              Regular price <s>{money(deal.originalPrice, deal.currency)}</s>
-            </span>
-            <span className={s.save}>
-              You save {money(deal.savings, deal.currency)} ({deal.discountPct}% off)
-            </span>
+            {deal.discountPct > 0 && (
+              <>
+                <span className={s.was}>
+                  Regular price <s>{money(deal.originalPrice, deal.currency)}</s>
+                </span>
+                <span className={s.save}>
+                  You save {money(deal.savings, deal.currency)} ({deal.discountPct}% off)
+                </span>
+              </>
+            )}
             <p className={s.asOf}>Price checked {istDateTime(deal.checkedAt)}</p>
           </div>
           )}
