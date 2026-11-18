@@ -102,8 +102,31 @@ def pick_deal(docs: list[dict], platforms: list[str], now: datetime,
     return None
 
 
+def post_collection(posters: dict[str, object], slot: datetime, *, live=None, site_url: str | None = None,
+                    dry_run: bool = False) -> list[dict]:
+    """Share this week's collection on X and Facebook in `slot`. Returns the posts made
+    (empty when no collection page has products, so the slot falls back to a deal)."""
+    from . import collections as col
+
+    live = live or col.is_live
+    targets = {p: posters[p] for p in ("x", "facebook") if p in posters and hasattr(posters[p], "post_text")}
+    if not targets:
+        return []
+    for slug, name, pitch in col.rotation(slot):
+        url = col.collection_url(slug, site_url or col.SITE_URL)
+        if not live(url):
+            continue
+        out = []
+        for platform, poster in targets.items():
+            text = col.build_collection_post(name, pitch, url, platform)
+            post_id = None if dry_run else poster.post_text(text, due_at=slot)
+            out.append({"slot": slot_key(slot), "asin": f"collection:{slug}", "platform": platform, "id": post_id})
+        return out
+    return []
+
+
 def run_once(store: DealStore, posters: dict[str, object], now: datetime, dry_run: bool = False,
-             slots: list[datetime] | None = None) -> QueueResult:
+             slots: list[datetime] | None = None, collections: bool = False, live=None) -> QueueResult:
     """Fill every free upcoming slot with its own deal, scheduled in Buffer for that time.
 
     Booked slots live in Firestore, so a second trigger in the same window posts nothing,
@@ -121,7 +144,19 @@ def run_once(store: DealStore, posters: dict[str, object], now: datetime, dry_ru
     docs = store.post_candidates()
     picked_asins: set[str] = set()
     picked_titles: list[str] = []
+    from .collections import is_collection_slot
+
     for slot in free:
+        if collections and is_collection_slot(slot):
+            try:
+                made = post_collection(posters, slot, live=live, site_url=_str("SITE_URL") or None, dry_run=dry_run)
+            except Exception as exc:  # noqa: BLE001 - fall back to a normal deal for this slot
+                log.error("collection post failed at %s: %s", slot_key(slot), exc)
+                made = []
+            if made:
+                out.posts.extend(made)
+                booked.add(slot_key(slot))
+                continue
         picked = pick_deal(docs, list(posters), now, skip=picked_asins, extra_titles=picked_titles)
         if picked is None:
             log.info("queue empty: no fresh deal for %s", slot_key(slot))
@@ -227,7 +262,8 @@ def main() -> int:
                 return 2
             result = run_test(store, test_platform, posters[test_platform], datetime.now(timezone.utc))
         else:
-            result = run_once(store, posters, datetime.now(timezone.utc), dry_run=_bool("DRY_RUN"))
+            result = run_once(store, posters, datetime.now(timezone.utc), dry_run=_bool("DRY_RUN"),
+                              collections=_bool("COLLECTION_POSTS", True))
     except StoreError as exc:
         log.error("%s", exc)
         return 3

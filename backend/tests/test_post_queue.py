@@ -183,3 +183,49 @@ def test_full_price_products_are_never_posted():
     x = Poster("x")
     run_once(store, {"x": x}, MORNING)
     assert x.sent == []
+
+
+class TextPoster(Poster):
+    def __init__(self, pid):
+        super().__init__(pid)
+        self.texts = []
+
+    def post_text(self, text, due_at=None):
+        self.texts.append((text, due_at))
+        return f"{self.pid}-c{len(self.texts)}"
+
+
+def test_sunday_7pm_slot_shares_a_collection_on_x_and_facebook():
+    from deal_finder.collections import is_collection_slot
+
+    sunday = datetime(2026, 11, 22, 13, 30, tzinfo=timezone.utc)  # 7 PM IST, Sunday
+    assert is_collection_slot(sunday)
+    store = Store([doc(d, now=sunday) for d in deals(3)])
+    x, fb, ig = TextPoster("x"), TextPoster("fb"), Poster("ig")
+    seen = []
+    res = run_once(store, {"x": x, "facebook": fb, "instagram": ig}, sunday - timedelta(hours=1),
+                   slots=[sunday], collections=True, live=lambda url: seen.append(url) or "winter" in url)
+    assert len(x.texts) == 1 and len(fb.texts) == 1 and ig.sent == []
+    assert "Collection of the week" in x.texts[0][0] and "#ad" in x.texts[0][0]
+    assert "As an Amazon Associate" in fb.texts[0][0]
+    assert all(p["asin"].startswith("collection:") for p in res.posts)
+    assert "winter" in seen[-1]
+
+
+def test_collection_slot_falls_back_to_a_deal_when_nothing_is_live():
+    sunday = datetime(2026, 11, 22, 13, 30, tzinfo=timezone.utc)
+    store = Store([doc(d, now=sunday) for d in deals(2)])
+    x = TextPoster("x")
+    run_once(store, {"x": x}, sunday - timedelta(hours=1), slots=[sunday], collections=True, live=lambda url: False)
+    assert x.texts == [] and len(x.sent) == 1
+
+
+def test_collection_slugs_match_the_website():
+    from pathlib import Path
+
+    from deal_finder.collections import COLLECTIONS, web_slugs
+
+    ts = Path(__file__).resolve().parents[2] / "web" / "src" / "data" / "collections.ts"
+    if not ts.exists():
+        return
+    assert sorted(s for s, _, _ in COLLECTIONS) == sorted(web_slugs(ts.read_text()))

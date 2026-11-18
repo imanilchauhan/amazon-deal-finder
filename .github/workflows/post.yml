@@ -62,4 +62,6 @@ jobs:
           BUFFER_IG_CHANNEL_ID: ${{ vars.BUFFER_IG_CHANNEL_ID }}
           CARDS_BASE_URL: ${{ vars.CARDS_BASE_URL }}
           CARDS_UPLOAD_SECRET: ${{ secrets.CARDS_UPLOAD_SECRET }}
+          COLLECTION_POSTS: ${{ vars.COLLECTION_POSTS || 'true' }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://cartcrush.pages.dev' }}
         run: python -m deal_finder.post_queue
