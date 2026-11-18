@@ -12,3 +12,6 @@ app/.dart_tool/
 app/build/
 app/.flutter-plugins*
 app/lib/firebase_options.dart.bak
+.venv/
+backend/.venv/
+*.log
