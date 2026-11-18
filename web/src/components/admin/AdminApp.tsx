@@ -32,6 +32,7 @@ import { DEPARTMENTS, getDepartment } from "@/lib/taxonomy";
 import { affiliateUrl, parseAsin } from "@/lib/xshare";
 import { ShareKit } from "./ShareKit";
 import { WhatsAppDigest } from "./WhatsAppDigest";
+import { CollectionsAdmin } from "./CollectionsAdmin";
 import s from "./admin.module.css";
 
 const OWNER = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || "imanilchauhan3@gmail.com").toLowerCase();
@@ -44,7 +45,7 @@ function useAuth() {
 
 export function AdminApp() {
   const user = useAuth();
-  const [tab, setTab] = useState<"add" | "library">("add");
+  const [tab, setTab] = useState<"add" | "library" | "collections">("add");
   const [loginError, setLoginError] = useState("");
 
   if (user === undefined) return <p className={s.muted}>Loading…</p>;
@@ -96,12 +97,17 @@ export function AdminApp() {
           <button role="tab" aria-selected={tab === "library"} onClick={() => setTab("library")}>
             Library
           </button>
+          <button role="tab" aria-selected={tab === "collections"} onClick={() => setTab("collections")}>
+            Collections
+          </button>
         </div>
         <button type="button" className={s.linkBtn} onClick={() => signOut(getAuth(firebaseApp()))}>
           Sign out
         </button>
       </header>
-      {tab === "add" ? <AddProduct onSaved={() => setTab("library")} /> : <Library />}
+      {tab === "add" && <AddProduct onSaved={() => setTab("library")} />}
+      {tab === "library" && <Library />}
+      {tab === "collections" && <CollectionsAdmin />}
     </div>
   );
 }
