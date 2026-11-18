@@ -29,7 +29,7 @@ DEAL_SCHEMA: dict = {
         "title": {"type": "string", "minLength": 3, "maxLength": 300},
         "price": {"type": "number", "exclusiveMinimum": 0},
         "original_price": {"type": "number", "exclusiveMinimum": 0},
-        "discount_pct": {"type": "integer", "minimum": 1, "maximum": 95},
+        "discount_pct": {"type": "integer", "minimum": 0, "maximum": 95},
         "currency": {"type": "string", "enum": ["INR", "USD"]},
         "image_url": {"type": "string", "pattern": "^https://"},
         "url": {
@@ -77,8 +77,12 @@ def schema_errors(payload: dict) -> list[str]:
     ]
     if errors:
         return errors
-    if payload["price"] >= payload["original_price"]:
-        errors.append("price must be lower than original_price")
+    if payload["price"] > payload["original_price"]:
+        errors.append("price must not be above original_price")
+    elif payload["price"] == payload["original_price"]:
+        # Full-price products are allowed (collections), but then there is no discount to claim.
+        if payload["discount_pct"] != 0:
+            errors.append("discount_pct must be 0 when price equals original_price")
     else:
         expected = compute_discount_pct(payload["price"], payload["original_price"])
         if abs(expected - payload["discount_pct"]) > 1:

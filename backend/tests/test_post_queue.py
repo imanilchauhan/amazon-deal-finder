@@ -175,3 +175,11 @@ def test_run_test_posts_one_deal_to_one_channel_soon():
     assert len(ig.sent) == 1 and ig.sent[0][1] == MORNING + timedelta(minutes=10)
     assert store.marked == [(ig.sent[0][0], "instagram", "ig-1")]
     assert store.saved is None  # slot plan untouched
+
+
+def test_full_price_products_are_never_posted():
+    full = make_deal("B0FULL0001", title="Woodland Mens Leather Boots", price=2999, original=2999)
+    store = Store([doc(full)])
+    x = Poster("x")
+    run_once(store, {"x": x}, MORNING)
+    assert x.sent == []

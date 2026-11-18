@@ -127,3 +127,12 @@ def test_interleave_is_round_robin_unique_and_capped():
     out = interleave([["A", "B", "C"], ["D", "A", "E"], ["F"]], 6)
     assert out == ["A", "D", "F", "B", "C", "E"]
     assert interleave([["A", "B"], ["C", "D"]], 3) == ["A", "C", "B"]
+
+
+def test_full_price_product_kept_only_for_collection_picks():
+    raw = {**RAW, "mrp_text": None, "savings_text": None}
+    assert normalize_product(raw, asin="B07PR1CL3S", **KW) is None  # normal scrape: no discount, skip
+    kw = {**KW, "min_discount_pct": 0}
+    deal = normalize_product(raw, asin="B07PR1CL3S", **kw)
+    assert (deal.price, deal.original_price, deal.discount_pct) == (1299.0, 1299.0, 0)
+    assert schema_errors(deal.to_dict()) == []

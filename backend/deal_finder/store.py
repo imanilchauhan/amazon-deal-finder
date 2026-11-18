@@ -77,7 +77,7 @@ def needs_post(doc: dict, platform: str, now: datetime) -> bool:
 # Amazon Associates: prices may be shown for at most 24 hours without a refresh, so curated
 # products follow the same rule as everything else. Trending products are refreshed each run.
 MANUAL_MAX_AGE_HOURS = 24
-CURATED_SOURCES = {"manual", "trending"}
+CURATED_SOURCES = {"manual", "trending", "collection"}
 
 
 class DealStore:
@@ -161,6 +161,59 @@ class DealStore:
             raise StoreError(f"Firestore read failed: {exc}") from exc
         stale = [(d.get("updated_at"), a) for a, d in docs if d.get("active") and d.get("updated_at") and d["updated_at"] < cutoff]
         return [a for _, a in sorted(stale)[:limit]]
+
+    # ---- collections (hand-picked products) ---------------------------------
+    def collection_picks(self) -> dict[str, list[str]]:
+        """{collection slug: [ASIN, ...]} from collections/{slug}.asins (edited in the admin)."""
+        try:
+            snaps = list(self._db.collection("collections").stream())
+        except Exception as exc:  # noqa: BLE001
+            raise StoreError(f"Firestore read failed: {exc}") from exc
+        out: dict[str, list[str]] = {}
+        for s in snaps:
+            asins = [a for a in ((s.to_dict() or {}).get("asins") or []) if isinstance(a, str)]
+            if asins:
+                out[s.id] = asins
+        return out
+
+    def collection_asins_to_refresh(self, limit: int, older_than_hours: int = 16) -> list[str]:
+        """Hand-picked products never checked, or whose price is the oldest, so each run
+        refreshes a few and every pick keeps a price under 24 hours old."""
+        if limit <= 0:
+            return []
+        asins = list(dict.fromkeys(a for picks in self.collection_picks().values() for a in picks))
+        if not asins:
+            return []
+        coll = self._db.collection("deals")
+        try:
+            snaps = {s.id: s for s in self._db.get_all([coll.document(a) for a in asins])}
+        except Exception as exc:  # noqa: BLE001
+            raise StoreError(f"Firestore read failed: {exc}") from exc
+        cutoff = self._now() - timedelta(hours=older_than_hours)
+        never, stale = [], []
+        for a in asins:
+            snap = snaps.get(a)
+            data = (snap.to_dict() or {}) if snap is not None and snap.exists else {}
+            updated = data.get("updated_at")
+            if updated is None or not data.get("active"):
+                never.append(a)
+            elif updated < cutoff:
+                stale.append((updated, a))
+        return (never + [a for _, a in sorted(stale)])[:limit]
+
+    def mark_collection_picks(self, asins) -> int:
+        """Tag refreshed picks so they are re-checked as collection items (kept at full price)."""
+        asins = list(asins)
+        if not asins:
+            return 0
+        batch = self._db.batch()
+        for a in asins:
+            batch.set(self._db.collection("deals").document(a), {"collection_pick": True}, merge=True)
+        try:
+            batch.commit()
+        except Exception as exc:  # noqa: BLE001
+            raise StoreError(f"Firestore write failed: {exc}") from exc
+        return len(asins)
 
     def deactivate_stale(self, max_age_hours: int) -> int:
         """Hide deals not seen recently (Amazon prices shouldn't be shown when >24h old)."""

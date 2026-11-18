@@ -94,8 +94,8 @@ def pick_deal(docs: list[dict], platforms: list[str], now: datetime,
         if not any(needs_post(doc, p, now) for p in platforms):
             continue
         deal = doc_to_deal(doc)
-        if deal is None:
-            continue
+        if deal is None or deal.discount_pct < 1:
+            continue  # full-price collection products are never posted as deals
         if any(t != deal.title and is_near_duplicate(deal.title, t) for t in recent):
             continue
         return deal, doc

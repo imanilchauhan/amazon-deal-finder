@@ -78,6 +78,11 @@ def run(cfg: Config, deps: Deps) -> RunSummary:
         deps.store.mark_trending([a for a in cfg.asins if a in saved])
         s.extra["trending_saved"] = len(saved & set(cfg.asins))
         s.extra["trending_skipped"] = [a for a in cfg.asins if a not in saved]
+    picks = set(getattr(deps.scrape, "picks", []) or [])
+    if picks:
+        found = [d.asin for d in valid if d.asin in picks]
+        deps.store.mark_collection_picks(found)
+        s.extra["collection_picks_saved"] = len(found)
     s.new = sum(r.status == "new" for r in results)
     s.updated = sum(r.status == "updated" for r in results)
     s.deactivated = deps.store.deactivate_stale(cfg.stale_after_hours)
@@ -190,7 +195,13 @@ def build_deps(cfg: Config) -> Deps:
         refresh = store.trending_to_refresh(cfg.trending_refresh_per_run) if store else []
         if refresh:
             log.info("re-checking %d trending products", len(refresh))
-        return base_scrape(extra_asins=refresh)
+        picks = store.collection_asins_to_refresh(cfg.collection_refresh_per_run) if store else []
+        if picks:
+            log.info("checking %d hand-picked collection products", len(picks))
+        scrape.picks = picks
+        return base_scrape(extra_asins=refresh, full_price_asins=picks)
+
+    scrape.picks = []
     x = meta = None
     if cfg.x.enabled and not cfg.dry_run:
         if cfg.x.publisher == "buffer":

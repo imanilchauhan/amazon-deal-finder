@@ -175,8 +175,10 @@ def normalize_product(
             original = round(price / (1 - pct / 100), 2)
 
     if original is None or original <= price:
-        log.info("skip %s: no discount", asin)
-        return None
+        if min_discount_pct > 0:
+            log.info("skip %s: no discount", asin)
+            return None
+        original = price  # collection pick at full price: shown without a discount
 
     discount = compute_discount_pct(price, original)
     if discount < min_discount_pct:
@@ -217,13 +219,16 @@ def scrape_deals(
     headless: bool = True,
     asins: list[str] | None = None,
     extra_asins: list[str] | None = None,
+    full_price_asins: list[str] | None = None,
 ) -> list[Deal]:
     """Launch headless Chromium, collect deal ASINs, extract product details.
 
     `asins`: scrape exactly these products and skip discovery (the trending list).
     `extra_asins`: products to re-check first on a normal run (stale trending items).
     Both accept any real discount (>= 1%): they were chosen because they sell, not
-    because of the size of the drop."""
+    because of the size of the drop.
+    `full_price_asins`: hand-picked collection products, re-checked first and kept even
+    at full price (no discount required)."""
     from playwright.sync_api import Error as PlaywrightError
     from playwright.sync_api import TimeoutError as PlaywrightTimeout
     from playwright.sync_api import sync_playwright
@@ -270,7 +275,8 @@ def scrape_deals(
                 per_source.append(collect_asins(page.evaluate(COLLECT_LINKS_JS), 1000))
                 if not url.endswith("/deals"):
                     _polite_pause()
-            pinned = explicit or list(extra_asins or [])
+            full_price = [a for a in (full_price_asins or []) if a not in explicit]
+            pinned = explicit or list(dict.fromkeys(full_price + list(extra_asins or [])))
             discovered = [a for a in interleave(per_source, wanted) if a not in pinned]
             queue = pinned + discovered
             log.info("collected %d candidate ASINs (%d pinned)", len(queue), len(pinned))
@@ -300,7 +306,7 @@ def scrape_deals(
                     domain=domain,
                     currency=currency,
                     tag=tag,
-                    min_discount_pct=1 if asin in pinned else min_discount_pct,
+                    min_discount_pct=0 if asin in full_price else (1 if asin in pinned else min_discount_pct),
                 )
                 if deal:
                     deals.append(deal)

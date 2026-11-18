@@ -148,3 +148,20 @@ def test_trending_products_are_tagged_and_refreshed_oldest_first(store, fake_db,
     clock["now"] = NOW + timedelta(hours=30)               # 30 h without a refresh: both go
     assert store.deactivate_stale(24) == 2
 
+
+
+def test_collection_picks_refresh_never_checked_first_then_oldest(store, fake_db, clock):
+    fake_db.data["collections"] = {
+        "winter-essentials": {"asins": ["B0AAAAAAAA", "B0TESTASIN"]},
+        "gifts-for-her": {"asins": ["B0TESTASIN", "B0BBBBBBBB"]},
+        "empty": {"asins": []},
+    }
+    store.upsert_deals([make_deal()])                       # B0TESTASIN checked at NOW
+    assert store.collection_picks() == {"winter-essentials": ["B0AAAAAAAA", "B0TESTASIN"],
+                                        "gifts-for-her": ["B0TESTASIN", "B0BBBBBBBB"]}
+    assert store.collection_asins_to_refresh(10) == ["B0AAAAAAAA", "B0BBBBBBBB"]  # fresh one skipped
+    clock["now"] = NOW + timedelta(hours=17)
+    assert store.collection_asins_to_refresh(10) == ["B0AAAAAAAA", "B0BBBBBBBB", "B0TESTASIN"]
+    assert store.collection_asins_to_refresh(1) == ["B0AAAAAAAA"]
+    assert store.mark_collection_picks(["B0TESTASIN"]) == 1
+    assert fake_db.data["deals"]["B0TESTASIN"]["collection_pick"] is True

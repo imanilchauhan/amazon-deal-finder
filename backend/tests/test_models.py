@@ -97,8 +97,14 @@ def test_invalid_payloads_rejected(mutate, fragment):
 
 def test_cross_field_rules():
     p = make_deal().to_dict()
+    p["price"] = p["original_price"] + 1
+    assert "price must not be above original_price" in schema_errors(p)
+
+    p = make_deal().to_dict()
     p["price"] = p["original_price"]
-    assert "price must be lower than original_price" in schema_errors(p)
+    assert "discount_pct must be 0 when price equals original_price" in schema_errors(p)
+    p["discount_pct"] = 0
+    assert schema_errors(p) == []  # full-price collection product
 
     p = make_deal().to_dict()
     p["discount_pct"] = 10

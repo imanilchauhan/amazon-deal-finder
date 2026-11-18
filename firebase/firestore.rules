@@ -20,6 +20,12 @@ service cloud.firestore {
       allow create, update, delete: if isOwner();
     }
 
+    // Collections: hand-picked ASINs per collection, edited by the owner in /admin.
+    match /collections/{slug} {
+      allow read: if true;
+      allow write: if isOwner();
+    }
+
     // Post-id -> deal link lookups for the comment-to-DM worker.
     // Single-document reads only, no listing/enumeration.
     match /ig_media/{mediaId} {

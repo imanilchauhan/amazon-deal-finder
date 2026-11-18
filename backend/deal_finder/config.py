@@ -82,6 +82,7 @@ class Config:
     # Explicit products to scrape (e.g. the trending list); when set, discovery is skipped.
     asins: tuple = ()
     trending_refresh_per_run: int = 15
+    collection_refresh_per_run: int = 20
     extra: dict = field(default_factory=dict)
 
     @property
@@ -197,6 +198,7 @@ def load_config() -> Config:
         stale_after_hours=_int("STALE_AFTER_HOURS", 24),
         asins=parse_asins(_str("ASINS")),
         trending_refresh_per_run=_int("TRENDING_REFRESH_PER_RUN", 15),
+        collection_refresh_per_run=_int("COLLECTION_REFRESH_PER_RUN", 20),
         dry_run=dry_run,
         firebase_credentials=creds,
         x=x,
