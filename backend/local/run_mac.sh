@@ -48,6 +48,8 @@ export MIN_DISCOUNT_PCT="${MIN_DISCOUNT_PCT:-20}"
 export X_ENABLED=false META_ENABLED=false DRY_RUN=false
 export OUT_DIR="$LOG_DIR/out"
 export PYTHONUNBUFFERED=1
+# gRPC's bundled DNS resolver fails on some Macs ("DNS query cancelled"); use the system one.
+export GRPC_DNS_RESOLVER=native
 
 if [[ ! -f "$GOOGLE_APPLICATION_CREDENTIALS" ]]; then
   log "ERROR: Firestore key not found at $GOOGLE_APPLICATION_CREDENTIALS"; exit 1
@@ -58,9 +60,16 @@ log "run start"
 "$BACKEND/.venv/bin/python" -m deal_finder >> "$LOG" 2>&1
 code=$?
 scraped=$("$BACKEND/.venv/bin/python" -c 'import json,sys; print(json.load(open(sys.argv[1])).get("scraped", 0))' "$OUT_DIR/summary.json" 2>/dev/null || echo 0)
-if (( code != 0 )) || (( scraped == 0 )); then
+# Pause only when Amazon blocked us (the run worked but scraped nothing, or the log shows a
+# robot check). Other failures (network, Firestore) just retry on the next 15-minute run.
+blocked=0
+if (( code == 0 && scraped == 0 )); then blocked=1; fi
+if tail -n 200 "$LOG" | grep -qiE "robot check|captcha"; then blocked=1; fi
+if (( blocked )); then
   print $(( now + 2 * 3600 )) > "$COOLDOWN"
-  log "run end: exit=$code scraped=$scraped -> pausing 2 hours (possible robot check)"
+  log "run end: exit=$code scraped=$scraped -> Amazon robot check, pausing 2 hours"
+elif (( code != 0 )); then
+  log "run end: exit=$code scraped=$scraped -> failed, will retry next run"
 else
   rm -f "$COOLDOWN"
   log "run end: exit=$code scraped=$scraped"
