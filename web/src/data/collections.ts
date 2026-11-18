@@ -177,7 +177,13 @@ export const COLLECTIONS: Collection[] = [
     ],
     maxPrice: 1000,
     sections: [
-      { heading: "Watches & wallets", rules: [{ department: "fashion", categories: ["watches", "accessories"], genders: ["men"] }, { department: "fashion", categories: ["accessories", "bags-luggage"], include: ["wallet", "belt"], genders: ["men"] }] },
+      {
+        heading: "Watches & wallets",
+        rules: [
+          { department: "fashion", categories: ["watches"], genders: ["men"] },
+          { department: "fashion", categories: ["accessories", "bags-luggage"], include: ["wallet", "belt", "cufflink", "sunglass", "card holder"], genders: ["men"] },
+        ],
+      },
       { heading: "Grooming", rules: [{ department: "beauty-personal-care", categories: ["grooming-shaving", "fragrance"] }, { department: "health-wellness", categories: ["personal-care-appliances"], include: ["trimmer", "shaver"] }] },
       { heading: "Gadgets", rules: [{ department: "electronics" }, { department: "mobiles-tablets", categories: ["mobile-accessories"] }] },
     ],
@@ -195,7 +201,13 @@ export const COLLECTIONS: Collection[] = [
     maxPrice: 1000,
     sections: [
       { heading: "Jewellery", rules: [{ department: "fashion", categories: ["jewellery"] }] },
-      { heading: "Handbags & accessories", rules: [{ department: "fashion", categories: ["bags-luggage", "accessories", "watches"], genders: ["women"] }, { department: "fashion", categories: ["bags-luggage"], include: ["handbag", "sling", "tote", "clutch", "purse"] }] },
+      {
+        heading: "Handbags & watches",
+        rules: [
+          { department: "fashion", categories: ["watches"], genders: ["women"] },
+          { department: "fashion", categories: ["bags-luggage", "accessories"], include: ["handbag", "sling", "tote", "clutch", "purse", "wallet"] },
+        ],
+      },
       { heading: "Beauty & skincare", rules: [{ department: "beauty-personal-care", categories: ["skincare", "makeup", "fragrance", "haircare"] }] },
     ],
   },
