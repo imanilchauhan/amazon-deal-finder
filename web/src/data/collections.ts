@@ -22,9 +22,21 @@ export type Rule = {
 
 export type Section = { heading: string; rules: Rule[] };
 
+export const COLLECTION_GROUPS = [
+  "Winter",
+  "Wedding season",
+  "Gifts",
+  "Everyday basics",
+  "Tech & gadgets",
+  "Home & living",
+  "Beauty & wellness",
+  "Kids & baby",
+  "Fitness & travel",
+] as const;
+
 export type Collection = {
   slug: string;
-  group: "Winter" | "Wedding season" | "Gifts" | "Everyday basics";
+  group: (typeof COLLECTION_GROUPS)[number];
   title: string;
   h1: string;
   description: string;
@@ -280,9 +292,273 @@ export const COLLECTIONS: Collection[] = [
       { heading: "Décor & lighting", rules: [{ department: "home-kitchen", categories: ["home-d-cor", "lighting"] }] },
     ],
   },
-];
 
-export const COLLECTION_GROUPS = ["Winter", "Wedding season", "Gifts", "Everyday basics"] as const;
+  // ---- Tech & gadgets ----------------------------------------------------------------
+  {
+    slug: "budget-gadgets-under-999",
+    group: "Tech & gadgets",
+    title: "Budget Gadgets Under ₹999 – Earbuds, Chargers, Speakers & More",
+    h1: "Budget gadgets under ₹999",
+    description: "Useful gadgets under ₹999 on Amazon India: earbuds, Bluetooth speakers, chargers, power banks, keyboards, mice and more.",
+    intro: [
+      "Under ₹999 you can get genuinely useful tech: budget wireless earbuds, a fast charger, a power bank, a small speaker or a wireless mouse. Stick to known brands for anything that charges a battery.",
+      "Check the warranty and whether the charger or cable is included, and read recent reviews for battery life claims.",
+    ],
+    maxPrice: 999,
+    sections: [
+      { heading: "Audio", rules: [{ department: "electronics", categories: ["headphones-earbuds", "speakers"] }] },
+      { heading: "Phone accessories", rules: [{ department: "mobiles-tablets", categories: ["mobile-accessories"] }] },
+      { heading: "Computer accessories", rules: [{ department: "computers-accessories", categories: ["keyboards-mice", "storage", "networking", "laptop-bags-cases", "other"] }] },
+      { heading: "Smartwatches & more", rules: [{ department: "electronics", categories: ["smartwatches-bands", "gaming", "other"] }] },
+    ],
+  },
+  {
+    slug: "mobile-accessories",
+    group: "Tech & gadgets",
+    title: "Mobile Accessories – Chargers, Cables, Power Banks & Covers",
+    h1: "Mobile accessories",
+    description: "Fast chargers, cables, power banks, phone covers and screen guards on Amazon India, picked and checked every few hours.",
+    intro: [
+      "A fast charger only charges fast if your phone supports the same standard, so check the wattage your phone accepts. For power banks, real capacity is lower than the label; 10,000 mAh gives roughly two phone charges.",
+      "Buy cables and chargers from known brands or Amazon-fulfilled listings; cheap fakes can damage batteries.",
+    ],
+    sections: [
+      { heading: "Chargers & cables", rules: [{ department: "mobiles-tablets", categories: ["mobile-accessories"], include: ["charger", "cable", "adapter", "charging"] }] },
+      { heading: "Power banks", rules: [{ department: "mobiles-tablets", categories: ["mobile-accessories"], include: ["power bank", "powerbank"] }] },
+      { heading: "Covers, stands & more", rules: [{ department: "mobiles-tablets", categories: ["mobile-accessories", "other"] }] },
+    ],
+  },
+  {
+    slug: "earbuds-and-headphones",
+    group: "Tech & gadgets",
+    title: "Earbuds & Headphones – Wireless, Noise Cancelling & Budget Picks",
+    h1: "Earbuds & headphones",
+    description: "Wireless earbuds, neckbands and over-ear headphones on Amazon India, from budget picks to noise cancelling.",
+    intro: [
+      "Compare earbuds by battery life with noise cancelling switched on, call quality and the warranty. Over-ear headphones are more comfortable for long listening; neckbands last longest on a charge.",
+      "If you game or watch videos, look for a low-latency mode.",
+    ],
+    sections: [
+      { heading: "Earbuds", rules: [{ department: "electronics", categories: ["headphones-earbuds"], include: ["earbud", "tws", "buds", "earphone"] }] },
+      { heading: "Headphones & neckbands", rules: [{ department: "electronics", categories: ["headphones-earbuds"] }] },
+    ],
+  },
+  {
+    slug: "smartwatches-and-fitness-bands",
+    group: "Tech & gadgets",
+    title: "Smartwatches & Fitness Bands – Calling, AMOLED & Budget Picks",
+    h1: "Smartwatches & fitness bands",
+    description: "Smartwatches with Bluetooth calling, AMOLED displays and fitness bands on Amazon India.",
+    intro: [
+      "Budget smartwatches differ most in display (AMOLED looks far better outdoors), battery life and how good the companion app is. Bluetooth calling is only useful if reviews rate the mic and speaker.",
+      "Health readings on budget watches are estimates, not medical measurements.",
+    ],
+    sections: [{ heading: "Smartwatches & bands", rules: [{ department: "electronics", categories: ["smartwatches-bands"] }] }],
+  },
+  {
+    slug: "work-from-home-setup",
+    group: "Tech & gadgets",
+    title: "Work From Home Setup – Chairs, Desks, Monitors, Keyboards & Lighting",
+    h1: "Work from home setup",
+    description: "Everything for a comfortable home office: office chairs, study tables, monitors, keyboards, mice, routers and desk lamps.",
+    intro: [
+      "Comfort first: a chair with lumbar support and adjustable height, and a monitor at eye level, matter more than any gadget. Then a keyboard and mouse you like, a reliable router and a desk lamp with neutral light.",
+      "For furniture, measure your space and check assembly details before ordering.",
+    ],
+    sections: [
+      { heading: "Chairs & desks", rules: [{ department: "home-kitchen", categories: ["furniture"], include: ["chair", "desk", "table"] }, { department: "office-stationery", categories: ["office-furniture"] }] },
+      { heading: "Monitors, keyboards & mice", rules: [{ department: "computers-accessories", categories: ["monitors", "keyboards-mice"] }] },
+      { heading: "Wi-Fi & storage", rules: [{ department: "computers-accessories", categories: ["networking", "storage"] }] },
+      { heading: "Desk lamps & lighting", rules: [{ department: "home-kitchen", categories: ["lighting"], include: ["lamp", "desk", "study"] }] },
+    ],
+  },
+  {
+    slug: "watches-for-men-and-women",
+    group: "Tech & gadgets",
+    title: "Watches for Men & Women – Analog, Digital & Chronograph",
+    h1: "Watches for men & women",
+    description: "Analog, digital and chronograph watches for men and women on Amazon India, picked and price-checked.",
+    intro: [
+      "For everyday wear, a quartz analog watch from a known brand with a stainless steel case is hard to beat. Check the water-resistance rating if you'll wear it while washing hands or swimming.",
+      "Strap width and case size matter for comfort; reviews with wrist photos help.",
+    ],
+    sections: [
+      { heading: "Men", rules: [{ department: "fashion", categories: ["watches"], genders: ["men"] }] },
+      { heading: "Women", rules: [{ department: "fashion", categories: ["watches"], genders: ["women"] }] },
+      { heading: "More watches", rules: [{ department: "fashion", categories: ["watches"] }] },
+    ],
+  },
+
+  // ---- Home & living ----------------------------------------------------------------
+  {
+    slug: "kitchen-appliances",
+    group: "Home & living",
+    title: "Kitchen Appliances – Mixer Grinders, Kettles, Air Fryers & More",
+    h1: "Kitchen appliances",
+    description: "Mixer grinders, electric kettles, air fryers, induction cooktops and other kitchen appliances on Amazon India.",
+    intro: [
+      "For Indian cooking the mixer grinder is the workhorse: 750 W with three jars suits most homes. Kettles, induction cooktops and air fryers save time; check the wattage and the warranty on the motor or heating element.",
+      "Read recent reviews for noise and after-sales service in your city.",
+    ],
+    sections: [{ heading: "Kitchen appliances", rules: [{ department: "home-kitchen", categories: ["kitchen-appliances"] }] }],
+  },
+  {
+    slug: "home-decor-and-lighting",
+    group: "Home & living",
+    title: "Home Décor & Lighting – Lights, Wall Décor, Curtains & More",
+    h1: "Home décor & lighting",
+    description: "String lights, lamps, wall décor, curtains, cushions and showpieces to refresh your home, on Amazon India.",
+    intro: [
+      "Small changes refresh a room most: warm lighting, new cushion covers or curtains, and one piece of wall décor. For string and LED lights, check the length, plug-in or battery power, and the warranty.",
+      "Look at customer photos for real colours; product photos are often edited.",
+    ],
+    sections: [
+      { heading: "Lighting", rules: [{ department: "home-kitchen", categories: ["lighting"] }] },
+      { heading: "Décor", rules: [{ department: "home-kitchen", categories: ["home-d-cor"] }] },
+    ],
+  },
+  {
+    slug: "storage-and-organisation",
+    group: "Home & living",
+    title: "Storage & Organisation – Containers, Organisers & Racks",
+    h1: "Storage & organisation",
+    description: "Airtight containers, wardrobe organisers, shoe racks and storage boxes on Amazon India.",
+    intro: [
+      "Airtight, BPA-free containers keep staples fresh, and stackable sets save shelf space. For wardrobes and shoe racks, measure first and check the material: metal and solid plastic last longer than fabric.",
+      "Sets look cheaper per piece, but only if you'll use every size.",
+    ],
+    sections: [
+      { heading: "Kitchen containers", rules: [{ department: "home-kitchen", categories: ["storage-containers"] }] },
+      { heading: "Racks & organisers", rules: [{ department: "home-kitchen", categories: ["furniture", "other"], include: ["rack", "organiser", "organizer", "storage", "shelf", "stand"] }] },
+    ],
+  },
+
+  // ---- Beauty & wellness --------------------------------------------------------------
+  {
+    slug: "skincare-essentials",
+    group: "Beauty & wellness",
+    title: "Skincare Essentials – Face Wash, Moisturiser, Sunscreen & Serums",
+    h1: "Skincare essentials",
+    description: "Cleansers, moisturisers, sunscreens and serums from trusted brands on Amazon India.",
+    intro: [
+      "A simple routine works for most skin: a gentle cleanser, a moisturiser and a broad-spectrum sunscreen every morning. Add one active ingredient at a time, and patch-test anything new.",
+      "Buy from the brand's store or Amazon-fulfilled listings, and check the expiry date in recent reviews.",
+    ],
+    sections: [{ heading: "Skincare", rules: [{ department: "beauty-personal-care", categories: ["skincare"] }] }],
+  },
+  {
+    slug: "grooming-for-men",
+    group: "Beauty & wellness",
+    title: "Men's Grooming – Trimmers, Shaving, Beard Care & Fragrances",
+    h1: "Grooming for men",
+    description: "Trimmers, shavers, beard care, face wash and perfumes for men on Amazon India.",
+    intro: [
+      "A good trimmer is the one grooming tool worth spending on: check battery runtime, the number of length settings and whether the blades are washable. Beard oils, face washes and deodorants are easy add-ons when prices drop.",
+      "For fragrances, Eau de Parfum lasts longer than Eau de Toilette.",
+    ],
+    sections: [
+      { heading: "Trimmers & shavers", rules: [{ department: "health-wellness", categories: ["personal-care-appliances"], include: ["trimmer", "shaver", "groom"] }, { department: "beauty-personal-care", categories: ["grooming-shaving"], include: ["trimmer", "shaver", "razor"] }] },
+      { heading: "Grooming & fragrance", rules: [{ department: "beauty-personal-care", categories: ["grooming-shaving", "fragrance"], genders: ["men"] }, { department: "beauty-personal-care", categories: ["grooming-shaving"] }] },
+    ],
+  },
+  {
+    slug: "haircare",
+    group: "Beauty & wellness",
+    title: "Haircare – Shampoos, Conditioners, Oils & Hair Dryers",
+    h1: "Haircare",
+    description: "Shampoos, conditioners, hair oils, serums, dryers and straighteners on Amazon India.",
+    intro: [
+      "Choose shampoo by scalp (oily or dry) and conditioner by hair length and texture. For heat tools, a dryer with a cool-shot setting and a straightener with adjustable temperature are kinder to hair.",
+      "Larger bottles and combo packs usually cost less per ml.",
+    ],
+    sections: [
+      { heading: "Shampoo, conditioner & oils", rules: [{ department: "beauty-personal-care", categories: ["haircare"] }] },
+      { heading: "Dryers & stylers", rules: [{ department: "health-wellness", categories: ["personal-care-appliances"], include: ["dryer", "straightener", "curler", "styler"] }] },
+    ],
+  },
+
+  // ---- Kids & baby ------------------------------------------------------------------
+  {
+    slug: "baby-care-essentials",
+    group: "Kids & baby",
+    title: "Baby Care Essentials – Diapers, Wipes, Feeding & Baby Gear",
+    h1: "Baby care essentials",
+    description: "Diapers, wipes, feeding bottles, baby skincare and baby gear on Amazon India, picked and price-checked.",
+    intro: [
+      "Most baby buys repeat, so stock up on the brand and size your baby already uses when the price is right. For anything that touches food or skin, check the material and expiry date.",
+      "For gear like strollers and carriers, check weight limits and how easy they are to fold.",
+    ],
+    sections: [
+      { heading: "Diapers & wipes", rules: [{ department: "baby", categories: ["diapering"] }] },
+      { heading: "Feeding & care", rules: [{ department: "baby", categories: ["feeding", "baby-care"] }] },
+      { heading: "Baby gear", rules: [{ department: "baby", categories: ["baby-gear", "other"] }] },
+    ],
+  },
+  {
+    slug: "school-and-stationery",
+    group: "Kids & baby",
+    title: "School & Stationery – Bags, Pens, Notebooks & Art Supplies",
+    h1: "School & stationery",
+    description: "School bags, pens, notebooks, art and craft supplies and desk organisers on Amazon India.",
+    intro: [
+      "Stationery is cheapest bought in packs: pens, notebooks and colours in bulk cost far less per piece. For school bags, check the capacity in litres, padded straps and whether it fits the child's height.",
+      "Art supplies labelled non-toxic are safer for younger children.",
+    ],
+    sections: [
+      { heading: "Stationery", rules: [{ department: "office-stationery", categories: ["stationery", "office-supplies"] }] },
+      { heading: "School bags", rules: [{ department: "fashion", categories: ["bags-luggage"], include: ["school", "kids", "backpack"] }] },
+    ],
+  },
+
+  // ---- Fitness & travel -------------------------------------------------------------
+  {
+    slug: "fitness-at-home",
+    group: "Fitness & travel",
+    title: "Fitness at Home – Dumbbells, Yoga Mats, Resistance Bands & More",
+    h1: "Fitness at home",
+    description: "Dumbbells, yoga mats, resistance bands, skipping ropes and home gym equipment on Amazon India.",
+    intro: [
+      "A home workout needs very little: a yoga mat, adjustable dumbbells or resistance bands, and a skipping rope. Choose a mat thick enough for your floor (6 mm is a good default) with a grippy surface.",
+      "For bigger equipment, check the dimensions and maximum user weight.",
+    ],
+    sections: [
+      { heading: "Gym equipment", rules: [{ department: "sports-fitness-outdoors", categories: ["gym-equipment"] }] },
+      { heading: "Yoga", rules: [{ department: "sports-fitness-outdoors", categories: ["yoga"] }] },
+      { heading: "Sports gear & cycling", rules: [{ department: "sports-fitness-outdoors", categories: ["sports-gear", "cycling", "other"] }] },
+    ],
+  },
+  {
+    slug: "travel-essentials",
+    group: "Fitness & travel",
+    title: "Travel Essentials – Trolley Bags, Backpacks, Power Banks & More",
+    h1: "Travel essentials",
+    description: "Trolley bags, backpacks, duffels, power banks, neck pillows and travel organisers on Amazon India.",
+    intro: [
+      "For flights, check your airline's cabin and check-in size limits before buying a trolley; four spinner wheels and a hard shell suit airports, a soft duffel suits road trips. A power bank and a cable organiser make any trip easier.",
+      "Luggage warranties vary a lot; good brands offer several years.",
+    ],
+    sections: [
+      { heading: "Luggage & backpacks", rules: [{ department: "fashion", categories: ["bags-luggage"], include: ["trolley", "luggage", "suitcase", "backpack", "duffel", "travel"] }] },
+      { heading: "Travel gadgets", rules: [{ department: "mobiles-tablets", categories: ["mobile-accessories"], include: ["power bank", "powerbank", "travel adapter"] }] },
+      { heading: "Camping & outdoors", rules: [{ department: "sports-fitness-outdoors", categories: ["camping"] }] },
+    ],
+  },
+  {
+    slug: "handbags-and-wallets",
+    group: "Fitness & travel",
+    title: "Handbags, Wallets & Sling Bags for Women and Men",
+    h1: "Handbags, wallets & sling bags",
+    description: "Handbags, totes, sling bags, clutches and wallets for women and men on Amazon India.",
+    intro: [
+      "A structured tote or a crossbody sling covers most daily needs. Check the inner pockets, strap length, and whether the material is real or vegan leather; customer photos show the true colour and size.",
+      "For wallets, RFID blocking is a useful extra if you carry contactless cards.",
+    ],
+    sections: [
+      { heading: "Handbags & slings", rules: [{ department: "fashion", categories: ["bags-luggage"], include: ["handbag", "tote", "sling", "clutch", "purse", "shoulder bag"] }] },
+      { heading: "Wallets", rules: [{ department: "fashion", categories: ["accessories", "bags-luggage"], include: ["wallet", "card holder"] }] },
+    ],
+  },
+];
 
 export function getCollection(slug: string): Collection | undefined {
   return COLLECTIONS.find((c) => c.slug === slug);

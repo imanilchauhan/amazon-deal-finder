@@ -1,23 +1,32 @@
 import Link from "next/link";
 import { CategoryNav } from "@/components/CategoryNav";
 import { DealGrid } from "@/components/DealGrid";
+import { DealRow } from "@/components/DealRow";
+import { COLLECTIONS, buildCollection } from "@/data/collections";
 import { JsonLd } from "@/components/SiteChrome";
-import { getDeals, lastChecked } from "@/lib/deals";
+import { getActiveProducts, getCollectionPicks, getDeals, lastChecked } from "@/lib/deals";
 import { istDateTime } from "@/lib/format";
 import { PRICE_DISCLAIMER, SITE } from "@/lib/site";
 import { DEPARTMENTS } from "@/lib/taxonomy";
 import s from "./page.module.css";
 
 export default async function Home() {
-  const deals = await getDeals();
+  const [deals, products, picks] = await Promise.all([getDeals(), getActiveProducts(), getCollectionPicks()]);
   const top = deals.slice(0, 12);
   const best = deals[0]?.discountPct ?? 0;
   const checked = lastChecked(deals);
   const counts: Record<string, number> = {};
   for (const d of deals) counts[d.department] = (counts[d.department] ?? 0) + 1;
-  const shelves = DEPARTMENTS.filter((d) => (counts[d.slug] ?? 0) >= 3)
-    .sort((a, b) => counts[b.slug] - counts[a.slug])
-    .slice(0, 4);
+  // Every department with live deals, busiest first, each with its own top deals.
+  const shelves = DEPARTMENTS.filter((d) => (counts[d.slug] ?? 0) > 0).sort((a, b) => counts[b.slug] - counts[a.slug]);
+  // Every collection with something live: its top deals first, then picks and sections.
+  const collectionRows = COLLECTIONS.map((col) => {
+    const r = buildCollection(col, products, picks[col.slug] ?? []);
+    const items = [...r.topDeals, ...r.picks, ...r.sections.flatMap((x) => x.items)].slice(0, 10);
+    return { col, items, hasDeals: r.topDeals.length > 0 };
+  })
+    .filter((x) => x.items.length > 0)
+    .sort((a, b) => Number(b.hasDeals) - Number(a.hasDeals));
 
   const itemList = {
     "@context": "https://schema.org",
@@ -70,16 +79,40 @@ export default async function Home() {
         <Link href="/deals">See all {deals.length} deals →</Link>
       </div>
       <DealGrid deals={top} showControls={false} />
+
+      {collectionRows.length > 0 && (
+        <div className={s.sectionHead}>
+          <h2>Collections</h2>
+          <Link href="/collections">All {COLLECTIONS.length} collections →</Link>
+        </div>
+      )}
+      {collectionRows.map(({ col, items }) => (
+        <DealRow
+          key={col.slug}
+          title={<>🧺 {col.h1}</>}
+          note={col.group}
+          href={`/collections/${col.slug}`}
+          linkLabel="See collection"
+          deals={items}
+        />
+      ))}
+
+      <div className={s.sectionHead}>
+        <h2>Top deals by category</h2>
+        <Link href="/deals">All {deals.length} deals →</Link>
+      </div>
       {shelves.map((dep) => (
-        <section key={dep.slug}>
-          <div className={s.sectionHead}>
-            <h2>
+        <DealRow
+          key={dep.slug}
+          title={
+            <>
               {dep.icon} {dep.name}
-            </h2>
-            <Link href={`/c/${dep.slug}`}>See all {counts[dep.slug]} →</Link>
-          </div>
-          <DealGrid deals={deals.filter((d) => d.department === dep.slug).slice(0, 4)} />
-        </section>
+            </>
+          }
+          href={`/c/${dep.slug}`}
+          linkLabel={`See all ${counts[dep.slug]}`}
+          deals={deals.filter((d) => d.department === dep.slug).slice(0, 10)}
+        />
       ))}
       <p className={s.note}>{PRICE_DISCLAIMER}</p>
 

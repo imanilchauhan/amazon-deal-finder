@@ -711,3 +711,52 @@
     transform: none;
   }
 }
+
+/* Home page shelves: one titled row per department or collection, scrolling sideways. */
+.rowSection {
+  margin: 28px 0 8px;
+}
+.rowHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.rowHead h2 {
+  font-size: clamp(20px, 2.6vw, 26px);
+  margin: 0;
+}
+.rowHead a {
+  color: var(--brand-deep);
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.rowNote {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(200px, 230px);
+  gap: 14px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+.rowItem {
+  scroll-snap-align: start;
+  display: grid;
+}
+@media (max-width: 520px) {
+  .row {
+    grid-auto-columns: 46vw;
+    gap: 10px;
+  }
+}

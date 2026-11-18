@@ -1,6 +1,10 @@
 import path from "node:path";
 import type { NextConfig } from "next";
 
+// One token per build, inherited by the static-generation workers, so they share a single
+// Firestore read of the catalogue (see src/lib/deals.ts loadCatalog).
+process.env.CARTCRUSH_BUILD_TOKEN ??= `${process.pid}-${Date.now()}`;
+
 const nextConfig: NextConfig = {
   /* config options here */
   // Pin the workspace root so a stray lockfile higher up the tree is not picked instead.

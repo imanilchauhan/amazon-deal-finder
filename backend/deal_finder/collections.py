@@ -29,6 +29,23 @@ COLLECTIONS: list[tuple[str, str, str]] = [
     ("kurta-sets-for-men", "Kurta sets for men", "wedding and festive ethnic wear"),
     ("shorts-and-track-pants", "Shorts & track pants", "for men, women, boys and girls"),
     ("gifts-for-kids-under-500", "Gifts for kids under ₹500", "toys, games and learning toys"),
+    ("budget-gadgets-under-999", "Budget gadgets under ₹999", "earbuds, chargers, speakers and more"),
+    ("kitchen-appliances", "Kitchen appliances", "mixer grinders, kettles and air fryers"),
+    ("skincare-essentials", "Skincare essentials", "cleansers, moisturisers and sunscreens"),
+    ("earbuds-and-headphones", "Earbuds & headphones", "wireless, noise cancelling and budget picks"),
+    ("home-decor-and-lighting", "Home décor & lighting", "lights, wall décor and cushions"),
+    ("fitness-at-home", "Fitness at home", "dumbbells, yoga mats and resistance bands"),
+    ("mobile-accessories", "Mobile accessories", "chargers, cables, power banks and covers"),
+    ("grooming-for-men", "Grooming for men", "trimmers, beard care and fragrances"),
+    ("baby-care-essentials", "Baby care essentials", "diapers, wipes, feeding and baby gear"),
+    ("work-from-home-setup", "Work from home setup", "chairs, monitors, keyboards and lamps"),
+    ("travel-essentials", "Travel essentials", "trolley bags, backpacks and power banks"),
+    ("smartwatches-and-fitness-bands", "Smartwatches & fitness bands", "calling, AMOLED and budget picks"),
+    ("haircare", "Haircare", "shampoos, oils, dryers and straighteners"),
+    ("storage-and-organisation", "Storage & organisation", "containers, organisers and racks"),
+    ("watches-for-men-and-women", "Watches for men & women", "analog, digital and chronograph"),
+    ("school-and-stationery", "School & stationery", "bags, pens, notebooks and art supplies"),
+    ("handbags-and-wallets", "Handbags & wallets", "totes, slings, clutches and wallets"),
 ]
 
 COLLECTION_WEEKDAY = 6   # Sunday

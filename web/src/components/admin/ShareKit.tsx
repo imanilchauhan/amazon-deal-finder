@@ -29,14 +29,20 @@ type Props = {
 };
 
 /**
- * Per-deal share actions. Each button prepares the post (caption copied, card made) and
- * opens the right place; the owner presses Post there, then ticks the platform here.
+ * Per-deal share actions. Each button prepares the post (caption copied, card made), opens
+ * the right place, and marks the deal as posted on that platform so it isn't posted twice.
+ * The chips below undo a mark if the post didn't go out.
  */
 export function ShareKit({ deal, onTogglePosted }: Props) {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const file = `cartcrush-${deal.asin}.jpg`;
   const share = { ...deal, brand: deal.brand };
+
+  /** Mark these platforms as posted (only the ones not marked yet). */
+  function markPosted(...ids: PlatformId[]) {
+    for (const id of ids) if (!deal.postedOn.includes(id)) onTogglePosted(id, true);
+  }
 
   async function copy(text: string, what: string) {
     try {
@@ -60,6 +66,7 @@ export function ShareKit({ deal, onTogglePosted }: Props) {
   }
 
   async function facebookAndInstagram() {
+    markPosted("facebook", "instagram");
     await copy(facebookText(share), "Facebook");
     const blob = await card();
     if (blob) downloadBlob(blob, file);
@@ -68,6 +75,7 @@ export function ShareKit({ deal, onTogglePosted }: Props) {
   }
 
   async function phoneShare() {
+    markPosted("instagram");
     await copy(instagramText(share), "Instagram");
     const blob = await card();
     if (!blob) return;
@@ -91,7 +99,13 @@ export function ShareKit({ deal, onTogglePosted }: Props) {
   return (
     <div className={s.shareKit}>
       <div className={s.actions}>
-        <a className={s.primary} href={xIntentUrl(buildPostText(deal))} target="_blank" rel="noopener">
+        <a
+          className={s.primary}
+          href={xIntentUrl(buildPostText(deal))}
+          target="_blank"
+          rel="noopener"
+          onClick={() => markPosted("x")}
+        >
           Post on X
         </a>
         <button type="button" className={s.secondary} disabled={busy} onClick={facebookAndInstagram}>
@@ -105,7 +119,10 @@ export function ShareKit({ deal, onTogglePosted }: Props) {
           href={whatsappUrl(whatsappText(share))}
           target="_blank"
           rel="noopener"
-          onClick={() => setNote("WhatsApp opened with the deal text. Pick your channel or a chat and send.")}
+          onClick={() => {
+            markPosted("whatsapp");
+            setNote("WhatsApp opened with the deal text. Pick your channel or a chat and send.");
+          }}
         >
           WhatsApp
         </a>
@@ -117,7 +134,7 @@ export function ShareKit({ deal, onTogglePosted }: Props) {
         </button>
       </div>
       <div className={s.postedRow} role="group" aria-label="Where this deal has been posted">
-        <span className={s.muted}>Posted on:</span>
+        <span className={s.muted}>Posted on (tap to undo):</span>
         {PLATFORMS.map((p) => {
           const on = deal.postedOn.includes(p.id);
           return (

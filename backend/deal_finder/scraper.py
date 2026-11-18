@@ -105,7 +105,10 @@ CATEGORY_SLUGS = [
     "beauty", "hpc", "apparel", "shoes", "kitchen", "home-improvement", "electronics", "jewelry",
     "grocery", "appliances", "watches", "luggage", "toys", "sports", "baby", "office", "computers",
     "furniture", "lawn-garden", "books", "automotive", "pet-supplies", "musical-instruments",
+    "videogames", "industrial",
 ]
+# Amazon list pages per category; new releases add products the best-seller lists don't show yet.
+LIST_KINDS = ("movers-and-shakers", "bestsellers", "new-releases")
 BULK_RUN_THRESHOLD = 30
 
 
@@ -126,7 +129,7 @@ def interleave(lists: list[list[str]], limit: int) -> list[str]:
 def source_urls(domain: str, max_products: int) -> list[str]:
     urls = [f"https://{domain}/deals"]
     if max_products > BULK_RUN_THRESHOLD:
-        for kind in ("movers-and-shakers", "bestsellers"):
+        for kind in LIST_KINDS:
             urls += [f"https://{domain}/gp/{kind}/{slug}" for slug in CATEGORY_SLUGS]
     return urls
 
