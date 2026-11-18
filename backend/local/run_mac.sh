@@ -57,14 +57,16 @@ fi
 
 cd "$BACKEND" || exit 1
 log "run start"
-"$BACKEND/.venv/bin/python" -m deal_finder >> "$LOG" 2>&1
+RUN_LOG="$LOG_DIR/last-run.log"
+"$BACKEND/.venv/bin/python" -m deal_finder > "$RUN_LOG" 2>&1
 code=$?
+cat "$RUN_LOG" >> "$LOG"
 scraped=$("$BACKEND/.venv/bin/python" -c 'import json,sys; print(json.load(open(sys.argv[1])).get("scraped", 0))' "$OUT_DIR/summary.json" 2>/dev/null || echo 0)
 # Pause only when Amazon blocked us (the run worked but scraped nothing, or the log shows a
 # robot check). Other failures (network, Firestore) just retry on the next 15-minute run.
 blocked=0
 if (( code == 0 && scraped == 0 )); then blocked=1; fi
-if tail -n 200 "$LOG" | grep -qiE "robot check|captcha"; then blocked=1; fi
+if grep -qiE "robot check|captcha" "$RUN_LOG"; then blocked=1; fi
 if (( blocked )); then
   print $(( now + 2 * 3600 )) > "$COOLDOWN"
   log "run end: exit=$code scraped=$scraped -> Amazon robot check, pausing 2 hours"
