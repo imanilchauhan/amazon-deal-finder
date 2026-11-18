@@ -16,7 +16,7 @@ export default async function CollectionsIndex() {
   const counts = Object.fromEntries(
     COLLECTIONS.map((col) => {
       const r = buildCollection(col, live, picks[col.slug] ?? []);
-      return [col.slug, r.picks.length + r.sections.reduce((n, s) => n + s.items.length, 0)];
+      return [col.slug, r.topDeals.length + r.picks.length + r.sections.reduce((n, s) => n + s.items.length, 0)];
     }),
   );
   return (

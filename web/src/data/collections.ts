@@ -317,15 +317,25 @@ export type BuiltSection<T> = { heading: string; items: T[] };
  * owner's order), then each section's automatic matches, best discount first, without
  * repeating a product. `perSection` caps each automatic section.
  */
-export function buildCollection<T extends Matchable & { asin: string }>(
+/** A product counts as a "top deal" in a collection from this discount up. */
+export const TOP_DEAL_MIN_DISCOUNT = 15;
+
+export function buildCollection<T extends Matchable & { asin: string; discountPct: number }>(
   c: Collection,
   live: T[],
   picks: string[],
   perSection = 12,
-): { picks: T[]; sections: BuiltSection<T>[] } {
+  topCount = 8,
+): { topDeals: T[]; picks: T[]; sections: BuiltSection<T>[] } {
   const byAsin = new Map(live.map((d) => [d.asin, d]));
   const picked = picks.map((a) => byAsin.get(a)).filter((d): d is T => !!d);
-  const used = new Set(picked.map((d) => d.asin));
+  const pickedSet = new Set(picked.map((d) => d.asin));
+  // Today's biggest discounts that fit any section of this collection (live is sorted by discount).
+  const fits = (d: T) => c.sections.some((s) => s.rules.some((r) => matchesRule(d, r, c.maxPrice)));
+  const topDeals = live
+    .filter((d) => d.discountPct >= TOP_DEAL_MIN_DISCOUNT && !pickedSet.has(d.asin) && fits(d))
+    .slice(0, topCount);
+  const used = new Set([...pickedSet, ...topDeals.map((d) => d.asin)]);
   const sections: BuiltSection<T>[] = [];
   for (const s of c.sections) {
     const items: T[] = [];
@@ -339,5 +349,5 @@ export function buildCollection<T extends Matchable & { asin: string }>(
     }
     if (items.length) sections.push({ heading: s.heading, items });
   }
-  return { picks: picked, sections };
+  return { topDeals, picks: picked, sections };
 }

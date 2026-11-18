@@ -19,7 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE.url}/collections`, lastModified: now, changeFrequency: "daily", priority: 0.7 },
     ...COLLECTIONS.filter((col) => {
       const r = buildCollection(col, products, picks[col.slug] ?? []);
-      return r.picks.length + r.sections.length > 0; // empty collections are noindex
+      return r.topDeals.length + r.picks.length + r.sections.length > 0; // empty collections are noindex
     }).map((col) => ({
       url: `${SITE.url}/collections/${col.slug}`,
       lastModified: now,

@@ -24,7 +24,7 @@ async function resolve(slug: string) {
 export async function generateMetadata({ params }: PageProps<"/collections/[slug]">): Promise<Metadata> {
   const r = await resolve((await params).slug);
   if (!r) return { title: "Collection not found", robots: { index: false } };
-  const count = r.picks.length + r.sections.reduce((n, s) => n + s.items.length, 0);
+  const count = r.topDeals.length + r.picks.length + r.sections.reduce((n, s) => n + s.items.length, 0);
   return {
     title: { absolute: r.col.title },
     description: r.col.description,
@@ -37,8 +37,8 @@ export async function generateMetadata({ params }: PageProps<"/collections/[slug
 export default async function CollectionPage({ params }: PageProps<"/collections/[slug]">) {
   const r = await resolve((await params).slug);
   if (!r) notFound();
-  const { col, picks, sections } = r;
-  const all = [...picks, ...sections.flatMap((s) => s.items)];
+  const { col, topDeals, picks, sections } = r;
+  const all = [...topDeals, ...picks, ...sections.flatMap((s) => s.items)];
   const checked = lastChecked(all);
   const url = `${SITE.url}/collections/${col.slug}`;
   const guides = (col.guides ?? []).map(getGuide).filter((g): g is NonNullable<typeof g> => !!g);
@@ -97,6 +97,13 @@ export default async function CollectionPage({ params }: PageProps<"/collections
         {checked && <p className={c.meta}>Prices last checked {istDateTime(checked)}. Amazon prices change often.</p>}
       </article>
 
+      {topDeals.length > 0 && (
+        <section className={c.deals}>
+          <h2>🔥 Top deals right now</h2>
+          <p className={c.meta}>The biggest discounts in this collection today, best first.</p>
+          <DealGrid deals={topDeals} />
+        </section>
+      )}
       {picks.length > 0 && (
         <section className={c.deals}>
           <h2>Our picks</h2>
