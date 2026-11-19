@@ -75,9 +75,11 @@ def doc_to_deal(doc: dict) -> Deal | None:
 
 def pick_deal(docs: list[dict], platforms: list[str], now: datetime,
               skip: set[str] | None = None, extra_titles: list[str] | None = None) -> tuple[Deal, dict] | None:
-    """Best-discount fresh deal that some platform still needs, skipping `skip` ASINs and
-    variants of anything posted in the last 24h (or picked earlier in this run).
-    `docs` is already sorted best discount first."""
+    """Fresh deal that the most platforms still need (all of them if possible), best discount
+    first, skipping `skip` ASINs and variants of anything posted in the last 24h (or picked
+    earlier in this run). `docs` is already sorted best discount first. Preferring deals every
+    channel needs stops a newly added channel (Instagram) from draining the slots with old deals
+    the other channels already posted."""
     skip = skip or set()
     # The trending list goes first (best discount first within it), then everything else.
     docs = sorted(docs, key=lambda d: d.get("source") != "trending")
@@ -85,21 +87,25 @@ def pick_deal(docs: list[dict], platforms: list[str], now: datetime,
         d.get("title", "") for d in docs
         if any(v.get("at") and now - v["at"] < timedelta(hours=24) for v in (d.get("posted") or {}).values())
     ] + list(extra_titles or [])
+    best: tuple[int, Deal, dict] | None = None
     for doc in docs:
         if doc.get("asin") in skip:
             continue
         updated = doc.get("updated_at")
         if updated is None or now - updated > timedelta(hours=FRESH_HOURS):
             continue
-        if not any(needs_post(doc, p, now) for p in platforms):
+        wanted = sum(needs_post(doc, p, now) for p in platforms)
+        if not wanted or (best is not None and wanted <= best[0]):
             continue
         deal = doc_to_deal(doc)
         if deal is None or deal.discount_pct < 1:
             continue  # full-price collection products are never posted as deals
         if any(t != deal.title and is_near_duplicate(deal.title, t) for t in recent):
             continue
-        return deal, doc
-    return None
+        best = (wanted, deal, doc)
+        if wanted == len(platforms):
+            break
+    return (best[1], best[2]) if best else None
 
 
 def post_collection(posters: dict[str, object], slot: datetime, *, live=None, site_url: str | None = None,

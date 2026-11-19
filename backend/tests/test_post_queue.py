@@ -229,3 +229,16 @@ def test_collection_slugs_match_the_website():
     if not ts.exists():
         return
     assert sorted(s for s, _, _ in COLLECTIONS) == sorted(web_slugs(ts.read_text()))
+
+
+def test_prefers_deals_every_channel_still_needs():
+    old = make_deal("B0OLD00001", title="Prestige Pressure Cooker 3 Litre", price=900, original=2000)  # 55% off
+    new = make_deal("B0NEW00001", title="Boat Rockerz Wireless Headphones", price=1200, original=2000)  # 40% off
+    d_old = doc(old)
+    d_old["posted"] = {p: {"at": MORNING - timedelta(days=3), "price": 900, "id": "1"} for p in ("x", "facebook")}
+    d_old["source"] = "trending"
+    store = Store([d_old, doc(new)])
+    x, fb, ig = Poster("x"), Poster("fb"), Poster("ig")
+    run_once(store, {"x": x, "facebook": fb, "instagram": ig}, MORNING, slots=[MORNING + timedelta(hours=1)])
+    assert [a for a, _ in x.sent] == ["B0NEW00001"]
+    assert [a for a, _ in ig.sent] == ["B0NEW00001"]
