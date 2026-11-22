@@ -268,6 +268,20 @@ class DealStore:
             return set()
         return set((snap.to_dict() or {}).get("slots", []))
 
+    def claim_slot(self, key: str, runner: str) -> bool:
+        """Atomically claim one posting slot, so the Mac and the cloud never fill the same hour.
+        Returns False if another runner already holds it."""
+        from google.api_core.exceptions import AlreadyExists, Conflict
+
+        try:
+            self._db.collection("post_slot_claims").document(key).create({"by": runner, "at": self._now()})
+            return True
+        except (AlreadyExists, Conflict):
+            return False
+
+    def release_slot(self, key: str) -> None:
+        self._db.collection("post_slot_claims").document(key).delete()
+
     def save_booked_slots(self, slots: set[str], now: datetime) -> None:
         """Keep the last 2 days of bookings; older ones can never matter again."""
         cutoff = (now - timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%SZ")

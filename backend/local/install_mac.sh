@@ -1,5 +1,6 @@
 #!/bin/zsh
-# Install (or update) the 15-minute CartCrush deal checker as a launchd agent.
+# Install (or update) the 15-minute CartCrush runner as a launchd agent. Run it from the
+# ~/cartcrush-runner clone (not ~/Documents, which macOS blocks for background jobs).
 #   zsh backend/local/install_mac.sh            install / reload
 #   zsh backend/local/install_mac.sh uninstall  remove
 set -eu

@@ -131,6 +131,9 @@ def post_collection(posters: dict[str, object], slot: datetime, *, live=None, si
     return []
 
 
+RUNNER = os.environ.get("CARTCRUSH_RUNNER", "cloud")
+
+
 def run_once(store: DealStore, posters: dict[str, object], now: datetime, dry_run: bool = False,
              slots: list[datetime] | None = None, collections: bool = False, live=None) -> QueueResult:
     """Fill every free upcoming slot with its own deal, scheduled in Buffer for that time.
@@ -153,6 +156,12 @@ def run_once(store: DealStore, posters: dict[str, object], now: datetime, dry_ru
     from .collections import is_collection_slot
 
     for slot in free:
+        key = slot_key(slot)
+        claim = getattr(store, "claim_slot", None)
+        if not dry_run and claim is not None and not claim(key, RUNNER):
+            log.info("slot %s already taken by another runner", key)
+            booked.add(key)
+            continue
         if collections and is_collection_slot(slot):
             try:
                 made = post_collection(posters, slot, live=live, site_url=_str("SITE_URL") or None, dry_run=dry_run)
@@ -165,6 +174,8 @@ def run_once(store: DealStore, posters: dict[str, object], now: datetime, dry_ru
                 continue
         picked = pick_deal(docs, list(posters), now, skip=picked_asins, extra_titles=picked_titles)
         if picked is None:
+            if not dry_run and claim is not None:
+                store.release_slot(key)
             log.info("queue empty: no fresh deal for %s", slot_key(slot))
             out.skipped_slots.append(slot_key(slot))
             continue
@@ -191,6 +202,8 @@ def run_once(store: DealStore, posters: dict[str, object], now: datetime, dry_ru
             sent += 1
         if sent:
             booked.add(slot_key(slot))
+        elif not dry_run and claim is not None:
+            store.release_slot(key)
     if out.posts and not dry_run:
         store.save_booked_slots(booked, now)
     return out

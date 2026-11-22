@@ -1,13 +1,18 @@
 #!/bin/zsh
-# CartCrush deal checker for a Mac. launchd runs this every 15 minutes (see install_mac.sh).
-# It scrapes a small batch of Amazon deals and saves them to Firestore. It never posts:
-# the cloud post job (every 2 h) books hourly slots from whatever is in Firestore.
+# CartCrush runner for a Mac. launchd runs this every 15 minutes (see install_mac.sh).
+# Every run scrapes a small batch of Amazon deals into Firestore. Once an hour it also
+# books the next posting slots in Buffer (X, Facebook, Instagram), side by side with the
+# cloud job: each hourly slot is claimed in Firestore first, so they never double-post.
+#
+# Lives in ~/cartcrush-runner (macOS blocks background jobs from reading ~/Documents)
+# and pulls the latest code from GitHub at the start of each run.
 #
 # Safety rails: one run at a time, quiet hours at night, and a 2-hour pause after
 # Amazon shows a robot check, so the home connection doesn't get flagged.
 set -u
 BACKEND="${0:A:h:h}"
-SECRETS="$HOME/Documents/internal projects/.secrets"
+REPO="${BACKEND:h}"
+SECRETS="${CARTCRUSH_SECRETS:-$HOME/.secrets}"
 LOG_DIR="$HOME/Library/Logs/cartcrush"
 LOG="$LOG_DIR/dealcheck.log"
 LOCK="$LOG_DIR/dealcheck.lock"
@@ -33,6 +38,20 @@ if ! mkdir "$LOCK" 2>/dev/null; then
   else exit 0; fi
 fi
 trap 'rmdir "$LOCK" 2>/dev/null' EXIT
+
+# Self-update: pull the latest code; reinstall packages when requirements change.
+old_head=$(git -C "$REPO" rev-parse HEAD 2>/dev/null)
+if git -C "$REPO" pull --ff-only -q >/dev/null 2>&1; then
+  new_head=$(git -C "$REPO" rev-parse HEAD)
+  if [[ "$old_head" != "$new_head" ]]; then
+    log "updated code ${old_head:0:7} -> ${new_head:0:7}"
+    if git -C "$REPO" diff --name-only "$old_head" "$new_head" | grep -q 'backend/requirements'; then
+      "$BACKEND/.venv/bin/pip" install -q -r "$BACKEND/requirements.txt" >> "$LOG" 2>&1
+    fi
+    rmdir "$LOCK" 2>/dev/null; trap - EXIT
+    exec /bin/zsh "$0" "$@"   # run the new version of this script
+  fi
+fi
 
 # Optional overrides and future keys live in the private secrets file.
 if [[ -f "$SECRETS/cartcrush.env" ]]; then set -a; source "$SECRETS/cartcrush.env"; set +a; fi
@@ -75,4 +94,22 @@ elif (( code != 0 )); then
 else
   rm -f "$COOLDOWN"
   log "run end: exit=$code scraped=$scraped"
+fi
+
+# Posting: once an hour (the first run after :00), fill any free slot in the next 6 hours.
+if [[ "${LOCAL_POSTING:-true}" == "true" ]] && (( 10#$(date +%M) < 15 )); then
+  if [[ -z "${BUFFER_API_KEY:-}" ]]; then
+    log "post: skipped, BUFFER_API_KEY missing from $SECRETS/cartcrush.env"
+  else
+    (
+      export CARTCRUSH_RUNNER=mac
+      export X_ENABLED=true FB_ENABLED=true IG_ENABLED=true COLLECTION_POSTS=true
+      export BUFFER_CHANNEL_ID="${BUFFER_CHANNEL_ID:-6af5655a62b70b94b0040d8c}"
+      export BUFFER_FB_CHANNEL_ID="${BUFFER_FB_CHANNEL_ID:-6af59bff62b70b94b006343c}"
+      export BUFFER_IG_CHANNEL_ID="${BUFFER_IG_CHANNEL_ID:-6afc311fece6dfde5ff59e1e}"
+      export CARDS_BASE_URL="${CARDS_BASE_URL:-https://cartcrush-cards.imanilchauhan3.workers.dev}"
+      export SITE_URL="${SITE_URL:-https://cartcrush.pages.dev}"
+      "$BACKEND/.venv/bin/python" -m deal_finder.post_queue 2>&1 | grep -E 'post_queue: |ERROR' >> "$LOG"
+    )
+  fi
 fi

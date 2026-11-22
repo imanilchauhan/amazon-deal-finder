@@ -242,3 +242,38 @@ def test_prefers_deals_every_channel_still_needs():
     run_once(store, {"x": x, "facebook": fb, "instagram": ig}, MORNING, slots=[MORNING + timedelta(hours=1)])
     assert [a for a, _ in x.sent] == ["B0NEW00001"]
     assert [a for a, _ in ig.sent] == ["B0NEW00001"]
+
+
+def test_slot_claimed_by_another_runner_is_left_alone():
+    class Claiming(Store):
+        def __init__(self, docs, taken):
+            super().__init__(docs)
+            self.taken, self.released = set(taken), []
+        def claim_slot(self, key, runner):
+            if key in self.taken:
+                return False
+            self.taken.add(key)
+            return True
+        def release_slot(self, key):
+            self.released.append(key)
+            self.taken.discard(key)
+
+    slots = [MORNING + timedelta(hours=1), MORNING + timedelta(hours=2)]
+    from deal_finder.post_queue import slot_key
+    store = Claiming([doc(d) for d in deals(3)], taken={slot_key(slots[0])})
+    x = Poster("x")
+    run_once(store, {"x": x}, MORNING, slots=slots)
+    assert [due for _, due in x.sent] == [slots[1]]
+
+
+def test_claim_is_released_when_nothing_was_posted():
+    class Claiming(Store):
+        released = []
+        def claim_slot(self, key, runner):
+            return True
+        def release_slot(self, key):
+            self.released.append(key)
+
+    store = Claiming([])
+    run_once(store, {"x": Poster("x")}, MORNING, slots=[MORNING + timedelta(hours=1)])
+    assert len(store.released) == 1
