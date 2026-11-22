@@ -231,9 +231,12 @@ def run_test(store: DealStore, platform: str, poster, now: datetime, lead_minute
 
 
 def build_posters(env_bool: Callable[[str], bool] = _bool) -> dict[str, object]:
+    """X goes through Buffer. Facebook and Instagram go through Zernio when ZERNIO_API_KEY
+    and the account id are set, with Buffer as the automatic backup; otherwise Buffer alone."""
     from .buffer import FACEBOOK_METADATA, BufferPoster
 
     key = _str("BUFFER_API_KEY")
+    zkey = _str("ZERNIO_API_KEY")
     posters: dict[str, object] = {}
     if env_bool("X_ENABLED"):
         chan = _str("BUFFER_CHANNEL_ID")
@@ -241,20 +244,34 @@ def build_posters(env_bool: Callable[[str], bool] = _bool) -> dict[str, object]:
             raise ConfigError("X_ENABLED=true needs BUFFER_API_KEY and BUFFER_CHANNEL_ID")
         posters["x"] = BufferPoster(key, chan, text_builder=build_tweet)
     if env_bool("FB_ENABLED"):
-        chan = _str("BUFFER_FB_CHANNEL_ID")
-        if not (key and chan):
-            raise ConfigError("FB_ENABLED=true needs BUFFER_API_KEY and BUFFER_FB_CHANNEL_ID")
-        posters["facebook"] = BufferPoster(key, chan, text_builder=build_facebook_post,
-                                           metadata=FACEBOOK_METADATA)
+        chan, zacc = _str("BUFFER_FB_CHANNEL_ID"), _str("ZERNIO_FB_ACCOUNT_ID")
+        providers: list[tuple[str, object]] = []
+        if zkey and zacc:
+            from .zernio import ZernioPoster
+
+            providers.append(("zernio", ZernioPoster(zkey, "facebook", zacc, text_builder=build_facebook_post)))
+        if key and chan:
+            providers.append(("buffer", BufferPoster(key, chan, text_builder=build_facebook_post,
+                                                     metadata=FACEBOOK_METADATA)))
+        if not providers:
+            raise ConfigError("FB_ENABLED=true needs BUFFER_API_KEY + BUFFER_FB_CHANNEL_ID "
+                              "or ZERNIO_API_KEY + ZERNIO_FB_ACCOUNT_ID")
+        if len(providers) == 1 and providers[0][0] == "buffer":
+            posters["facebook"] = providers[0][1]
+        else:
+            from .zernio import FallbackPoster
+
+            posters["facebook"] = FallbackPoster(providers, "facebook")
     if env_bool("IG_ENABLED"):
         from .instagram import build_instagram_poster
 
-        chan = _str("BUFFER_IG_CHANNEL_ID")
+        chan, zacc = _str("BUFFER_IG_CHANNEL_ID"), _str("ZERNIO_IG_ACCOUNT_ID")
         cards_url, cards_secret = _str("CARDS_BASE_URL"), _str("CARDS_UPLOAD_SECRET")
-        if not (key and chan and cards_url and cards_secret):
-            raise ConfigError("IG_ENABLED=true needs BUFFER_API_KEY, BUFFER_IG_CHANNEL_ID, CARDS_BASE_URL "
-                              "and CARDS_UPLOAD_SECRET")
-        posters["instagram"] = build_instagram_poster(key, chan, cards_url, cards_secret)
+        if not (cards_url and cards_secret and ((key and chan) or (zkey and zacc))):
+            raise ConfigError("IG_ENABLED=true needs CARDS_BASE_URL, CARDS_UPLOAD_SECRET and either "
+                              "BUFFER_API_KEY + BUFFER_IG_CHANNEL_ID or ZERNIO_API_KEY + ZERNIO_IG_ACCOUNT_ID")
+        posters["instagram"] = build_instagram_poster(key or "", chan or "", cards_url, cards_secret,
+                                                      zernio_key=zkey or "", zernio_account=zacc or "")
     return posters
 
 

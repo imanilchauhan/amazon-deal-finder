@@ -1,9 +1,10 @@
-"""Instagram posts through Buffer: render the branded deal card, host it, schedule the post.
+"""Instagram posts: render the branded deal card, host it, schedule the post.
 
 Instagram needs an image and Buffer only takes images by public URL, so each post
 1. draws the card (cardart.render_card) from the Amazon product photo,
 2. uploads the JPEG to the cartcrush-cards Worker (cards/), which serves it publicly,
-3. schedules a Buffer post on the Instagram channel with that image and the IG caption.
+3. schedules the post with that image and the IG caption: through Zernio when it is
+   configured, with Buffer as the automatic backup (zernio.FallbackPoster), else Buffer alone.
 """
 from __future__ import annotations
 
@@ -48,7 +49,7 @@ class InstagramPoster:
 
     wants_doc = True
 
-    def __init__(self, buffer: BufferPoster, uploader: CardUploader, *, fetch_image=cardart.fetch_product_image,
+    def __init__(self, buffer, uploader: CardUploader, *, fetch_image=cardart.fetch_product_image,
                  clock=lambda: datetime.now(timezone.utc)):
         self._buffer = buffer
         self._uploader = uploader
@@ -72,6 +73,22 @@ def instagram_caption_builder(deal: Deal) -> str:
     return build_instagram_post(deal)
 
 
-def build_instagram_poster(api_key: str, channel_id: str, cards_url: str, cards_secret: str) -> InstagramPoster:
-    buffer = BufferPoster(api_key, channel_id, text_builder=instagram_caption_builder, metadata=INSTAGRAM_METADATA)
-    return InstagramPoster(buffer, CardUploader(cards_url, cards_secret))
+def build_instagram_poster(api_key: str, channel_id: str, cards_url: str, cards_secret: str, *,
+                           zernio_key: str = "", zernio_account: str = "") -> InstagramPoster:
+    """`buffer` below is whatever schedules the finished card: Buffer alone, or Zernio first
+    with Buffer as backup when a Zernio key and Instagram account id are configured."""
+    sender = None
+    if api_key and channel_id:
+        sender = BufferPoster(api_key, channel_id, text_builder=instagram_caption_builder,
+                              metadata=INSTAGRAM_METADATA)
+    if zernio_key and zernio_account:
+        from .zernio import FallbackPoster, ZernioPoster
+
+        providers = [("zernio", ZernioPoster(zernio_key, "instagram", zernio_account,
+                                             text_builder=instagram_caption_builder))]
+        if sender is not None:
+            providers.append(("buffer", sender))
+        sender = FallbackPoster(providers, "instagram")
+    if sender is None:
+        raise ValueError("Instagram needs Buffer (key + channel) or Zernio (key + account)")
+    return InstagramPoster(sender, CardUploader(cards_url, cards_secret))

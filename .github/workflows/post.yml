@@ -62,6 +62,9 @@ jobs:
           BUFFER_IG_CHANNEL_ID: ${{ vars.BUFFER_IG_CHANNEL_ID }}
           CARDS_BASE_URL: ${{ vars.CARDS_BASE_URL }}
           CARDS_UPLOAD_SECRET: ${{ secrets.CARDS_UPLOAD_SECRET }}
+          ZERNIO_API_KEY: ${{ secrets.ZERNIO_API_KEY }}
+          ZERNIO_FB_ACCOUNT_ID: ${{ vars.ZERNIO_FB_ACCOUNT_ID }}
+          ZERNIO_IG_ACCOUNT_ID: ${{ vars.ZERNIO_IG_ACCOUNT_ID }}
           COLLECTION_POSTS: ${{ vars.COLLECTION_POSTS || 'true' }}
           SITE_URL: ${{ vars.SITE_URL || 'https://cartcrush.pages.dev' }}
         run: python -m deal_finder.post_queue
