@@ -62,18 +62,26 @@ def wrap_lines(measure, text: str, width: float, max_lines: int) -> list[str]:
     return lines
 
 
-def render_card(deal: Deal, product: Image.Image, brand: str = "") -> Image.Image:
+def render_card(deal: Deal, product: Image.Image, brand: str = "", label: str = "TODAY'S DEAL",
+                accent: str | None = None) -> Image.Image:
+    """`label`/`accent` come from the post theme (captions.THEMES): e.g. a blue WINTER DEAL
+    pill and badge, a pink FOR HER one, or the default red TODAY'S DEAL."""
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
+    hot = accent or BRAND
 
-    # brand row: red dot + wordmark, and a "TODAY'S DEAL" pill on the right
+    # brand row: red dot + wordmark, and the theme pill on the right
     d.ellipse((75 - 11, 84 - 11, 75 + 11, 84 + 11), fill=BRAND)
     d.text((100, 86), "CartCrush", font=font(800, 40), fill=INK, anchor="lm")
-    pill = "TODAY'S DEAL"
-    pf = font(700, 24)
+    pill = label.upper()
+    pf = font(800, 24)
     pw = d.textlength(pill, font=pf) + 48
-    d.rounded_rectangle((W - 64 - pw, 60, W - 64, 112), radius=26, fill="#ffffff", outline=LINE, width=2)
-    d.text((W - 64 - pw + 24, 87), pill, font=pf, fill=MUTED, anchor="lm")
+    if accent:
+        d.rounded_rectangle((W - 64 - pw, 60, W - 64, 112), radius=26, fill=accent)
+        d.text((W - 64 - pw + 24, 87), pill, font=pf, fill="#ffffff", anchor="lm")
+    else:
+        d.rounded_rectangle((W - 64 - pw, 60, W - 64, 112), radius=26, fill="#ffffff", outline=LINE, width=2)
+        d.text((W - 64 - pw + 24, 87), pill, font=pf, fill=MUTED, anchor="lm")
 
     # product panel
     d.rounded_rectangle((64, 150, 64 + 952, 150 + 640), radius=40, fill="#ffffff", outline=LINE, width=2)
@@ -87,7 +95,7 @@ def render_card(deal: Deal, product: Image.Image, brand: str = "") -> Image.Imag
     k = 3  # draw large, rotate, then scale down for smooth edges
     badge = Image.new("RGBA", (260 * k, 260 * k), (0, 0, 0, 0))
     bd = ImageDraw.Draw(badge)
-    bd.ellipse((12 * k, 12 * k, 248 * k, 248 * k), fill=BRAND)
+    bd.ellipse((12 * k, 12 * k, 248 * k, 248 * k), fill=hot)
     bd.text((130 * k, 116 * k), f"{deal.discount_pct}%", font=font(900, 92 * k), fill="#ffffff", anchor="mm")
     bd.text((130 * k, 182 * k), "OFF", font=font(800, 34 * k), fill="#ffffff", anchor="mm")
     badge = badge.rotate(8, resample=Image.BICUBIC).resize((260, 260), Image.LANCZOS)  # PIL turns counter-clockwise
@@ -128,9 +136,10 @@ def render_card(deal: Deal, product: Image.Image, brand: str = "") -> Image.Imag
     return img
 
 
-def card_jpeg(deal: Deal, product: Image.Image, brand: str = "", quality: int = 88) -> bytes:
+def card_jpeg(deal: Deal, product: Image.Image, brand: str = "", quality: int = 88, *,
+              label: str = "TODAY'S DEAL", accent: str | None = None) -> bytes:
     buf = io.BytesIO()
-    render_card(deal, product, brand).save(buf, "JPEG", quality=quality, optimize=True, progressive=True)
+    render_card(deal, product, brand, label, accent).save(buf, "JPEG", quality=quality, optimize=True, progressive=True)
     return buf.getvalue()
 
 

@@ -123,8 +123,34 @@ def test_build_posters_routes_facebook_and_instagram_through_zernio(monkeypatch)
     for k, v in env.items():
         monkeypatch.setenv(k, v)
     posters = build_posters(lambda name: True)
-    assert isinstance(posters["facebook"], FallbackPoster)
-    assert [n for n, _ in posters["facebook"]._providers] == ["zernio", "buffer"]
+    assert isinstance(posters["facebook"], InstagramPoster)  # card poster, link in the caption
+    assert [n for n, _ in posters["facebook"]._buffer._providers] == ["zernio", "buffer"]
     assert isinstance(posters["instagram"], InstagramPoster)
     assert [n for n, _ in posters["instagram"]._buffer._providers] == ["zernio", "buffer"]
     assert type(posters["x"]).__name__ == "BufferPoster"
+
+
+def test_card_poster_themes_the_card_and_caption():
+    from PIL import Image
+
+    from deal_finder.captions import build_facebook_post
+    from deal_finder.instagram import CardPoster
+
+    class Up:
+        def upload(self, name, jpeg):
+            self.name = name
+            return f"https://cards/c/{name}.jpg"
+
+    class Sender:
+        def post_text(self, text, due_at=None, image_url=None):
+            self.sent = (text, image_url)
+            return "z1"
+
+    sender = Sender()
+    poster = CardPoster(sender, Up(), fetch_image=lambda u: Image.new("RGB", (400, 400), "white"),
+                        caption=build_facebook_post, platform="facebook")
+    deal = make_deal("B0WINTER01", title="Women Puffer Winter Jacket Hooded")
+    assert poster.post(deal, due_at=DUE, doc={"department": "fashion", "gender": "women"}) == "z1"
+    text, image = sender.sent
+    assert text.startswith("❄️ Winter steal") and deal.url in text and "#winterwear" in text
+    assert image == "https://cards/c/B0WINTER01-202611230430.jpg"

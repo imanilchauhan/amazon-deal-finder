@@ -135,24 +135,62 @@ def build_meta_caption(deal: Deal, keyword: str, *, platform: str) -> str:
 
 
 
-def build_facebook_post(deal: Deal) -> str:
-    """Facebook Page post with the affiliate link in the text.
+# Post themes (picker.theme): card pill + accent colour, caption hook and extra hashtags.
+THEMES = {
+    "winter": {"pill": "WINTER DEAL", "accent": "#2563EB", "emoji": "❄️", "hook": "Winter steal",
+               "tags": ["#winterwear", "#winterdeals"]},
+    "her": {"pill": "FOR HER", "accent": "#DB2777", "emoji": "💖", "hook": "For her",
+            "tags": ["#womensfashion", "#fashiondeals"]},
+    "trending": {"pill": "TRENDING NOW", "accent": "#D97706", "emoji": "📈", "hook": "Trending on Amazon",
+                 "tags": ["#trending"]},
+    "": {"pill": "TODAY'S DEAL", "accent": None, "emoji": "🔥", "hook": "Deal alert", "tags": []},
+}
+DEPARTMENT_TAGS = {
+    "fashion": "#fashion", "beauty-personal-care": "#beauty", "home-kitchen": "#homeessentials",
+    "electronics": "#gadgets", "mobiles-tablets": "#mobileaccessories", "computers-accessories": "#techdeals",
+    "toys-games": "#toys", "baby": "#babyessentials", "sports-fitness-outdoors": "#fitness",
+    "large-appliances": "#appliances", "health-wellness": "#wellness", "grocery-gourmet": "#grocery",
+    "home-improvement-garden": "#homeimprovement", "automotive": "#carlovers", "books-media": "#books",
+    "office-stationery": "#stationery", "pet-supplies": "#petlovers",
+}
+
+
+def _theme(name: str) -> dict:
+    return THEMES.get(name or "", THEMES[""])
+
+
+def _headline(deal: Deal, theme: str) -> str:
+    t = _theme(theme)
+    return f"{t['emoji']} {t['hook']} · {deal.discount_pct}% OFF"
+
+
+def _price_line(deal: Deal) -> str:
+    mrp = "MRP" if deal.currency == "INR" else "was"
+    return (f"💰 {money(deal.price, deal.currency)} ({mrp} {money(deal.original_price, deal.currency)})"
+            f" · you save {money(deal.savings, deal.currency)}")
+
+
+def _hashtags(base: list[str], theme: str, department: str = "") -> str:
+    tags = list(_theme(theme)["tags"])
+    if department in DEPARTMENT_TAGS:
+        tags.append(DEPARTMENT_TAGS[department])
+    return " ".join(dict.fromkeys(tags + base))
+
+
+def build_facebook_post(deal: Deal, *, theme: str = "", department: str = "") -> str:
+    """Facebook Page post with the affiliate link in the text, shown under the deal card.
 
     No "comment DEAL" prompt: Meta treats comment-baiting as engagement bait and cuts
     the Page's reach. Price wording stays soft because Amazon prices change quickly."""
     lines = [
-        f"🔥 {deal.discount_pct}% OFF — {short_title(deal.title, max_chars=110)}",
+        _headline(deal, theme),
+        short_title(deal.title, max_chars=110),
         "",
-        f"💰 {money(deal.price, deal.currency)} (MRP {money(deal.original_price, deal.currency)})"
-        if deal.currency == "INR"
-        else f"💰 {money(deal.price, deal.currency)} (was {money(deal.original_price, deal.currency)})",
-        f"✅ You save {money(deal.savings, deal.currency)}",
+        _price_line(deal),
+        f"🛒 Get it here: {deal.url}",
         "",
-        f"🛒 Buy on Amazon: {deal.url}",
-        "⏳ Price at the time of posting; Amazon prices change fast.",
-        "",
-        f"#ad {AMAZON_DISCLOSURE}",
-        "#dealsoftheday #dealsindia #cartcrush",
+        f"#ad {AMAZON_DISCLOSURE} Price at the time of posting; Amazon prices change fast.",
+        _hashtags(["#dealsindia", "#cartcrush"], theme, department),
     ]
     return "\n".join(lines)
 
@@ -160,24 +198,22 @@ def build_facebook_post(deal: Deal) -> str:
 IG_CAPTION_MAX = 2200
 
 
-def build_instagram_post(deal: Deal, *, category_tag: str = "") -> str:
+def build_instagram_post(deal: Deal, *, category_tag: str = "", theme: str = "", department: str = "") -> str:
     """Instagram caption. Links aren't clickable in captions, so it points to the link in bio
     and names the product so people can find it on the site. No Amazon trademarks in hashtags."""
-    tags = ["#dealsoftheday", "#dealsindia", "#lootdeals", "#onlineshopping", "#savemoney", "#cartcrush"]
+    base = ["#dealsoftheday", "#dealsindia", "#lootdeals", "#onlineshopping", "#savemoney", "#cartcrush"]
     if category_tag:
-        tags.insert(0, "#" + re.sub(r"[^a-z0-9]", "", category_tag.lower()))
+        base.insert(0, "#" + re.sub(r"[^a-z0-9]", "", category_tag.lower()))
     name = short_title(deal.title, max_chars=110)
     lines = [
-        f"🔥 {deal.discount_pct}% OFF: {name}",
+        _headline(deal, theme),
+        name,
         "",
-        f"💰 {money(deal.price, deal.currency)} (MRP {money(deal.original_price, deal.currency)})"
-        f" · you save {money(deal.savings, deal.currency)}",
+        _price_line(deal),
+        "🔗 Tap the link in our bio, then search for this product on cartcrush.pages.dev",
         "",
-        "👉 Tap the link in our bio, then search for this product on cartcrush.pages.dev",
-        "⏳ Price at the time of posting; Amazon prices change fast.",
+        f"#ad {AMAZON_DISCLOSURE} Price at the time of posting; Amazon prices change fast.",
         "",
-        f"#ad {AMAZON_DISCLOSURE}",
-        "",
-        " ".join(tags),
+        _hashtags(base, theme, department),
     ]
     return "\n".join(lines)[:IG_CAPTION_MAX]

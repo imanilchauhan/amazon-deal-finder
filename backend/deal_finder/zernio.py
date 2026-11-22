@@ -54,10 +54,10 @@ class ZernioPoster:
             raise ZernioError("Instagram posts need an image")
         return self._create(self._text(deal), due_at, image)
 
-    def post_text(self, text: str, due_at: datetime | None = None) -> str:
-        if self._platform == "instagram":
+    def post_text(self, text: str, due_at: datetime | None = None, image_url: str | None = None) -> str:
+        if self._platform == "instagram" and not image_url:
             raise ZernioError("Instagram can't take a text-only post")
-        return self._create(text, due_at, None)
+        return self._create(text, due_at, image_url)
 
     def _create(self, text: str, due_at: datetime | None, image_url: str | None) -> str:
         when = due_at if due_at is not None else self._clock() + timedelta(minutes=self._delay)
@@ -130,8 +130,9 @@ class FallbackPoster:
             return p.post(deal, due_at=due_at, **kw)
         return self._try(send)
 
-    def post_text(self, text: str, due_at: datetime | None = None) -> str:
-        return self._try(lambda p: p.post_text(text, due_at=due_at))
+    def post_text(self, text: str, due_at: datetime | None = None, image_url: str | None = None) -> str:
+        kw = {"image_url": image_url} if image_url else {}
+        return self._try(lambda p: p.post_text(text, due_at=due_at, **kw))
 
     def _try(self, send) -> str:
         errors = []

@@ -45,28 +45,49 @@ class CardUploader:
 
 
 class InstagramPoster:
-    """Same interface as BufferPoster.post, plus the Firestore doc for brand and category."""
+    """Deal card poster (Instagram, and Facebook too): draws the themed card, hosts it and
+    schedules it with the caption. Same interface as BufferPoster.post, plus the Firestore doc
+    (brand, department, gender, source) which decides the theme: winter / for her / trending."""
 
     wants_doc = True
 
     def __init__(self, buffer, uploader: CardUploader, *, fetch_image=cardart.fetch_product_image,
-                 clock=lambda: datetime.now(timezone.utc)):
-        self._buffer = buffer
+                 clock=lambda: datetime.now(timezone.utc), caption=None, platform: str = "instagram"):
+        self._buffer = buffer          # whatever schedules the post: Buffer, Zernio or a FallbackPoster
         self._uploader = uploader
         self._fetch = fetch_image
         self._clock = clock
+        self._caption = caption        # caption(deal, theme=, department=) -> text; None = sender's own
+        self._platform = platform
 
     def post(self, deal: Deal, due_at: datetime | None = None, doc: dict | None = None) -> str:
-        doc = doc or {}
+        from .captions import THEMES
+        from .picker import theme as pick_theme
+
+        doc = {"title": deal.title, **(doc or {})}
+        when = due_at or self._clock()
+        th = pick_theme(doc, when)
         try:
             product = self._fetch(deal.image_url)
         except Exception as exc:  # noqa: BLE001
             raise BufferError(f"could not download the product image: {exc}") from exc
-        jpeg = cardart.card_jpeg(deal, product, brand=str(doc.get("brand") or ""))
-        stamp = (due_at or self._clock()).astimezone(timezone.utc).strftime("%Y%m%d%H%M")
+        style = THEMES.get(th, THEMES[""])
+        jpeg = cardart.card_jpeg(deal, product, brand=str(doc.get("brand") or ""),
+                                 label=style["pill"], accent=style["accent"])
+        stamp = when.astimezone(timezone.utc).strftime("%Y%m%d%H%M")
         image_url = self._uploader.upload(f"{deal.asin}-{stamp}", jpeg)
-        log.info("instagram card for %s at %s", deal.asin, image_url)
-        return self._buffer.post(deal, due_at=due_at, image_url=image_url)
+        log.info("%s card (%s) for %s at %s", self._platform, th or "default", deal.asin, image_url)
+        if self._caption is None:
+            return self._buffer.post(deal, due_at=due_at, image_url=image_url)
+        text = self._caption(deal, theme=th, department=str(doc.get("department") or ""))
+        return self._buffer.post_text(text, due_at=due_at, image_url=image_url)
+
+    def post_text(self, text: str, due_at: datetime | None = None, image_url: str | None = None) -> str:
+        """Plain posts (e.g. the weekly collection link on Facebook) go straight to the sender."""
+        return self._buffer.post_text(text, due_at=due_at, **({"image_url": image_url} if image_url else {}))
+
+
+CardPoster = InstagramPoster
 
 
 def instagram_caption_builder(deal: Deal) -> str:
@@ -91,4 +112,4 @@ def build_instagram_poster(api_key: str, channel_id: str, cards_url: str, cards_
         sender = FallbackPoster(providers, "instagram")
     if sender is None:
         raise ValueError("Instagram needs Buffer (key + channel) or Zernio (key + account)")
-    return InstagramPoster(sender, CardUploader(cards_url, cards_secret))
+    return InstagramPoster(sender, CardUploader(cards_url, cards_secret), caption=build_instagram_post)

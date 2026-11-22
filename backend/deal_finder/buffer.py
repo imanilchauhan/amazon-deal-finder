@@ -100,11 +100,11 @@ class BufferPoster:
             raise BufferError(f"unexpected Buffer response: {json.dumps(body)[:300]}")
         return str(post["id"])
 
-    def post_text(self, text: str, due_at: datetime | None = None) -> str:
-        """Schedule a plain text post (no deal), e.g. the weekly collection link."""
+    def post_text(self, text: str, due_at: datetime | None = None, image_url: str | None = None) -> str:
+        """Schedule a post with ready-made text (the weekly collection link, or a deal card caption)."""
         when = due_at if due_at is not None else self._clock() + timedelta(minutes=self._delay)
         due = when.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
-        body = self._call(build_create_post_mutation(text, self._channel, due, None, self._metadata))
+        body = self._call(build_create_post_mutation(text, self._channel, due, image_url, self._metadata))
         result = (body.get("data") or {}).get("createPost") or {}
         if result.get("message"):
             raise BufferError(f"Buffer rejected the post: {result['message']}")

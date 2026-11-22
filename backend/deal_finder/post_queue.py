@@ -271,11 +271,19 @@ def build_posters(env_bool: Callable[[str], bool] = _bool) -> dict[str, object]:
             raise ConfigError("FB_ENABLED=true needs BUFFER_API_KEY + BUFFER_FB_CHANNEL_ID "
                               "or ZERNIO_API_KEY + ZERNIO_FB_ACCOUNT_ID")
         if len(providers) == 1 and providers[0][0] == "buffer":
-            posters["facebook"] = providers[0][1]
+            fb = providers[0][1]
         else:
             from .zernio import FallbackPoster
 
-            posters["facebook"] = FallbackPoster(providers, "facebook")
+            fb = FallbackPoster(providers, "facebook")
+        cards_url, cards_secret = _str("CARDS_BASE_URL"), _str("CARDS_UPLOAD_SECRET")
+        if cards_url and cards_secret:
+            # Facebook gets the same themed deal card as Instagram, with the link in the text.
+            from .instagram import CardPoster, CardUploader
+
+            fb = CardPoster(fb, CardUploader(cards_url, cards_secret), caption=build_facebook_post,
+                            platform="facebook")
+        posters["facebook"] = fb
     if env_bool("IG_ENABLED"):
         from .instagram import build_instagram_poster
 

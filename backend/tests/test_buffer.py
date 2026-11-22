@@ -110,7 +110,7 @@ def test_custom_text_builder_for_facebook_channel():
                      text_builder=build_facebook_post, metadata=FACEBOOK_METADATA)
     assert p.post(make_deal()) == "fb_1"
     q = s.calls[0].json["query"]
-    assert 'channelId: "FBCHAN"' in q and "Buy on Amazon" in q
+    assert 'channelId: "FBCHAN"' in q and "Get it here" in q
     assert "metadata: { facebook: { type: post } }" in q
 
 
