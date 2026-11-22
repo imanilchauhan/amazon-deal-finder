@@ -74,38 +74,43 @@ def doc_to_deal(doc: dict) -> Deal | None:
 
 
 def pick_deal(docs: list[dict], platforms: list[str], now: datetime,
-              skip: set[str] | None = None, extra_titles: list[str] | None = None) -> tuple[Deal, dict] | None:
-    """Fresh deal that the most platforms still need (all of them if possible), best discount
-    first, skipping `skip` ASINs and variants of anything posted in the last 24h (or picked
-    earlier in this run). `docs` is already sorted best discount first. Preferring deals every
-    channel needs stops a newly added channel (Instagram) from draining the slots with old deals
-    the other channels already posted."""
+              skip: set[str] | None = None, extra_titles: list[str] | None = None,
+              history: list | None = None, when: datetime | None = None) -> tuple[Deal, dict] | None:
+    """The deal for the slot at `when` (default `now`), chosen by picker.rank: fresh, still
+    needed by the most channels, then the best score (discount, season, audience and variety
+    against `history`, the recent post log). `skip` ASINs and variants of `extra_titles`
+    (picked earlier in this run) are left out."""
+    from .picker import log_from_docs, rank, recently_on
+
     skip = skip or set()
-    # The trending list goes first (best discount first within it), then everything else.
-    docs = sorted(docs, key=lambda d: d.get("source") != "trending")
-    recent = [
-        d.get("title", "") for d in docs
-        if any(v.get("at") and now - v["at"] < timedelta(hours=24) for v in (d.get("posted") or {}).values())
-    ] + list(extra_titles or [])
-    best: tuple[int, Deal, dict] | None = None
+    when = when or now
+    history = log_from_docs(docs) if history is None else history
+    extra = list(extra_titles or [])
+    pool: list[tuple[int, dict]] = []
     for doc in docs:
         if doc.get("asin") in skip:
             continue
         updated = doc.get("updated_at")
         if updated is None or now - updated > timedelta(hours=FRESH_HOURS):
             continue
-        wanted = sum(needs_post(doc, p, now) for p in platforms)
-        if not wanted or (best is not None and wanted <= best[0]):
+        wanted = sum(needs_post(doc, p, now) and not recently_on(doc, p, when) for p in platforms)
+        if not wanted:
             continue
+        if any(t != doc.get("title") and is_near_duplicate(doc.get("title", ""), t) for t in extra):
+            continue
+        pool.append((wanted, doc))
+    if not pool:
+        return None
+    wanted_by_asin = {d.get("asin"): w for w, d in pool}
+    ranked = rank([d for _, d in pool], history, when)
+    # Deals every channel still needs come first, so a newly added channel can't drain the slots.
+    ranked.sort(key=lambda sd: (-wanted_by_asin[sd[1].get("asin")], -sd[0]))
+    for _, doc in ranked:
         deal = doc_to_deal(doc)
         if deal is None or deal.discount_pct < 1:
             continue  # full-price collection products are never posted as deals
-        if any(t != deal.title and is_near_duplicate(deal.title, t) for t in recent):
-            continue
-        best = (wanted, deal, doc)
-        if wanted == len(platforms):
-            break
-    return (best[1], best[2]) if best else None
+        return deal, doc
+    return None
 
 
 def post_collection(posters: dict[str, object], slot: datetime, *, live=None, site_url: str | None = None,
@@ -151,6 +156,10 @@ def run_once(store: DealStore, posters: dict[str, object], now: datetime, dry_ru
         log.info("all upcoming slots already booked (%d)", len(slots))
         return out
     docs = store.post_candidates()
+    from .picker import LogEntry, log_from_docs, merge_logs, recently_on
+
+    load_log = getattr(store, "post_log", None)
+    history = merge_logs(load_log() if load_log else [], log_from_docs(docs))
     picked_asins: set[str] = set()
     picked_titles: list[str] = []
     from .collections import is_collection_slot
@@ -172,7 +181,8 @@ def run_once(store: DealStore, posters: dict[str, object], now: datetime, dry_ru
                 out.posts.extend(made)
                 booked.add(slot_key(slot))
                 continue
-        picked = pick_deal(docs, list(posters), now, skip=picked_asins, extra_titles=picked_titles)
+        picked = pick_deal(docs, list(posters), now, skip=picked_asins, extra_titles=picked_titles,
+                           history=history, when=slot)
         if picked is None:
             if not dry_run and claim is not None:
                 store.release_slot(key)
@@ -184,7 +194,7 @@ def run_once(store: DealStore, posters: dict[str, object], now: datetime, dry_ru
         picked_titles.append(deal.title)
         sent = 0
         for platform, poster in posters.items():
-            if not needs_post(doc, platform, now):
+            if not needs_post(doc, platform, now) or recently_on(doc, platform, slot):
                 continue
             if dry_run:
                 out.posts.append({"slot": slot_key(slot), "asin": deal.asin, "platform": platform, "id": None})
@@ -202,10 +212,14 @@ def run_once(store: DealStore, posters: dict[str, object], now: datetime, dry_ru
             sent += 1
         if sent:
             booked.add(slot_key(slot))
+            history.append(LogEntry.from_doc(doc, slot))
         elif not dry_run and claim is not None:
             store.release_slot(key)
     if out.posts and not dry_run:
         store.save_booked_slots(booked, now)
+        save_log = getattr(store, "save_post_log", None)
+        if save_log:
+            save_log(merge_logs(history))
     return out
 
 

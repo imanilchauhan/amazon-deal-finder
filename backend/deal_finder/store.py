@@ -288,6 +288,27 @@ class DealStore:
         keep = sorted(x for x in slots if x >= cutoff)
         self._db.collection("meta").document("post_slots").set({"slots": keep, "updated_at": now})
 
+    # ---- post log (meta/post_log.entries: what went out, for variety and de-duplication) --
+    def post_log(self) -> list:
+        from .picker import LogEntry
+
+        snap = self._db.collection("meta").document("post_log").get()
+        if not getattr(snap, "exists", False):
+            return []
+        out = []
+        for d in (snap.to_dict() or {}).get("entries", []):
+            try:
+                out.append(LogEntry.from_dict(d))
+            except (KeyError, TypeError):
+                continue
+        return out
+
+    def save_post_log(self, entries: list) -> None:
+        from .picker import LOG_KEEP
+
+        self._db.collection("meta").document("post_log").set(
+            {"entries": [e.to_dict() for e in entries[-LOG_KEEP:]], "updated_at": self._now()})
+
     def map_social_post(self, collection: str, post_id: str, deal: Deal) -> None:
         if collection not in {"ig_media", "fb_posts"}:
             raise ValueError(collection)
