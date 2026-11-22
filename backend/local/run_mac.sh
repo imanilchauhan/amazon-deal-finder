@@ -55,6 +55,8 @@ fi
 
 # Optional overrides and future keys live in the private secrets file.
 if [[ -f "$SECRETS/cartcrush.env" ]]; then set -a; source "$SECRETS/cartcrush.env"; set +a; fi
+# Keys kept next to the code: backend/.env (gitignored), e.g. BUFFER_API_KEY.
+if [[ -f "$BACKEND/.env" ]]; then set -a; source "$BACKEND/.env"; set +a; fi
 
 export AMAZON_MARKETPLACE="${AMAZON_MARKETPLACE:-in}"
 export AMAZON_ASSOCIATE_TAG="${AMAZON_ASSOCIATE_TAG:-cartcrush004-21}"
@@ -99,7 +101,7 @@ fi
 # Posting: once an hour (the first run after :00), fill any free slot in the next 6 hours.
 if [[ "${LOCAL_POSTING:-true}" == "true" ]] && (( 10#$(date +%M) < 15 )); then
   if [[ -z "${BUFFER_API_KEY:-}" ]]; then
-    log "post: skipped, BUFFER_API_KEY missing from $SECRETS/cartcrush.env"
+    log "post: skipped, BUFFER_API_KEY missing (add it to backend/.env)"
   else
     (
       export CARTCRUSH_RUNNER=mac
