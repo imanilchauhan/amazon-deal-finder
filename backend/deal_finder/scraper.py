@@ -126,8 +126,41 @@ def interleave(lists: list[list[str]], limit: int) -> list[str]:
     return list(seen)
 
 
-def source_urls(domain: str, max_products: int) -> list[str]:
+# Searches for what the audience wants and the general deals page under-supplies: women's
+# fashion and beauty all year, winter wear and home in Nov–Feb. Each run adds one of each, in
+# rotation, so even small 8-product runs keep these shelves stocked. Every result still has to
+# pass the product-page discount check.
+WOMEN_SEARCHES = [
+    "women kurta set", "women saree", "women handbag", "women earrings jewellery set",
+    "women western dress", "women sandals flats", "women ethnic wear dupatta", "makeup kit women",
+    "women nightwear", "women watches", "women sling bag", "women leggings",
+]
+WINTER_SEARCHES = [
+    "women winter jacket", "women sweatshirt hoodie", "thermal wear women", "women shawl stole",
+    "women cardigan sweater", "men winter jacket", "men sweatshirt hoodie", "thermal wear men",
+    "kids winter wear", "fleece blanket double bed", "room heater", "woollen socks gloves cap",
+]
+WINTER_MONTHS = {11, 12, 1, 2}
+
+
+def focus_searches(when: datetime) -> list[str]:
+    """This run's audience/season searches (rotates every 15 minutes)."""
+    turn = (when.timetuple().tm_yday * 96 + when.hour * 4 + when.minute // 15)
+    out = [WOMEN_SEARCHES[turn % len(WOMEN_SEARCHES)]]
+    if when.month in WINTER_MONTHS:
+        out.append(WINTER_SEARCHES[turn % len(WINTER_SEARCHES)])
+    return out
+
+
+def search_url(domain: str, query: str) -> str:
+    from urllib.parse import quote_plus
+
+    return f"https://{domain}/s?k={quote_plus(query)}"
+
+
+def source_urls(domain: str, max_products: int, when: datetime | None = None) -> list[str]:
     urls = [f"https://{domain}/deals"]
+    urls += [search_url(domain, q) for q in focus_searches(when or datetime.now(timezone.utc))]
     if max_products > BULK_RUN_THRESHOLD:
         for kind in LIST_KINDS:
             urls += [f"https://{domain}/gp/{kind}/{slug}" for slug in CATEGORY_SLUGS]

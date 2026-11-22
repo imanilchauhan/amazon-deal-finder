@@ -115,8 +115,14 @@ def test_captcha_page_is_detected(page):
 def test_source_urls_expand_only_for_bulk_runs():
     from deal_finder.scraper import source_urls
 
-    assert source_urls("amazon.in", 15) == ["https://amazon.in/deals"]
-    bulk = source_urls("amazon.in", 150)
+    from datetime import datetime, timezone
+
+    nov = datetime(2026, 11, 22, 14, 0, tzinfo=timezone.utc)
+    small = source_urls("amazon.in", 15, nov)
+    assert small[0] == "https://amazon.in/deals" and len(small) == 3
+    assert all(u.startswith("https://amazon.in/s?k=") for u in small[1:])
+    assert len(source_urls("amazon.in", 15, nov.replace(month=6))) == 2  # no winter search in June
+    bulk = source_urls("amazon.in", 150, nov)
     assert bulk[0] == "https://amazon.in/deals" and len(bulk) > 20
     assert "https://amazon.in/gp/bestsellers/kitchen" in bulk
 
@@ -136,3 +142,13 @@ def test_full_price_product_kept_only_for_collection_picks():
     deal = normalize_product(raw, asin="B07PR1CL3S", **kw)
     assert (deal.price, deal.original_price, deal.discount_pct) == (1299.0, 1299.0, 0)
     assert schema_errors(deal.to_dict()) == []
+
+
+def test_focus_searches_rotate_through_women_and_winter_lists():
+    from datetime import datetime, timedelta, timezone
+
+    from deal_finder.scraper import WINTER_SEARCHES, WOMEN_SEARCHES, focus_searches
+
+    start = datetime(2026, 11, 22, 0, 0, tzinfo=timezone.utc)
+    seen = {q for i in range(48) for q in focus_searches(start + timedelta(minutes=15 * i))}
+    assert set(WOMEN_SEARCHES) <= seen and set(WINTER_SEARCHES) <= seen
