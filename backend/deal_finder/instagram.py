@@ -73,9 +73,10 @@ class InstagramPoster:
             raise BufferError(f"could not download the product image: {exc}") from exc
         style = THEMES.get(th, THEMES[""])
         jpeg = cardart.card_jpeg(deal, product, brand=str(doc.get("brand") or ""),
-                                 label=style["pill"], accent=style["accent"])
+                                 label=style["pill"], accent=style["accent"], platform=self._platform)
         stamp = when.astimezone(timezone.utc).strftime("%Y%m%d%H%M")
-        image_url = self._uploader.upload(f"{deal.asin}-{stamp}", jpeg)
+        name = f"{deal.asin}-{stamp}" if self._platform == "instagram" else f"{deal.asin}-{stamp}-{self._platform}"
+        image_url = self._uploader.upload(name, jpeg)
         log.info("%s card (%s) for %s at %s", self._platform, th or "default", deal.asin, image_url)
         if self._caption is None:
             return self._buffer.post(deal, due_at=due_at, image_url=image_url)

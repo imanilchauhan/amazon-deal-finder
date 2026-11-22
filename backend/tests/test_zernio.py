@@ -153,4 +153,4 @@ def test_card_poster_themes_the_card_and_caption():
     assert poster.post(deal, due_at=DUE, doc={"department": "fashion", "gender": "women"}) == "z1"
     text, image = sender.sent
     assert text.startswith("❄️ Winter steal") and deal.url in text and "#winterwear" in text
-    assert image == "https://cards/c/B0WINTER01-202611230430.jpg"
+    assert image == "https://cards/c/B0WINTER01-202611230430-facebook.jpg"

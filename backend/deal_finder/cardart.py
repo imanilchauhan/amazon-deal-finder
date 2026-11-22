@@ -62,8 +62,14 @@ def wrap_lines(measure, text: str, width: float, max_lines: int) -> list[str]:
     return lines
 
 
+FOOTERS = {
+    "instagram": "Link in bio → cartcrush.pages.dev",
+    "facebook": "Tap the link in the post to shop",
+}
+
+
 def render_card(deal: Deal, product: Image.Image, brand: str = "", label: str = "TODAY'S DEAL",
-                accent: str | None = None) -> Image.Image:
+                accent: str | None = None, platform: str = "instagram") -> Image.Image:
     """`label`/`accent` come from the post theme (captions.THEMES): e.g. a blue WINTER DEAL
     pill and badge, a pink FOR HER one, or the default red TODAY'S DEAL."""
     img = Image.new("RGB", (W, H), BG)
@@ -103,6 +109,9 @@ def render_card(deal: Deal, product: Image.Image, brand: str = "", label: str = 
 
     # brand + title
     y = 850
+    # The brand is guessed from the title's first words, so only show it when it adds something.
+    if brand and deal.title.lower().startswith(brand.lower()):
+        brand = ""
     if brand:
         d.text((64, y), brand, font=font(600, 30), fill=MUTED, anchor="lm")
         y += 50
@@ -130,16 +139,17 @@ def render_card(deal: Deal, product: Image.Image, brand: str = "", label: str = 
 
     # footer
     d.rectangle((0, H - 150, W, H), fill=INK)
-    d.text((64, H - 82), "Link in bio → cartcrush.pages.dev", font=font(800, 38), fill="#ffffff", anchor="ls")
+    d.text((64, H - 82), FOOTERS.get(platform, FOOTERS["instagram"]), font=font(800, 38), fill="#ffffff",
+           anchor="ls")
     d.text((64, H - 40), "#ad · Price when posted; Amazon prices change fast.", font=font(500, 22),
            fill=FOOT_MUTED, anchor="ls")
     return img
 
 
 def card_jpeg(deal: Deal, product: Image.Image, brand: str = "", quality: int = 88, *,
-              label: str = "TODAY'S DEAL", accent: str | None = None) -> bytes:
+              label: str = "TODAY'S DEAL", accent: str | None = None, platform: str = "instagram") -> bytes:
     buf = io.BytesIO()
-    render_card(deal, product, brand, label, accent).save(buf, "JPEG", quality=quality, optimize=True, progressive=True)
+    render_card(deal, product, brand, label, accent, platform).save(buf, "JPEG", quality=quality, optimize=True, progressive=True)
     return buf.getvalue()
 
 

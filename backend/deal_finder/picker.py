@@ -39,6 +39,8 @@ WINTER_RX = re.compile(
     r"room heater|heater|geyser|water heater|electric blanket|hot water bag|warmer|"
     r"moisturi[sz]er|body lotion|body milk|lip balm|cold cream|petroleum jelly)\b", re.I)
 WOMEN_DEPARTMENTS = {"fashion", "beauty-personal-care"}
+NOT_WINTER_RX = re.compile(r"\bac\s+(comforter|blanket|quilt|dohar|duvet)|\bsummer\b|\bcooling\b", re.I)
+KIDS_RX = re.compile(r"\b(girls?|kids?|baby|babies|toddler|infant|child|children|\d+\s*-\s*\d+\s*(years?|yrs?)|years?)\b", re.I)
 
 SEASON_BOOST = 18
 WOMEN_BOOST = 15
@@ -70,11 +72,14 @@ def family_key(title: str, brand: str | None = None) -> str:
 
 
 def is_winter_item(title: str) -> bool:
-    return bool(WINTER_RX.search(title or ""))
+    title = title or ""
+    return bool(WINTER_RX.search(title)) and not NOT_WINTER_RX.search(title)
 
 
 def is_for_her(doc: dict) -> bool:
-    return doc.get("gender") == "women" and doc.get("department") in WOMEN_DEPARTMENTS | {"fashion"}
+    """Women's fashion/beauty, not girls' or kids' wear (the gender guess counts 'girls' as women)."""
+    return (doc.get("gender") == "women" and doc.get("department") in WOMEN_DEPARTMENTS
+            and not KIDS_RX.search(doc.get("title", "")))
 
 
 def theme(doc: dict, when: datetime) -> str:

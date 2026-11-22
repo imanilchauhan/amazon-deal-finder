@@ -44,6 +44,7 @@ def test_winter_and_women_get_boosted_and_repeats_get_pushed_down():
     lamp = d("H1", "LED Table Lamp", dept="home-kitchen", cat="lighting", pct=60)
     assert rank([luggage, lamp], history, WHEN)[0][1]["asin"] == "H1"
     assert is_winter_item("Polar Fleece Single Bed Blanket") and not is_winter_item("Pressure Cooker")
+    assert not is_winter_item("Microfiber Reversible Single Bed AC Comforter")
 
 
 def test_theme_labels():
@@ -51,6 +52,7 @@ def test_theme_labels():
     assert theme(d("B", "Anarkali Kurta", gender="women"), WHEN) == "her"
     assert theme(d("C", "Steel Bottle", dept="home-kitchen", cat="storage-containers", source="trending"), WHEN) == "trending"
     assert theme(d("D", "Puffer Winter Jacket"), WHEN.replace(month=6)) == ""
+    assert theme(d("E", "Girls Half Saree Langa Voni 5-6 Years", gender="women"), WHEN) == ""
 
 
 def test_merge_logs_dedupes_and_keeps_order():
