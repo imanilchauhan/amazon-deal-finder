@@ -29,8 +29,9 @@ hour=$(TZ=Asia/Kolkata date +%H)
 if (( 10#$hour >= ${QUIET_FROM:-1} && 10#$hour < ${QUIET_TO:-7} )); then
   exit 0  # quiet hours (IST): no shopper traffic worth the scraping risk
 fi
+paused=0
 if [[ -f "$COOLDOWN" ]] && (( now < $(cat "$COOLDOWN") )); then
-  exit 0  # paused after a robot check
+  paused=1  # scraping paused after a robot check; posting still runs
 fi
 if ! mkdir "$LOCK" 2>/dev/null; then
   # A run is still going, or a crashed one left the lock. Clear locks older than 40 min.
@@ -77,6 +78,9 @@ if [[ ! -f "$GOOGLE_APPLICATION_CREDENTIALS" ]]; then
 fi
 
 cd "$BACKEND" || exit 1
+if (( paused )); then
+  log "scrape skipped: paused after a robot check"
+else
 log "run start"
 RUN_LOG="$LOG_DIR/last-run.log"
 "$BACKEND/.venv/bin/python" -m deal_finder > "$RUN_LOG" 2>&1
@@ -97,9 +101,18 @@ else
   rm -f "$COOLDOWN"
   log "run end: exit=$code scraped=$scraped"
 fi
+fi
 
-# Posting: once an hour (the first run after :00), fill any free slot in the next 6 hours.
-if [[ "${LOCAL_POSTING:-true}" == "true" ]] && (( 10#$(date +%M) < 15 )); then
+# Posting: at most once every 50 minutes, fill any free slot in the next 6 hours. (A stamp
+# file, not the clock minute: launchd's 15-minute timer drifts and pauses while the Mac sleeps,
+# so "first run after :00" missed most hours.)
+POST_STAMP="$LOG_DIR/last-post-check"
+post_due() {
+  [[ ! -f "$POST_STAMP" ]] && return 0
+  (( $(date +%s) - $(stat -f %m "$POST_STAMP") >= 3000 ))
+}
+if [[ "${LOCAL_POSTING:-true}" == "true" ]] && post_due; then
+  touch "$POST_STAMP"
   if [[ -z "${BUFFER_API_KEY:-}" ]]; then
     log "post: skipped, BUFFER_API_KEY missing (add it to backend/.env)"
   else
