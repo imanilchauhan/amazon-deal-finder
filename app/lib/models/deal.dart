@@ -44,7 +44,7 @@ class Deal {
       currency: (m['currency'] as String?) ?? 'INR',
       imageUrl: (m['image_url'] as String?) ?? '',
       url: url,
-      updatedAt: ts is Timestamp ? ts.toDate() : (ts is DateTime ? ts : null),
+      updatedAt: ts is Timestamp ? ts.toDate().toUtc() : (ts is DateTime ? ts.toUtc() : null),
     );
   }
 }
