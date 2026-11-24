@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { AMAZON_DISCLOSURE, SITE } from "@/lib/site";
+import { AMAZON_DISCLOSURE, SITE, SOCIALS } from "@/lib/site";
 import s from "./ui.module.css";
 
 export function Header() {
@@ -16,9 +16,7 @@ export function Header() {
           <Link href="/collections">Collections</Link>
           <Link href="/guides">Guides</Link>
           <Link href="/about">About</Link>
-          <a href={SITE.xUrl} target="_blank" rel="noopener">
-            Follow on X
-          </a>
+          <Link href="/contact">Contact</Link>
         </nav>
       </div>
     </header>
@@ -41,9 +39,14 @@ export function Footer() {
           <Link href="/about">About</Link>
           <Link href="/affiliate-disclosure">Affiliate disclosure</Link>
           <Link href="/privacy">Privacy policy</Link>
-          <a href={SITE.xUrl} target="_blank" rel="noopener">
-            X {SITE.xHandle}
-          </a>
+          <Link href="/contact">Contact us</Link>
+        </nav>
+        <nav className={s.footerNav} aria-label="Follow CartCrush">
+          {SOCIALS.map((so) => (
+            <a key={so.name} href={so.url} target="_blank" rel="noopener me">
+              {so.name} {so.handle}
+            </a>
+          ))}
         </nav>
       </div>
       <p className={s.disclosure}>{AMAZON_DISCLOSURE} Amazon and the Amazon logo are trademarks of Amazon.com, Inc. or its affiliates.</p>

@@ -30,7 +30,8 @@ export default function About() {
       </p>
       <h2>Get deals first</h2>
       <p>
-        Follow <a href={SITE.xUrl}>{SITE.xHandle}</a> on X to see new deals as soon as we post them.
+        Follow <a href={SITE.xUrl}>{SITE.xHandle}</a> on X, or find us on Instagram and Facebook. All our channels
+        and how to reach us are on the <Link href="/contact">contact page</Link>.
       </p>
     </main>
   );

@@ -1,0 +1,144 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 16px 56px;
+}
+.hero {
+  text-align: center;
+  padding: 24px 0 36px;
+}
+.kicker {
+  margin: 0 0 8px;
+  color: var(--brand-deep);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.hero h1 {
+  margin: 0 auto;
+  max-width: 18ch;
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.1;
+}
+.lead {
+  margin: 14px auto 24px;
+  max-width: 52ch;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.55;
+}
+.primary {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: 13px 22px;
+  border-radius: 12px;
+  background: var(--brand);
+  color: var(--on-brand, #fff);
+  font-weight: 700;
+  text-decoration: none;
+}
+.primary:hover {
+  background: var(--brand-deep);
+}
+.primary:focus-visible,
+.follow:focus-visible,
+.reason a:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+.h2 {
+  margin: 8px 0 14px;
+  font-size: clamp(20px, 2.6vw, 26px);
+}
+
+.socials,
+.reasons {
+  list-style: none;
+  margin: 0 0 36px;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.socials {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.social {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 18px 18px 20px;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.socialText {
+  flex: 1;
+}
+.social h3 {
+  margin: 0;
+  font-size: 18px;
+}
+.handle {
+  margin: 2px 0 8px;
+  color: var(--accent);
+  font-weight: 700;
+}
+.blurb {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+.follow {
+  align-self: flex-start;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--accent);
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+.follow:hover {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+.reasons {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+.reason {
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+.reason h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.reason p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 14.5px;
+  line-height: 1.5;
+  flex: 1;
+}
+.reason a {
+  color: var(--brand-deep);
+  font-weight: 600;
+  text-decoration: none;
+}
+.reason a:hover {
+  text-decoration: underline;
+}
+.note {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
