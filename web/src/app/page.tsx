@@ -149,7 +149,7 @@ export default async function Home() {
               <span className={h.kicker}>Steals</span>
               <h3 className={h.big}>Under ₹499</h3>
               <p>
-                {snippet(steal.shortTitle)} · {money(steal.price, steal.currency)} · {steal.discountPct}% off
+                {snippet(steal.shortTitle, 22)} · {money(steal.price, steal.currency)} · {steal.discountPct}% off
               </p>
             </div>
             <img className={h.side} src={steal.imageUrl} alt="" loading="lazy" />
@@ -162,7 +162,7 @@ export default async function Home() {
               <span className={h.kicker}>For her</span>
               <h3>Fashion, bags &amp; beauty</h3>
               <p>
-                {snippet(forHer.shortTitle)} · {money(forHer.price, forHer.currency)}
+                {snippet(forHer.shortTitle, 22)} · {money(forHer.price, forHer.currency)}
               </p>
             </div>
             <img className={h.side} src={forHer.imageUrl} alt="" loading="lazy" />
@@ -175,7 +175,7 @@ export default async function Home() {
               <span className={h.kicker}>Home refresh</span>
               <h3>Home &amp; kitchen up to {homeMax}% off</h3>
               <p>
-                {snippet(home.shortTitle)} · {money(home.price, home.currency)}
+                {snippet(home.shortTitle, 22)} · {money(home.price, home.currency)}
               </p>
             </div>
             <img className={h.side} src={home.imageUrl} alt="" loading="lazy" />

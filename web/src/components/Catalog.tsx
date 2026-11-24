@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Deal } from "@/lib/deals";
 import { titleMatches } from "@/lib/ask";
+import { withoutVariants } from "@/lib/variants";
 import { money } from "@/lib/format";
 import { DealCard } from "./DealCard";
 import { QuickView } from "./QuickView";
@@ -112,7 +113,7 @@ export function Catalog({ deals, categories }: { deals: Deal[]; categories?: { s
   const visible = useMemo(() => {
     const words = st.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
     const bands = PRICE_BANDS.filter((b) => st.bands.includes(b.id));
-    return deals
+    const list = deals
       .filter(
         (d) =>
           (!st.cats.length || st.cats.includes(d.category)) &&
@@ -125,6 +126,7 @@ export function Catalog({ deals, categories }: { deals: Deal[]; categories?: { s
           (!words.length || titleMatches(d.title, words)),
       )
       .sort(SORTS[st.sort].fn);
+    return withoutVariants(list);
   }, [deals, st]);
 
   const activeCount =

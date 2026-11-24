@@ -11,7 +11,7 @@ const EXAMPLES = ["warm jacket under ₹1,000 for my dad", "gift for mom under �
 export function AskBar({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
   const [text, setText] = useState("");
-  const placeholder = `Ask: ${EXAMPLES[0]}…`;
+  const placeholder = `Ask: ${EXAMPLES[1]}`;
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
