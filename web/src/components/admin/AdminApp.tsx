@@ -35,7 +35,8 @@ import { WhatsAppDigest } from "./WhatsAppDigest";
 import { CollectionsAdmin } from "./CollectionsAdmin";
 import s from "./admin.module.css";
 
-const OWNER = (process.env.NEXT_PUBLIC_ADMIN_EMAIL || "imanilchauhan3@gmail.com").toLowerCase();
+// The owner's Firebase user ID (not personal: it reveals nothing). Firestore rules check the same ID.
+const OWNER_UID = process.env.NEXT_PUBLIC_ADMIN_UID || "1SFNbV75lgdxOFg1qY248oa5m9Z2";
 
 function useAuth() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -74,7 +75,7 @@ export function AdminApp() {
     );
   }
 
-  if ((user.email ?? "").toLowerCase() !== OWNER || !user.emailVerified) {
+  if (user.uid !== OWNER_UID || !user.emailVerified) {
     return (
       <section className={s.card}>
         <h1>Not authorised</h1>

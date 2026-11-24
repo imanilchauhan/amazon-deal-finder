@@ -2,14 +2,15 @@ rules_version = '2';
 
 // Public clients (website, app, Cloudflare Worker) are READ-ONLY.
 // Writes come from the backend's service account (Admin SDK bypasses these rules) and from
-// the site owner, signed in to /admin with their verified Google account.
+// the site owner, signed in to /admin with their Google account (matched by Firebase user ID,
+// so no personal email sits in this public repo).
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function isOwner() {
       return request.auth != null
         && request.auth.token.email_verified == true
-        && request.auth.token.email == 'imanilchauhan3@gmail.com';
+        && request.auth.uid == '1SFNbV75lgdxOFg1qY248oa5m9Z2';
     }
 
     match /deals/{asin} {
