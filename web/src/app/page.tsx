@@ -10,7 +10,7 @@ import { getActiveProducts, getCollectionPicks, getDeals } from "@/lib/deals";
 import { money } from "@/lib/format";
 import { PRICE_DISCLAIMER, SITE, SOCIALS } from "@/lib/site";
 import { DEPARTMENTS } from "@/lib/taxonomy";
-import { isForHer, isWinter, moodsOf } from "@/lib/themes";
+import { isForHer, isWinter, moodsOf, snippet } from "@/lib/themes";
 import { withoutVariants } from "@/lib/variants";
 import h from "./home.module.css";
 import s from "./page.module.css";
@@ -62,6 +62,13 @@ export default async function Home() {
     .filter((x) => x.items.length >= 3)
     .sort((a, b) => b.best - a.best)
     .slice(0, 6);
+  // Each collection tile shows its own photos: a product already shown on an earlier tile is skipped.
+  const shownOnTiles = new Set<string>();
+  for (const t of collectionTiles) {
+    const fresh = t.items.filter((d) => !shownOnTiles.has(d.asin));
+    t.items = (fresh.length >= 3 ? fresh : t.items).slice(0, 3);
+    t.items.forEach((d) => shownOnTiles.add(d.asin));
+  }
   const day = now.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
   const instagram = SOCIALS.find((x) => x.name === "Instagram");
   const whatsapp = SOCIALS.find((x) => x.name === "WhatsApp");
@@ -142,7 +149,7 @@ export default async function Home() {
               <span className={h.kicker}>Steals</span>
               <h3 className={h.big}>Under ₹499</h3>
               <p>
-                {steal.shortTitle.split(" ").slice(0, 4).join(" ")} {money(steal.price, steal.currency)} · {steal.discountPct}% off
+                {snippet(steal.shortTitle)} · {money(steal.price, steal.currency)} · {steal.discountPct}% off
               </p>
             </div>
             <img className={h.side} src={steal.imageUrl} alt="" loading="lazy" />
@@ -155,7 +162,7 @@ export default async function Home() {
               <span className={h.kicker}>For her</span>
               <h3>Fashion, bags &amp; beauty</h3>
               <p>
-                {forHer.shortTitle.split(" ").slice(0, 4).join(" ")} {money(forHer.price, forHer.currency)}
+                {snippet(forHer.shortTitle)} · {money(forHer.price, forHer.currency)}
               </p>
             </div>
             <img className={h.side} src={forHer.imageUrl} alt="" loading="lazy" />
@@ -168,7 +175,7 @@ export default async function Home() {
               <span className={h.kicker}>Home refresh</span>
               <h3>Home &amp; kitchen up to {homeMax}% off</h3>
               <p>
-                {home.shortTitle.split(" ").slice(0, 4).join(" ")} {money(home.price, home.currency)}
+                {snippet(home.shortTitle)} · {money(home.price, home.currency)}
               </p>
             </div>
             <img className={h.side} src={home.imageUrl} alt="" loading="lazy" />
@@ -184,7 +191,7 @@ export default async function Home() {
           </div>
           <Link href="/deals">See all {all.length} deals →</Link>
         </div>
-        <MoodGrid items={crushes} perView={8} />
+        <MoodGrid items={crushes} perView={12} />
       </section>
 
       {collectionTiles.length > 0 && (

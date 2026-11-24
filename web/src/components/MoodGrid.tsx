@@ -5,7 +5,6 @@ import type { Deal } from "@/lib/deal-model";
 import { MOODS, type Mood } from "@/lib/themes";
 import { DealCard } from "./DealCard";
 import h from "@/app/home.module.css";
-import s from "./ui.module.css";
 
 type Item = { deal: Deal; moods: Mood[] };
 
@@ -26,7 +25,7 @@ export function MoodGrid({ items, perView = 8 }: { items: Item[]; perView?: numb
           </button>
         ))}
       </div>
-      <div className={s.grid} key={mood}>
+      <div className={h.crushGrid} key={mood}>
         {shown.map(({ deal }, i) => (
           <DealCard key={deal.asin} deal={deal} index={i} priority={i < 4} />
         ))}

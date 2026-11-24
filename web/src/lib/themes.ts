@@ -3,7 +3,7 @@ import type { Deal } from "./deal-model";
 /** Mirrors backend picker.py: winter items (Nov–Feb), women's fashion and beauty (not kids'). */
 const WINTER_RX =
   /\b(winter|thermal|woolen|woollen|wool|fleece|sweater|sweatshirt|hoodie|jacket|puffer|cardigan|shawl|stole|muffler|beanie|gloves|blanket|quilt|comforter|razai|dohar|room heater|heater|geyser|water heater|electric blanket|hot water bag|warmer)\b/i;
-const NOT_WINTER_RX = /\bac\s+(comforter|blanket|quilt|dohar|duvet)|\bsummer\b|\bcooling\b/i;
+const NOT_WINTER_RX = /\bac\s+(comforter|blanket|quilt|dohar|duvet)|\bsummer\b|\bcooling\b|\bstorage\b|\borgani[sz]er\b|\bvacuum bag/i;
 const KIDS_RX = /\b(girls?|kids?|baby|babies|toddler|infant|child|children|years?)\b/i;
 const GIFT_DEPTS = new Set(["electronics", "toys-games"]);
 const GIFT_CATS = new Set(["watches", "jewellery", "bags-luggage", "fragrance", "smartwatches-bands", "headphones-earbuds"]);
@@ -48,4 +48,11 @@ export function dealTag(d: Deal, now = new Date()): string {
   if (d.department === "home-kitchen") return "Home pick";
   if (d.price < 500) return "Under ₹500";
   return "";
+}
+
+/** A product name cut to about `max` characters at a word boundary, for small captions. */
+export function snippet(title: string, max = 28): string {
+  if (title.length <= max) return title;
+  const cut = title.slice(0, max + 1).replace(/\s+\S*$/, "");
+  return `${cut.replace(/[\s,|–-]+$/, "")}…`;
 }

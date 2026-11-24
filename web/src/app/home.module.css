@@ -335,6 +335,22 @@ a.tile:focus-visible,
   color: var(--bg);
 }
 
+.crushGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+@media (max-width: 1080px) {
+  .crushGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .crushGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
 .cols {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
