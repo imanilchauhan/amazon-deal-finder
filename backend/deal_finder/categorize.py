@@ -60,6 +60,12 @@ def classify(title: str) -> dict:
         if pat.search(text):
             scores[(dep, cat)] = scores.get((dep, cat), 0) + weight
     gender = next((g for g, rx in GENDER_RULES if rx.search(title)), None)
+    if gender in ("women", "men"):
+        # "for Women" / "Men's" is a strong sign of fashion or beauty: a tie with a generic
+        # word elsewhere ("set", "box", "mirror work") goes to the wearable reading.
+        for key in scores:
+            if key[0] in ("fashion", "beauty-personal-care"):
+                scores[key] += 4
     out: dict = {"brand": _guess_brand(title), "gender": gender}
     if not scores:
         out.update(

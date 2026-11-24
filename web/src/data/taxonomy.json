@@ -188,9 +188,9 @@
       "keyboard",
       "mouse",
       "mousepad",
-      "combo",
       "mouse pad",
-      "gaming mouse"
+      "gaming mouse",
+      "keyboard mouse combo"
      ]
     },
     {
@@ -451,7 +451,6 @@
       "artificial plant",
       "photo frame",
       "clock",
-      "mirror",
       "curtain",
       "rug",
       "carpet",
@@ -461,7 +460,10 @@
       "rangoli",
       "toran",
       "decor",
-      "decoration"
+      "decoration",
+      "wall mirror",
+      "bathroom mirror",
+      "decorative mirror"
      ]
     },
     {
@@ -576,7 +578,32 @@
       "sweater",
       "salwar",
       "dupatta",
-      "ethnic"
+      "ethnic",
+      "night suit",
+      "nightsuit",
+      "nightwear",
+      "night dress",
+      "nighty",
+      "bra",
+      "panty",
+      "penty",
+      "lingerie",
+      "bathrobe",
+      "bath robe",
+      "pyjama",
+      "pajama",
+      "co-ord",
+      "blouse",
+      "anarkali",
+      "georgette",
+      "bandhani",
+      "chiffon",
+      "palazzo",
+      "mirror work",
+      "thermal wear",
+      "thermal set",
+      "shapewear",
+      "petticoat"
      ]
     },
     {
@@ -950,7 +977,11 @@
       "breast pump",
       "baby food",
       "cerelac",
-      "formula"
+      "formula",
+      "pacifier",
+      "teether",
+      "soother",
+      "baby bottle"
      ]
     },
     {

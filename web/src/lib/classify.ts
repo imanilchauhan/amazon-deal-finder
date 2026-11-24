@@ -47,6 +47,10 @@ export function classify(title: string): Classified {
   const scores = new Map<string, number>();
   for (const r of RULES) if (r.rx.test(text)) scores.set(`${r.dep}/${r.cat}`, (scores.get(`${r.dep}/${r.cat}`) ?? 0) + r.weight);
   const gender = GENDERS.find(([, rx]) => rx.test(title))?.[0] ?? null;
+  // Same as the backend: "for Women" / "Men's" tips a tie towards fashion or beauty.
+  if (gender === "women" || gender === "men") {
+    for (const [k, v] of scores) if (k.startsWith("fashion/") || k.startsWith("beauty-personal-care/")) scores.set(k, v + 4);
+  }
   const brand = guessBrand(title);
   if (!scores.size) {
     return { department: "uncategorised", category: "uncategorised", category_path: ["uncategorised"], category_source: "rules", category_confidence: 0, brand, gender };

@@ -73,3 +73,19 @@ def test_winter_and_trending_products_are_categorised():
     for title, (dept, cat) in cases.items():
         c = classify(title)
         assert (c["department"], c["category"]) == (dept, cat), title
+
+
+def test_misfiled_titles_from_live_collections():
+    from deal_finder.categorize import classify
+
+    cases = {
+        "Valentine's Day Fancy Night Suit Bath Robe Dress & Bra Penty Set Combo": ("fashion", "clothing"),
+        "Shining Diva Fashion 12 Pairs Set Earrings for Women Girls with Jewellery Box": ("fashion", "jewellery"),
+        "SIRIL Women's Georgette Mirror Work Bandhani Printed Saree with Unstitched Blouse": ("fashion", "clothing"),
+        "Philips Avent Ultra Air Pacifier, 0-6 Months | Aids Natural Oral Development": ("baby", "feeding"),
+        "Logitech MK270 Wireless Keyboard Mouse Combo": ("computers-accessories", "keyboards-mice"),
+        "Decorative Wall Mirror for Living Room": ("home-kitchen", "home-d-cor"),
+    }
+    for title, want in cases.items():
+        got = classify(title)
+        assert (got["department"], got["category"]) == want, title

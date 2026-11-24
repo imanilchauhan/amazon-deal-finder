@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 def tag_all(db, *, dry_run: bool = False) -> dict:
-    stats = {"seen": 0, "tagged": 0, "skipped_manual": 0, "uncategorised": 0}
+    stats = {"seen": 0, "tagged": 0, "unchanged": 0, "skipped_manual": 0, "uncategorised": 0}
     batch = db.batch()
     pending = 0
     for snap in db.collection("deals").stream():
@@ -26,9 +26,12 @@ def tag_all(db, *, dry_run: bool = False) -> dict:
         cats = classify(str(data.get("title", "")))
         if cats["department"] == "uncategorised":
             stats["uncategorised"] += 1
-        update = dict(cats)
+        update = {k: v for k, v in cats.items() if data.get(k) != v}
         if "x_status" not in data:
             update["x_status"] = "posted" if (data.get("posted") or {}).get("x") else "unposted"
+        if not update:
+            stats["unchanged"] += 1
+            continue
         stats["tagged"] += 1
         if not dry_run:
             batch.update(snap.reference, update)
