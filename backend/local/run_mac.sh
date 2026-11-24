@@ -103,6 +103,20 @@ else
 fi
 fi
 
+# Website: ask Cloudflare Pages to rebuild with the latest deals, at most every 2 hours,
+# and only after a run that found or changed deals. (The cloud job used to do this.)
+REBUILD_STAMP="$LOG_DIR/last-site-rebuild"
+if [[ -n "${CLOUDFLARE_DEPLOY_HOOK:-}" ]] && (( ! paused )) && (( ${scraped:-0} > 0 )); then
+  if [[ ! -f "$REBUILD_STAMP" ]] || (( $(date +%s) - $(stat -f %m "$REBUILD_STAMP") >= 7200 )); then
+    if curl -fsS -m 30 -X POST "$CLOUDFLARE_DEPLOY_HOOK" -d "" >/dev/null 2>&1; then
+      touch "$REBUILD_STAMP"
+      log "site: rebuild requested"
+    else
+      log "site: rebuild request failed, will retry next run"
+    fi
+  fi
+fi
+
 # Posting: at most once every 50 minutes, fill any free slot in the next 6 hours. (A stamp
 # file, not the clock minute: launchd's 15-minute timer drifts and pauses while the Mac sleeps,
 # so "first run after :00" missed most hours.)
