@@ -89,7 +89,8 @@ export default async function Home() {
       {collectionRows.map(({ col, items }) => (
         <DealRow
           key={col.slug}
-          title={<>🧺 {col.h1}</>}
+          title={col.h1}
+          label={col.h1}
           note={col.group}
           href={`/collections/${col.slug}`}
           linkLabel="See collection"
@@ -109,6 +110,7 @@ export default async function Home() {
               {dep.icon} {dep.name}
             </>
           }
+          label={dep.name}
           href={`/c/${dep.slug}`}
           linkLabel={`See all ${counts[dep.slug]}`}
           deals={deals.filter((d) => d.department === dep.slug).slice(0, 10)}

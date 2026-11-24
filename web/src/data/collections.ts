@@ -5,6 +5,7 @@
  * over the live catalogue. Copy is advice that stays true whatever is live; never quote
  * a specific product price here.
  */
+import { familyKey } from "@/lib/variants";
 export type Rule = {
   department: string;
   /** Any of these categories; omit for the whole department. */
@@ -596,7 +597,7 @@ export type BuiltSection<T> = { heading: string; items: T[] };
 /** A product counts as a "top deal" in a collection from this discount up. */
 export const TOP_DEAL_MIN_DISCOUNT = 15;
 
-export function buildCollection<T extends Matchable & { asin: string; discountPct: number }>(
+export function buildCollection<T extends Matchable & { asin: string; discountPct: number; brand?: string }>(
   c: Collection,
   live: T[],
   picks: string[],
@@ -608,8 +609,17 @@ export function buildCollection<T extends Matchable & { asin: string; discountPc
   const pickedSet = new Set(picked.map((d) => d.asin));
   // Today's biggest discounts that fit any section of this collection (live is sorted by discount).
   const fits = (d: T) => c.sections.some((s) => s.rules.some((r) => matchesRule(d, r, c.maxPrice)));
+  // One card per product: colour/size variants of something already shown are skipped.
+  const families = new Set(picked.map((d) => familyKey(d)));
+  const fresh = (d: T) => {
+    const k = familyKey(d);
+    if (families.has(k)) return false;
+    families.add(k);
+    return true;
+  };
   const topDeals = live
     .filter((d) => d.discountPct >= TOP_DEAL_MIN_DISCOUNT && !pickedSet.has(d.asin) && fits(d))
+    .filter(fresh)
     .slice(0, topCount);
   const used = new Set([...pickedSet, ...topDeals.map((d) => d.asin)]);
   const sections: BuiltSection<T>[] = [];
@@ -618,7 +628,7 @@ export function buildCollection<T extends Matchable & { asin: string; discountPc
     for (const d of live) {
       if (items.length >= perSection) break;
       if (used.has(d.asin)) continue;
-      if (s.rules.some((r) => matchesRule(d, r, c.maxPrice))) {
+      if (s.rules.some((r) => matchesRule(d, r, c.maxPrice)) && fresh(d)) {
         items.push(d);
         used.add(d.asin);
       }

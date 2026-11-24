@@ -33,7 +33,6 @@ export function DealCard({ deal, priority = false, index = 0, onQuickView }: Pro
         </button>
       )}
       <div className={s.cardBody}>
-        {deal.brand && <p className={s.brandTag}>{deal.brand}</p>}
         <h3 className={s.cardTitle}>
           <Link href={`/deals/${deal.slug}`}>{deal.shortTitle}</Link>
         </h3>
