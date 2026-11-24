@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   backend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: backend
@@ -26,7 +26,7 @@ jobs:
       - run: python -m pytest -v
 
   worker:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: worker
@@ -38,7 +38,7 @@ jobs:
       - run: npm test
 
   scheduler:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: scheduler
@@ -50,7 +50,7 @@ jobs:
       - run: npm test
 
   flutter:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: app
