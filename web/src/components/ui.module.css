@@ -44,12 +44,32 @@
   color: var(--ink);
   background: var(--surface-2);
 }
-@media (max-width: 560px) {
-  .nav a:nth-child(2) {
+.nav a {
+  white-space: nowrap;
+}
+/* Phones: logo on its own line, every link in one sideways-scrolling strip below it. */
+@media (max-width: 640px) {
+  .headerInner {
+    flex-wrap: wrap;
+    row-gap: 2px;
+    padding: 8px 16px 4px;
+  }
+  .logo {
+    font-size: 19px;
+  }
+  .nav {
+    order: 1;
+    width: calc(100% + 32px);
+    margin: 0 -16px;
+    padding: 0 10px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar {
     display: none;
   }
   .nav a {
-    padding: 8px 6px;
+    padding: 7px 8px;
     font-size: 14px;
   }
 }
@@ -733,6 +753,18 @@
 .rowHead h2 {
   font-size: clamp(20px, 2.6vw, 26px);
   margin: 0;
+}
+.rowHead > div {
+  min-width: 0;
+}
+@media (max-width: 520px) {
+  .rowHead {
+    align-items: flex-start;
+  }
+  .rowHead a {
+    font-size: 14px;
+    padding-top: 4px;
+  }
 }
 .rowHead a {
   color: var(--brand-deep);
