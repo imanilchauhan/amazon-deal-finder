@@ -1,10 +1,18 @@
 :root {
-  --bg: #faf8f6;
+  --bg: #f6f3ef;
   --surface: #ffffff;
-  --surface-2: #f3efec;
-  --ink: #16181d;
-  --muted: #5b6170;
-  --line: #e7e2de;
+  --surface-2: #f3efea;
+  --tile: #f7f4f1;
+  --ink: #15161a;
+  --muted: #4b505c;
+  --line: #e6e0da;
+  /* soft theme tiles on the home page */
+  --t-winter: #dce7f7;
+  --t-winter-ink: #1e4fa8;
+  --t-her: #fbe4ea;
+  --t-her-ink: #a3164a;
+  --t-home: #e5f0e7;
+  --t-home-ink: #136a35;
   --brand: #e5484d;
   --brand-deep: #c62828;
   --brand-soft: #fde8e8;
@@ -12,7 +20,7 @@
   --on-brand: #ffffff;
   --radius: 16px;
   --shadow: 0 1px 2px rgb(22 24 29 / 6%), 0 8px 24px rgb(22 24 29 / 6%);
-  --max: 1200px;
+  --max: 1280px;
   color-scheme: light;
 }
 
@@ -21,7 +29,14 @@
     --bg: #0f1013;
     --surface: #17191e;
     --surface-2: #1f2228;
+    --tile: #f4f1ee;
     --ink: #eceef2;
+    --t-winter: #18243a;
+    --t-winter-ink: #9fc0f5;
+    --t-her: #33192a;
+    --t-her-ink: #f5a3c2;
+    --t-home: #16281c;
+    --t-home-ink: #93d6a8;
     --muted: #a3a9b6;
     --line: #2a2e36;
     --brand: #ff5a5f;

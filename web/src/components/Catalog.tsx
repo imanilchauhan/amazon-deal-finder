@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Deal } from "@/lib/deals";
+import { titleMatches } from "@/lib/ask";
 import { money } from "@/lib/format";
 import { DealCard } from "./DealCard";
 import { QuickView } from "./QuickView";
@@ -28,8 +29,21 @@ const GENDERS = [
   { id: "kids", label: "Kids" },
 ];
 
-type State = { cats: string[]; bands: string[]; minOff: number; brands: string[]; genders: string[]; sort: Sort; q: string };
-const EMPTY: State = { cats: [], bands: [], minOff: 0, brands: [], genders: [], sort: "discount", q: "" };
+type State = {
+  cats: string[];
+  bands: string[];
+  minOff: number;
+  brands: string[];
+  genders: string[];
+  sort: Sort;
+  q: string;
+  /** price range from an "Ask CartCrush" question ("under ₹1,000") */
+  max: number;
+  min: number;
+  /** the question itself, shown above the results */
+  ask: string;
+};
+const EMPTY: State = { cats: [], bands: [], minOff: 0, brands: [], genders: [], sort: "discount", q: "", max: 0, min: 0, ask: "" };
 
 const list = (v: string | null) => (v ? v.split(",").filter(Boolean) : []);
 
@@ -44,6 +58,9 @@ function fromUrl(): State {
     genders: list(p.get("for")),
     sort: sort && sort in SORTS ? sort : "discount",
     q: p.get("q") ?? "",
+    max: Number(p.get("max") ?? 0) || 0,
+    min: Number(p.get("min") ?? 0) || 0,
+    ask: p.get("ask") ?? "",
   };
 }
 
@@ -56,6 +73,9 @@ function toUrl(st: State): string {
   if (st.genders.length) p.set("for", st.genders.join(","));
   if (st.sort !== "discount") p.set("sort", st.sort);
   if (st.q) p.set("q", st.q);
+  if (st.max) p.set("max", String(st.max));
+  if (st.min) p.set("min", String(st.min));
+  if (st.ask) p.set("ask", st.ask);
   const qs = p.toString();
   return window.location.pathname + (qs ? `?${qs}` : "");
 }
@@ -90,7 +110,7 @@ export function Catalog({ deals, categories }: { deals: Deal[]; categories?: { s
   }, [deals]);
 
   const visible = useMemo(() => {
-    const q = st.q.trim().toLowerCase();
+    const words = st.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
     const bands = PRICE_BANDS.filter((b) => st.bands.includes(b.id));
     return deals
       .filter(
@@ -100,12 +120,15 @@ export function Catalog({ deals, categories }: { deals: Deal[]; categories?: { s
           d.discountPct >= st.minOff &&
           (!st.brands.length || st.brands.includes(d.brand)) &&
           (!st.genders.length || st.genders.includes(d.gender)) &&
-          (!q || d.title.toLowerCase().includes(q)),
+          (!st.max || d.price <= st.max) &&
+          (!st.min || d.price >= st.min) &&
+          (!words.length || titleMatches(d.title, words)),
       )
       .sort(SORTS[st.sort].fn);
   }, [deals, st]);
 
-  const activeCount = st.cats.length + st.bands.length + st.brands.length + st.genders.length + (st.minOff ? 1 : 0) + (st.q ? 1 : 0);
+  const activeCount =
+    st.cats.length + st.bands.length + st.brands.length + st.genders.length + (st.minOff ? 1 : 0) + (st.q ? 1 : 0) + (st.max || st.min ? 1 : 0);
   const clear = () => update({ ...EMPTY, sort: st.sort });
   const visibleCats = categories?.filter((c) => catCounts.get(c.slug));
 
@@ -191,7 +214,7 @@ export function Catalog({ deals, categories }: { deals: Deal[]; categories?: { s
             placeholder="Search these deals"
             aria-label="Search these deals"
             value={st.q}
-            onChange={(e) => update({ q: e.target.value })}
+            onChange={(e) => update({ q: e.target.value, ask: "" })}
           />
           <button type="button" className={s.filterBtn} onClick={() => setSheet(true)}>
             Filters{activeCount ? ` (${activeCount})` : ""}
@@ -207,6 +230,14 @@ export function Catalog({ deals, categories }: { deals: Deal[]; categories?: { s
             </select>
           </label>
         </div>
+        {st.ask && (
+          <p className={s.askNote}>
+            Deals for <b>&ldquo;{st.ask}&rdquo;</b>
+            {st.max ? ` · up to ${money(st.max, "INR")}` : ""}
+            {st.min ? ` · from ${money(st.min, "INR")}` : ""}
+            {st.genders.length ? ` · for ${st.genders.join(", ")}` : ""}
+          </p>
+        )}
         <p className={s.count} aria-live="polite">
           {visible.length} deal{visible.length === 1 ? "" : "s"}
           {activeCount > 0 && (

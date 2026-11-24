@@ -1,22 +1,28 @@
 import Link from "next/link";
 import Image from "next/image";
 import { AMAZON_DISCLOSURE, SITE, SOCIALS } from "@/lib/site";
+import { AskBar } from "./AskBar";
+import c from "./chrome.module.css";
+import { Freshness } from "./Freshness";
+import { SavedLink } from "./SaveButton";
 import s from "./ui.module.css";
 
-export function Header() {
+export function Header({ checked = "" }: { checked?: string }) {
   return (
-    <header className={s.header}>
-      <div className={s.headerInner}>
-        <Link href="/" className={s.logo} aria-label="CartCrush home">
-          <Image src="/logo-mark.png" alt="" width={34} height={34} priority />
+    <header className={c.header}>
+      <div className={c.inner}>
+        <Link href="/" className={c.logo} aria-label="CartCrush home">
+          <Image src="/logo-mark.png" alt="" width={32} height={32} priority />
           <span>CartCrush</span>
         </Link>
-        <nav className={s.nav} aria-label="Main">
-          <Link href="/deals">All deals</Link>
+        <Freshness checked={checked} short />
+        <AskBar />
+        <nav className={c.nav} aria-label="Main">
+          <Link href="/deals">Deals</Link>
           <Link href="/collections">Collections</Link>
           <Link href="/guides">Guides</Link>
-          <Link href="/about">About</Link>
           <Link href="/contact">Contact</Link>
+          <SavedLink />
         </nav>
       </div>
     </header>

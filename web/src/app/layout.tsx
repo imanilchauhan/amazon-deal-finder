@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { Footer, Header, JsonLd } from "@/components/SiteChrome";
-import { SITE } from "@/lib/site";
+import { getDeals, lastChecked } from "@/lib/deals";
+import { SITE, SOCIALS } from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#faf8f6" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f3ef" },
     { media: "(prefers-color-scheme: dark)", color: "#0f1013" },
   ],
 };
@@ -55,7 +56,7 @@ const orgJsonLd = {
       name: SITE.name,
       url: SITE.url,
       logo: `${SITE.url}/logo-mark.png`,
-      sameAs: [SITE.xUrl],
+      sameAs: SOCIALS.map((so) => so.url),
     },
     {
       "@type": "WebSite",
@@ -66,12 +67,13 @@ const orgJsonLd = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const checked = lastChecked(await getDeals());
   return (
     <html lang="en-IN" className={`${inter.variable} ${display.variable}`}>
       <body>
         <JsonLd data={orgJsonLd} />
-        <Header />
+        <Header checked={checked} />
         {children}
         <Footer />
       </body>
