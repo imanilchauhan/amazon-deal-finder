@@ -27,6 +27,12 @@ service cloud.firestore {
       allow write: if isOwner();
     }
 
+    // The owner flags the product cache as out of date after an admin edit; the runner then
+    // rebuilds it from Firestore on its next pass (backend/deal_finder/catalog.py).
+    match /meta/catalog_cache {
+      allow write: if isOwner();
+    }
+
     // Post-id -> deal link lookups for the comment-to-DM worker.
     // Single-document reads only, no listing/enumeration.
     match /ig_media/{mediaId} {

@@ -154,13 +154,28 @@ class DealStore:
         if limit <= 0:
             return []
         cutoff = self._now() - timedelta(hours=older_than_hours)
-        query = self._db.collection("deals").where(filter=_field_filter("source", "==", "trending"))
+        # Only active deals not checked since the cutoff (existing active+updated_at index), so a
+        # run reads the few deals that are due, not every trending product.
         try:
-            docs = [(s.id, s.to_dict() or {}) for s in query.stream()]
+            docs = [(s.id, s.to_dict() or {}) for s in self._stale_active(cutoff).stream()]
         except Exception as exc:  # noqa: BLE001
             raise StoreError(f"Firestore read failed: {exc}") from exc
-        stale = [(d.get("updated_at"), a) for a, d in docs if d.get("active") and d.get("updated_at") and d["updated_at"] < cutoff]
+        stale = [(d.get("updated_at"), a) for a, d in docs if d.get("source") == "trending" and d.get("updated_at")]
         return [a for _, a in sorted(stale)[:limit]]
+
+    def _stale_active(self, cutoff: datetime):
+        """Active deals whose price is older than `cutoff`, newest first (index: active, updated_at desc)."""
+        try:
+            from google.cloud.firestore_v1 import Query
+            desc = Query.DESCENDING
+        except ImportError:  # unit tests
+            desc = "DESCENDING"
+        return (
+            self._db.collection("deals")
+            .where(filter=_field_filter("active", "==", True))
+            .where(filter=_field_filter("updated_at", "<", cutoff))
+            .order_by("updated_at", direction=desc)
+        )
 
     # ---- collections (hand-picked products) ---------------------------------
     def collection_picks(self) -> dict[str, list[str]]:
@@ -174,6 +189,7 @@ class DealStore:
             asins = [a for a in ((s.to_dict() or {}).get("asins") or []) if isinstance(a, str)]
             if asins:
                 out[s.id] = asins
+        self.last_picks = out   # reused by the product cache, no second read
         return out
 
     def collection_asins_to_refresh(self, limit: int, older_than_hours: int = 16) -> list[str]:
@@ -219,21 +235,54 @@ class DealStore:
         """Hide deals not seen recently (Amazon prices shouldn't be shown when >24h old)."""
         cutoff = self._now() - timedelta(hours=max_age_hours)
         manual_cutoff = self._now() - timedelta(hours=max(max_age_hours, MANUAL_MAX_AGE_HOURS))
-        query = self._db.collection("deals").where(filter=_field_filter("active", "==", True))
+        # Read only the active deals that are already past the shorter cutoff, not every active deal.
+        query = self._stale_active(max(cutoff, manual_cutoff))  # the later cutoff covers both rules
         batch = self._db.batch()
         count = 0
+        self.deactivated: list[str] = []
         for snap in query.stream():
             data = snap.to_dict() or {}
             updated = data.get("updated_at")
             limit = manual_cutoff if data.get("source") in CURATED_SOURCES else cutoff
             if updated is not None and updated < limit:
                 batch.update(snap.reference, {"active": False})
+                self.deactivated.append(snap.id)
                 count += 1
         if count:
             batch.commit()
         return count
 
-    def post_candidates(self, limit: int = 300) -> list[dict]:
+    def catalog_dirty_at(self):
+        """When the owner last edited products in the admin (meta/catalog_cache.dirty_at), or None."""
+        try:
+            snap = self._db.collection("meta").document("catalog_cache").get()
+        except Exception as exc:  # noqa: BLE001
+            raise StoreError(f"Firestore read failed: {exc}") from exc
+        return (snap.to_dict() or {}).get("dirty_at") if snap.exists else None
+
+    def catalog_docs(self, ended_days: int) -> dict[str, dict]:
+        """Every active deal plus deals that ended within `ended_days` (for the daily cache rebuild)."""
+        try:
+            from google.cloud.firestore_v1 import Query
+            desc = Query.DESCENDING
+        except ImportError:  # unit tests
+            desc = "DESCENDING"
+        coll = self._db.collection("deals")
+        cutoff = self._now() - timedelta(days=ended_days)
+        try:
+            out = {s.id: s.to_dict() or {} for s in coll.where(filter=_field_filter("active", "==", True)).stream()}
+            ended = (coll.where(filter=_field_filter("active", "==", False))
+                     .order_by("updated_at", direction=desc).stream())
+            for s in ended:
+                d = s.to_dict() or {}
+                if d.get("updated_at") is None or d["updated_at"] < cutoff:
+                    break   # newest first: the rest are older
+                out.setdefault(s.id, d)
+        except Exception as exc:  # noqa: BLE001
+            raise StoreError(f"Firestore read failed: {exc}") from exc
+        return out
+
+    def post_candidates(self, limit: int = 150) -> list[dict]:
         """Active deals, best discount first (uses the active+discount_pct index)."""
         try:
             from google.cloud.firestore_v1 import Query

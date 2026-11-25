@@ -90,6 +90,9 @@ jobs:
           MAX_POSTS_PER_RUN: ${{ vars.MAX_POSTS_PER_RUN || '3' }}
           DM_KEYWORD: ${{ vars.DM_KEYWORD || 'DEAL' }}
           FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+          # Product cache (catalog.json on the cards Worker) that the site build and admin read.
+          CARDS_BASE_URL: ${{ vars.CARDS_BASE_URL }}
+          CARDS_UPLOAD_SECRET: ${{ secrets.CARDS_UPLOAD_SECRET }}
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}   # optional fallback to keyless auth
           # X: "buffer" = free via Buffer's API; "api" = X API pay-per-use ($0.20 per post with a link).
           # Posting moved to post.yml (one deal per run from the Firestore queue); this job only scrapes.

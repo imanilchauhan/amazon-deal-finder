@@ -165,3 +165,28 @@ def test_collection_picks_refresh_never_checked_first_then_oldest(store, fake_db
     assert store.collection_asins_to_refresh(1) == ["B0AAAAAAAA"]
     assert store.mark_collection_picks(["B0TESTASIN"]) == 1
     assert fake_db.data["deals"]["B0TESTASIN"]["collection_pick"] is True
+
+
+def test_stale_checks_read_only_the_stale_deals(store, fake_db, clock):
+    fresh = [make_deal(asin=f"B0FRESH{i:03d}") for i in range(40)]
+    store.upsert_deals([make_deal(asin="B0OLDXXXXX")])
+    clock["now"] = NOW + timedelta(hours=30)
+    store.upsert_deals(fresh)
+    fake_db.reads = 0
+    assert store.deactivate_stale(24) == 1
+    assert store.deactivated == ["B0OLDXXXXX"]
+    assert fake_db.reads == 1          # not 41: fresh deals are never read
+    fake_db.reads = 0
+    assert store.trending_to_refresh(5) == []
+    assert fake_db.reads == 0
+
+
+def test_catalog_docs_reads_live_deals_and_recently_ended_ones(store, fake_db, clock):
+    store.upsert_deals([make_deal(asin="B0ANCIENT0")])
+    clock["now"] = NOW + timedelta(days=40)
+    store.upsert_deals([make_deal(asin="B0RECENT00")])
+    clock["now"] = NOW + timedelta(days=41, hours=2)
+    store.upsert_deals([make_deal(asin="B0LIVE0000")])
+    store.deactivate_stale(24)                       # ancient + recent go inactive
+    docs = store.catalog_docs(31)
+    assert set(docs) == {"B0LIVE0000", "B0RECENT00"}  # ancient ended > 31 days ago

@@ -78,6 +78,8 @@ if [[ ! -f "$GOOGLE_APPLICATION_CREDENTIALS" ]]; then
 fi
 
 cd "$BACKEND" || exit 1
+# Card host: deal cards, reels and the product cache (catalog.json) the site build reads.
+export CARDS_BASE_URL="${CARDS_BASE_URL:-https://cartcrush-cards.imanilchauhan3.workers.dev}"
 if (( paused )); then
   log "scrape skipped: paused after a robot check"
 else

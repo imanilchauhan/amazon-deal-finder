@@ -30,6 +30,7 @@ import { firebaseApp } from "@/lib/firebase";
 import { dealSlug, money } from "@/lib/format";
 import { DEPARTMENTS, getDepartment } from "@/lib/taxonomy";
 import { affiliateUrl, parseAsin } from "@/lib/xshare";
+import { CATALOG_URL } from "@/lib/catalog-url";
 import { PLATFORMS, ShareKit, type PlatformId } from "./ShareKit";
 import { WhatsAppDigest } from "./WhatsAppDigest";
 import { CollectionsAdmin } from "./CollectionsAdmin";
@@ -45,6 +46,15 @@ function useAuth() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   useEffect(() => onAuthStateChanged(getAuth(firebaseApp()), setUser), []);
   return user;
+}
+
+/** Tell the runner the product cache is out of date (it rebuilds it on its next pass). */
+async function markCacheDirty() {
+  try {
+    await setDoc(doc(getFirestore(firebaseApp()), "meta", "catalog_cache"), { dirty_at: serverTimestamp() }, { merge: true });
+  } catch {
+    /* the daily rebuild catches it anyway */
+  }
 }
 
 function millis(v: unknown): number {
@@ -112,6 +122,12 @@ export function AdminApp() {
 /* -------------------------------- studio -------------------------------- */
 
 type Row = Deal & { source: string; postedAt: number };
+
+function toRow(asin: string, data: Record<string, unknown>): Row {
+  const posted = (data.posted as Record<string, { at?: unknown } | undefined>) ?? {};
+  const postedAt = Math.max(0, ...Object.values(posted).map((p) => millis(p?.at)));
+  return { ...toDeal(asin, data), source: String(data.source ?? "scraper"), postedAt };
+}
 type Tab = "library" | "add" | "collections";
 
 function Studio({ user }: { user: User }) {
@@ -121,21 +137,35 @@ function Studio({ user }: { user: User }) {
   const [loading, setLoading] = useState(true);
   const [loadedAt, setLoadedAt] = useState(0);
 
+  const [source, setSource] = useState<"cache" | "firestore" | "">("");
+
   const load = useCallback(async () => {
     setLoading(true);
     setErr("");
     setLoadedAt(Date.now());
+    // The product cache first (no Firestore reads; refreshed after every scrape, ~15 min),
+    // Firestore only if the cache can't be fetched.
+    try {
+      const res = await fetch(CATALOG_URL, { cache: "no-store" });
+      if (res.ok) {
+        const snap = (await res.json()) as { deals?: Record<string, Record<string, unknown>> };
+        const list = Object.entries(snap.deals ?? {}).map(([asin, data]) => toRow(asin, data));
+        if (list.length) {
+          list.sort((a, b) => (a.firstSeenAt < b.firstSeenAt ? 1 : -1));
+          setRows(list.slice(0, 1000));
+          setSource("cache");
+          setLoading(false);
+          return;
+        }
+      }
+    } catch {
+      /* fall back to Firestore */
+    }
     try {
       const db = getFirestore(firebaseApp());
-      const snap = await getDocs(query(collection(db, "deals"), orderBy("first_seen_at", "desc"), limit(500)));
-      setRows(
-        snap.docs.map((d) => {
-          const data = d.data();
-          const posted = (data.posted as Record<string, { at?: unknown } | undefined>) ?? {};
-          const postedAt = Math.max(0, ...Object.values(posted).map((p) => millis(p?.at)));
-          return { ...toDeal(d.id, data), source: String(data.source ?? "scraper"), postedAt };
-        }),
-      );
+      const snap = await getDocs(query(collection(db, "deals"), orderBy("first_seen_at", "desc"), limit(100)));
+      setRows(snap.docs.map((d) => toRow(d.id, d.data())));
+      setSource("firestore");
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Could not load products");
     } finally {
@@ -194,7 +224,7 @@ function Studio({ user }: { user: User }) {
         <div className={s.kpi}>
           <span>Live deals</span>
           <b>{loading ? "…" : stats.live}</b>
-          <small>of the newest {rows.length}</small>
+          <small>{source === "cache" ? "from the product cache" : `of the newest ${rows.length}`}</small>
         </div>
         <div className={`${s.kpi} ${s.kpiAccent}`}>
           <span>Not posted yet</span>
@@ -214,11 +244,13 @@ function Studio({ user }: { user: User }) {
       </div>
 
       {err && <p className={s.error}>{err}</p>}
-      {tab === "library" && <Library rows={rows} loading={loading} reload={load} setErr={setErr} />}
+      {tab === "library" && <Library rows={rows} setRows={setRows} loading={loading} reload={load} setErr={setErr} />}
       {tab === "add" && (
         <AddProduct
-          onSaved={() => {
-            void load();
+          onSaved={(asin, data) => {
+            // Show it straight away; the product cache picks it up at the next daily sync.
+            const row = toRow(asin, data);
+            setRows((rs) => [row, ...rs.filter((r) => r.asin !== asin)]);
             setTab("library");
           }}
         />
@@ -230,7 +262,7 @@ function Studio({ user }: { user: User }) {
 
 /* ------------------------------ add product ------------------------------ */
 
-function AddProduct({ onSaved }: { onSaved: () => void }) {
+function AddProduct({ onSaved }: { onSaved: (asin: string, data: Record<string, unknown>) => void }) {
   const [input, setInput] = useState("");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
@@ -286,34 +318,33 @@ function AddProduct({ onSaved }: { onSaved: () => void }) {
       const ref = doc(db, "deals", asin);
       const existing = await getDoc(ref);
       const d = getDepartment(dep);
-      await setDoc(
-        ref,
-        {
-          asin,
-          title: title.trim(),
-          price: p,
-          original_price: m,
-          discount_pct: pct,
-          currency: "INR",
-          image_url: image.trim(),
-          ...(extras.length ? { images: [image.trim(), ...extras] } : {}),
-          url: link,
-          marketplace: "in",
-          scraped_at: new Date().toISOString(),
-          active: true,
-          updated_at: serverTimestamp(),
-          ...(existing.exists() ? {} : { first_seen_at: serverTimestamp(), posted: {}, x_status: "unposted" }),
-          source: "manual",
-          department: dep,
-          category: cat,
-          category_path: [dep, cat],
-          category_source: "manual",
-          category_confidence: 1,
-          brand: brand.trim() || null,
-          gender: gender || null,
-        },
-        { merge: true },
-      );
+      const fields = {
+        asin,
+        title: title.trim(),
+        price: p,
+        original_price: m,
+        discount_pct: pct,
+        currency: "INR",
+        image_url: image.trim(),
+        ...(extras.length ? { images: [image.trim(), ...extras] } : {}),
+        url: link,
+        marketplace: "in",
+        scraped_at: new Date().toISOString(),
+        active: true,
+        updated_at: serverTimestamp(),
+        ...(existing.exists() ? {} : { first_seen_at: serverTimestamp(), posted: {}, x_status: "unposted" }),
+        source: "manual",
+        department: dep,
+        category: cat,
+        category_path: [dep, cat],
+        category_source: "manual",
+        category_confidence: 1,
+        brand: brand.trim() || null,
+        gender: gender || null,
+      };
+      await setDoc(ref, fields, { merge: true });
+      void markCacheDirty();
+      const iso = new Date().toISOString();
       setMsg(`Saved ${d ? d.name : dep} › ${cat}. ${existing.exists() ? "Updated the existing product." : "New product added."}`);
       setInput("");
       setTitle("");
@@ -324,7 +355,7 @@ function AddProduct({ onSaved }: { onSaved: () => void }) {
       setBrand("");
       setGender("");
       setTouchedCat(false);
-      onSaved();
+      onSaved(asin, { ...fields, updated_at: iso, first_seen_at: iso, posted: {} });
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Save failed");
     } finally {
@@ -506,11 +537,13 @@ type Sort = "new" | "discount" | "recent-post" | "price";
 
 function Library({
   rows,
+  setRows,
   loading,
   reload,
   setErr,
 }: {
   rows: Row[];
+  setRows: React.Dispatch<React.SetStateAction<Row[]>>;
   loading: boolean;
   reload: () => Promise<void>;
   setErr: (e: string) => void;
@@ -523,10 +556,11 @@ function Library({
   const [shown, setShown] = useState(PAGE);
   const [flash, setFlash] = useState("");
 
-  async function patch(asin: string, data: Record<string, unknown>) {
+  /** Write to Firestore, then update the row here (no re-read: the list comes from the cache). */
+  async function patch(asin: string, data: Record<string, unknown>, local: (r: Row) => Row) {
     try {
       await updateDoc(doc(getFirestore(firebaseApp()), "deals", asin), data);
-      await reload();
+      setRows((rs) => rs.map((r) => (r.asin === asin ? local(r) : r)));
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Update failed");
     }
@@ -541,17 +575,29 @@ function Library({
         batch.update(doc(db, "deals", asin), { "posted.whatsapp": { at: serverTimestamp(), price: r?.price ?? null, id: "digest" } });
       }
       await batch.commit();
-      await reload();
+      const sent = new Set(asins);
+      const at = Date.now();
+      setRows((rs) =>
+        rs.map((r) => (sent.has(r.asin) && !r.postedOn.includes("whatsapp") ? { ...r, postedOn: [...r.postedOn, "whatsapp"], postedAt: at } : r)),
+      );
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Update failed");
     }
   }
 
   function togglePosted(r: Row, platform: PlatformId, on: boolean) {
-    return patch(r.asin, {
-      [`posted.${platform}`]: on ? { at: serverTimestamp(), price: r.price, id: "manual" } : deleteField(),
-      ...(platform === "x" ? { x_status: on ? "posted" : "unposted" } : {}),
-    });
+    return patch(
+      r.asin,
+      {
+        [`posted.${platform}`]: on ? { at: serverTimestamp(), price: r.price, id: "manual" } : deleteField(),
+        ...(platform === "x" ? { x_status: on ? "posted" : "unposted" } : {}),
+      },
+      (row) => ({
+        ...row,
+        postedOn: on ? [...new Set([...row.postedOn, platform])] : row.postedOn.filter((p) => p !== platform),
+        postedAt: on ? Date.now() : row.postedAt,
+      }),
+    );
   }
 
   const counts = useMemo(
@@ -703,7 +749,9 @@ function Library({
                   <a className={`${s.ghost} ${s.small}`} href={`/deals/${dealSlug(r.title, r.asin)}`} target="_blank" rel="noopener">
                     View ↗
                   </a>
-                  <button type="button" className={`${s.ghost} ${s.small}`} onClick={() => void patch(r.asin, { active: !r.active })}>
+                  <button type="button" className={`${s.ghost} ${s.small}`} onClick={() => {
+                      void patch(r.asin, { active: !r.active }, (row) => ({ ...row, active: !row.active })).then(markCacheDirty);
+                    }}>
                     {r.active ? "Hide" : "Show"}
                   </button>
                 </div>

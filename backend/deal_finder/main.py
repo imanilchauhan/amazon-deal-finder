@@ -49,6 +49,7 @@ class Deps:
     meta: object | None = None         # MetaClient
     render: Callable[[Deal, bool], dict] | None = None
     now: Callable[[], datetime] = lambda: datetime.now(timezone.utc)
+    catalog: object | None = None      # catalog.CatalogCache (product cache for the site/admin)
 
 
 def run(cfg: Config, deps: Deps) -> RunSummary:
@@ -86,6 +87,17 @@ def run(cfg: Config, deps: Deps) -> RunSummary:
     s.new = sum(r.status == "new" for r in results)
     s.updated = sum(r.status == "updated" for r in results)
     s.deactivated = deps.store.deactivate_stale(cfg.stale_after_hours)
+    if deps.catalog is not None:
+        from . import catalog
+
+        upserts = {r.deal.asin: dict(r.doc) for r in results}
+        for a in cfg.asins or []:
+            if a in upserts:
+                upserts[a]["source"] = "trending"
+        s.extra["catalog"] = catalog.sync(
+            deps.catalog, deps.store, upserts=upserts,
+            deactivated=getattr(deps.store, "deactivated", []),
+            picks=getattr(deps.store, "last_picks", None), now=deps.now())
 
     now = deps.now()
     platforms = []
@@ -223,7 +235,14 @@ def build_deps(cfg: Config) -> Deps:
         product = graphics.download_image(deal.image_url)
         return graphics.render_media(deal, product, media_dir, cfg.dm_keyword, want_video=want_video)
 
-    return Deps(scrape=scrape, store=store, x=x, meta=meta, render=render)
+    cache = None
+    if os.environ.get("CATALOG_CACHE", "true").lower() not in {"0", "false", "no", "off"}:
+        base, secret = os.environ.get("CARDS_BASE_URL", ""), os.environ.get("CARDS_UPLOAD_SECRET", "")
+        if base and secret:
+            from .catalog import CatalogCache
+
+            cache = CatalogCache(base, secret)
+    return Deps(scrape=scrape, store=store, x=x, meta=meta, render=render, catalog=cache)
 
 
 def _write_summary(cfg: Config, summary: RunSummary) -> None:

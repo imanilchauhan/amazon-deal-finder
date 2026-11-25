@@ -15,6 +15,7 @@ import {
 } from "firebase/firestore/lite";
 import { db } from "./firebase";
 import { toDeal, type Deal } from "./deal-model";
+import { CATALOG_URL } from "./catalog-url";
 
 export type { Deal };
 
@@ -47,7 +48,47 @@ async function pageThrough(
   return out;
 }
 
+
+type Snapshot = { updated_at?: string; deals?: Record<string, Record<string, unknown>>; picks?: Record<string, unknown> };
+
+/** Build the catalog from a cache snapshot: no Firestore reads at all. */
+export function catalogFromSnapshot(snap: Snapshot): Catalog {
+  const all = Object.entries(snap.deals ?? {}).map(([asin, d]) => toDeal(asin, d));
+  const active = all
+    .filter((d) => d.active)
+    .sort((a, b) => b.discountPct - a.discountPct || a.asin.localeCompare(b.asin))
+    .slice(0, MAX_ACTIVE);
+  const ref = Date.parse(lastChecked(active));
+  const cutoff = Number.isFinite(ref) ? ref - ENDED_PAGE_DAYS * 24 * 3600 * 1000 : Infinity;
+  const ended = all
+    .filter((d) => !d.active && Date.parse(d.checkedAt) >= cutoff)
+    .sort((a, b) => (a.checkedAt < b.checkedAt ? 1 : -1));
+  const picks: Record<string, string[]> = {};
+  for (const [slug, list] of Object.entries(snap.picks ?? {})) {
+    if (Array.isArray(list)) picks[slug] = list.filter((a): a is string => typeof a === "string");
+  }
+  return { active, ended, picks };
+}
+
 async function fetchCatalog(): Promise<Catalog> {
+  try {
+    const res = await fetch(CATALOG_URL, { cache: "no-store" });
+    if (res.ok) {
+      const snap = (await res.json()) as Snapshot;
+      const cat = catalogFromSnapshot(snap);
+      if (cat.active.length) {
+        console.log(`catalog: ${cat.active.length} live + ${cat.ended.length} ended from the product cache (updated ${snap.updated_at})`);
+        return cat;
+      }
+    }
+    console.warn(`catalog: product cache unavailable (HTTP ${res.status}); reading Firestore`);
+  } catch (err) {
+    console.warn("catalog: product cache unavailable; reading Firestore:", err instanceof Error ? err.message : err);
+  }
+  return fetchCatalogFromFirestore();
+}
+
+async function fetchCatalogFromFirestore(): Promise<Catalog> {
   // Every live product, biggest discount first (full-price collection picks come last).
   const active = await pageThrough([where("active", "==", true), orderBy("discount_pct", "desc")], MAX_ACTIVE);
 

@@ -85,21 +85,41 @@ class FakeDocRef:
 
 
 class FakeQuery:
-    def __init__(self, db, coll, filters):
-        self.db, self.coll, self.filters = db, coll, filters
+    def __init__(self, db, coll, filters, order=None, cap=None):
+        self.db, self.coll, self.filters, self.order, self.cap = db, coll, filters, order, cap
 
     def where(self, filter=None):  # noqa: A002
-        return FakeQuery(self.db, self.coll, self.filters + [filter])
+        return FakeQuery(self.db, self.coll, self.filters + [filter], self.order, self.cap)
+
+    def order_by(self, field, direction="ASCENDING"):
+        return FakeQuery(self.db, self.coll, self.filters, (field, str(direction).upper().startswith("DESC")), self.cap)
+
+    def limit(self, n):
+        return FakeQuery(self.db, self.coll, self.filters, self.order, n)
 
     def stream(self):
+        rows = []
         for doc_id, data in list(self.db.data.get(self.coll, {}).items()):
             ok = True
             for f in self.filters:
                 field, op, value = f if isinstance(f, tuple) else (f.field_path, f.op_string, f.value)
-                assert op == "=="
-                ok &= data.get(field) == value
+                have = data.get(field)
+                if op == "==":
+                    ok &= have == value
+                elif op == "<":
+                    ok &= have is not None and have < value
+                else:
+                    raise AssertionError(f"unsupported op {op}")
             if ok:
-                yield FakeSnap(self.db, self.coll, doc_id)
+                rows.append((doc_id, data))
+        if self.order:
+            field, desc = self.order
+            rows.sort(key=lambda r: r[1].get(field), reverse=desc)
+        if self.cap is not None:
+            rows = rows[: self.cap]
+        for doc_id, _ in rows:
+            self.db.reads = getattr(self.db, "reads", 0) + 1
+            yield FakeSnap(self.db, self.coll, doc_id)
 
 
 class FakeCollection(FakeQuery):

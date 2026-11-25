@@ -79,3 +79,18 @@ test('videos: a JPEG is not accepted as an MP4, and a video name does not shadow
   await handle(req('PUT', '/c/x.jpg', { body: JPEG, headers: auth }), e);
   assert.equal((await handle(req('GET', '/c/x.mp4'), e)).status, 404);
 });
+
+test('catalog: PUT needs the secret, GET is public JSON with CORS', async () => {
+  const e = env();
+  const body = new TextEncoder().encode('{"deals":{}}').buffer;
+  assert.equal((await handle(req('PUT', '/catalog.json', { body }), e)).status, 401);
+  assert.equal((await handle(req('GET', '/catalog.json'), e)).status, 404);
+  const put = await handle(req('PUT', '/catalog.json', { body, headers: auth }), e);
+  assert.equal(put.status, 200);
+  const r = await handle(req('GET', '/catalog.json'), e);
+  assert.equal(r.status, 200);
+  assert.equal(r.headers.get('Access-Control-Allow-Origin'), '*');
+  assert.deepEqual(await r.json(), { deals: {} });
+  const bad = await handle(req('PUT', '/catalog.json', { body: JPEG, headers: auth }), e);
+  assert.equal(bad.status, 400);
+});

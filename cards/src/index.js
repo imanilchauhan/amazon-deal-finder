@@ -1,4 +1,5 @@
-// CartCrush card host: deal card images and Reel videos for the social posts.
+// CartCrush card host: deal card images and Reel videos for the social posts, plus the product cache.
+//   GET /catalog.json public, PUT /catalog.json with the secret (see backend/deal_finder/catalog.py)
 //   PUT /c/<name>.jpg | .mp4  (Authorization: Bearer UPLOAD_SECRET)  stores the file for TTL_DAYS
 //   GET /c/<name>.jpg | .mp4  public, so Zernio, Buffer and Meta can fetch it (videos support Range)
 // Storage is Workers KV (free tier: 1 GB, 1,000 writes a day, 25 MB a value; we write ~30 a day).
@@ -38,8 +39,42 @@ function parseRange(header, size) {
   return { start, end };
 }
 
+export const MAX_CATALOG_BYTES = 20 * 1024 * 1024;
+const CATALOG_KEY = 'catalog:v1';
+const CORS = { 'Access-Control-Allow-Origin': '*' };
+
+// Product cache (backend/deal_finder/catalog.py writes it after each scrape; the site build and
+// the admin read it instead of Firestore). The Worker only stores and serves the bytes.
+async function catalog(request, env) {
+  if (request.method === 'GET' || request.method === 'HEAD') {
+    const body = await env.CARDS.get(CATALOG_KEY, 'arrayBuffer');
+    if (!body) return new Response('Not found', { status: 404, headers: CORS });
+    return new Response(request.method === 'HEAD' ? null : body, {
+      headers: { ...CORS, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache', 'Content-Length': String(body.byteLength) },
+    });
+  }
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Allow-Methods': 'GET, HEAD' } });
+  }
+  if (request.method === 'PUT') {
+    const auth = request.headers.get('Authorization') || '';
+    if (!env.UPLOAD_SECRET || !timingSafeEqual(auth, `Bearer ${env.UPLOAD_SECRET}`)) {
+      return new Response('Unauthorized', { status: 401 });
+    }
+    const body = await request.arrayBuffer();
+    const first = new Uint8Array(body.slice(0, 1))[0];
+    if (body.byteLength === 0 || body.byteLength > MAX_CATALOG_BYTES || first !== 0x7b /* { */) {
+      return new Response('Expected a JSON object under 20 MB', { status: 400 });
+    }
+    await env.CARDS.put(CATALOG_KEY, body);
+    return new Response(JSON.stringify({ bytes: body.byteLength }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
+  return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD, PUT' } });
+}
+
 export async function handle(request, env) {
   const url = new URL(request.url);
+  if (url.pathname === '/catalog.json') return catalog(request, env);
   const m = url.pathname.match(NAME);
   if (!m) return new Response('Not found', { status: 404 });
   const [, name, ext] = m;
