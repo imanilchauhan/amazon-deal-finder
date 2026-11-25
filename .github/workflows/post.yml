@@ -29,7 +29,7 @@ permissions:
 jobs:
   post:
     if: ${{ github.event_name == 'workflow_dispatch' || vars.POSTING_ENABLED == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright has no Chromium build for ubuntu-latest (26.04) yet
     timeout-minutes: 20
     defaults:
       run:
