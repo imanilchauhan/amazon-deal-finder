@@ -582,7 +582,7 @@ function Library({
   const catLabel = (d: string, c: string) => getDepartment(d)?.categories.find((x) => x.slug === c)?.name ?? c.replace(/-/g, " ");
 
   return (
-    <section style={{ display: "grid", gap: 14 }}>
+    <section style={{ display: "grid", gap: 14, gridTemplateColumns: "minmax(0, 1fr)" }}>
       {!loading && <WhatsAppDigest rows={rows} onMarkSent={markWhatsAppSent} />}
 
       <div className={s.toolbar}>
