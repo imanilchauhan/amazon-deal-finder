@@ -1,28 +1,37 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'firebase_options.dart';
-import 'ui/deals_page.dart';
+import 'core/providers.dart';
+import 'services/push.dart';
+import 'ui/app_shell.dart';
+import 'ui/theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const ProviderScope(child: DealFinderApp()));
+  final prefs = await SharedPreferences.getInstance();
+  // Push is optional: without Firebase config the app still works, just without notifications.
+  await Push.init(prefs);
+  runApp(ProviderScope(
+    overrides: [prefsProvider.overrideWithValue(prefs)],
+    child: const CartCrushApp(),
+  ));
 }
 
-class DealFinderApp extends StatelessWidget {
-  const DealFinderApp({super.key});
+class CartCrushApp extends StatelessWidget {
+  const CartCrushApp({super.key, this.useGoogleFonts = true});
+
+  /// Tests switch Google Fonts off (no network).
+  final bool useGoogleFonts;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Deal Finder',
+      title: 'CartCrush',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(colorSchemeSeed: const Color(0xFFFF9900), useMaterial3: true),
-      darkTheme: ThemeData(
-          colorSchemeSeed: const Color(0xFFFF9900), brightness: Brightness.dark, useMaterial3: true),
-      home: const DealsPage(),
+      theme: buildTheme(Brightness.light, useGoogleFonts: useGoogleFonts),
+      darkTheme: buildTheme(Brightness.dark, useGoogleFonts: useGoogleFonts),
+      home: const AppShell(),
     );
   }
 }

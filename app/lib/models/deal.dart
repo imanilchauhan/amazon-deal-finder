@@ -1,6 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import '../core/config.dart';
+import '../logic/format.dart' as fmt;
 
-/// Mirrors the `deals/{asin}` document written by the Python backend.
+/// One product from the product cache (catalog.json), same fields as the Firestore document.
 class Deal {
   const Deal({
     required this.asin,
@@ -8,10 +9,18 @@ class Deal {
     required this.price,
     required this.originalPrice,
     required this.discountPct,
-    required this.currency,
     required this.imageUrl,
     required this.url,
-    this.updatedAt,
+    this.currency = 'INR',
+    this.images = const [],
+    this.active = true,
+    this.checkedAt,
+    this.firstSeenAt,
+    this.department = 'uncategorised',
+    this.category = 'uncategorised',
+    this.brand = '',
+    this.gender = '',
+    this.source = 'scraper',
   });
 
   final String asin;
@@ -21,30 +30,62 @@ class Deal {
   final int discountPct;
   final String currency;
   final String imageUrl;
+  final List<String> images;
   final String url;
-  final DateTime? updatedAt;
+  final bool active;
+  final DateTime? checkedAt;
+  final DateTime? firstSeenAt;
+  final String department;
+  final String category;
+  final String brand;
+  final String gender;
+  final String source;
 
   double get savings => originalPrice - price;
+  String get shortTitle => fmt.shortTitle(title);
+  String get slug => fmt.dealSlug(title, asin);
+  String get pageUrl => '${AppConfig.siteUrl}/deals/$slug';
 
-  /// Returns null for malformed documents so one bad row can't break the feed.
-  static Deal? tryFromMap(String id, Map<String, dynamic> m) {
-    final price = (m['price'] as num?)?.toDouble();
-    final original = (m['original_price'] as num?)?.toDouble();
-    final url = m['url'] as String?;
-    final title = m['title'] as String?;
-    if (price == null || original == null || url == null || title == null) return null;
+  /// All photos, main first (at least the main image).
+  List<String> get gallery => images.isNotEmpty ? images : [if (imageUrl.isNotEmpty) imageUrl];
+
+  /// Amazon lets us show a price only for 24 hours after it was checked.
+  bool priceFresh(DateTime now) =>
+      active && checkedAt != null && now.difference(checkedAt!) <= AppConfig.priceFreshFor;
+
+  static DateTime? _time(Object? v) => v is String && v.isNotEmpty ? DateTime.tryParse(v)?.toUtc() : null;
+  static double? _num(Object? v) => v is num ? v.toDouble() : null;
+  static String _str(Object? v, [String fallback = '']) => v is String ? v : fallback;
+
+  /// Null for malformed entries so one bad product can't break the app.
+  static Deal? fromEntry(String asin, Map<String, dynamic> m) {
+    final price = _num(m['price']);
+    final original = _num(m['original_price']);
+    final url = _str(m['url']);
+    final title = _str(m['title']).trim();
+    if (price == null || original == null || title.isEmpty) return null;
     if (!url.startsWith('https://www.amazon.')) return null;
-    final ts = m['updated_at'];
+    final imgs = (m['images'] is List)
+        ? (m['images'] as List).whereType<String>().where((u) => u.startsWith('https://')).toList()
+        : <String>[];
     return Deal(
-      asin: (m['asin'] as String?) ?? id,
+      asin: asin,
       title: title,
       price: price,
       originalPrice: original,
       discountPct: (m['discount_pct'] as num?)?.toInt() ?? 0,
-      currency: (m['currency'] as String?) ?? 'INR',
-      imageUrl: (m['image_url'] as String?) ?? '',
+      currency: _str(m['currency'], 'INR'),
+      imageUrl: _str(m['image_url']),
+      images: imgs,
       url: url,
-      updatedAt: ts is Timestamp ? ts.toDate().toUtc() : (ts is DateTime ? ts.toUtc() : null),
+      active: m['active'] == true,
+      checkedAt: _time(m['updated_at']),
+      firstSeenAt: _time(m['first_seen_at']),
+      department: _str(m['department'], 'uncategorised'),
+      category: _str(m['category'], 'uncategorised'),
+      brand: _str(m['brand']),
+      gender: _str(m['gender']),
+      source: _str(m['source'], 'scraper'),
     );
   }
 }
