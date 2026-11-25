@@ -61,7 +61,6 @@ void main() {
     await pumpApp(tester, links);
     expect(find.text('DEAL OF THE HOUR'), findsOneWidget);
     expect(find.textContaining('ANNI Designer Embroidered Kurta Set'), findsWidgets);
-    expect(find.textContaining('As an Amazon Associate'), findsWidgets);
     await tester.tap(find.text('Get this deal on Amazon').first);
     expect(links.opened.single, startsWith('https://www.amazon.in/dp/'));
   });
@@ -93,6 +92,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Price as of'), findsOneWidget);
     expect(find.textContaining('You save'), findsOneWidget);
+    expect(find.textContaining('As an Amazon Associate'), findsWidgets);
     await tester.tap(find.text('Get this deal on Amazon'));
     expect(links.opened.single, contains('tag=cartcrush004-21'));
   });
