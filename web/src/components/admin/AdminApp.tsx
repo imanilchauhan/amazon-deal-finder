@@ -119,10 +119,12 @@ function Studio({ user }: { user: User }) {
   const [rows, setRows] = useState<Row[]>([]);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadedAt, setLoadedAt] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
     setErr("");
+    setLoadedAt(Date.now());
     try {
       const db = getFirestore(firebaseApp());
       const snap = await getDocs(query(collection(db, "deals"), orderBy("first_seen_at", "desc"), limit(500)));
@@ -146,7 +148,7 @@ function Studio({ user }: { user: User }) {
   }, [load]);
 
   const stats = useMemo(() => {
-    const now = Date.now();
+    const now = loadedAt;
     const live = rows.filter((r) => r.active);
     return {
       live: live.length,
@@ -154,7 +156,7 @@ function Studio({ user }: { user: User }) {
       posted24: rows.filter((r) => r.postedAt > now - DAY).length,
       lastCheck: Math.max(0, ...rows.map((r) => Date.parse(r.checkedAt) || 0)),
     };
-  }, [rows]);
+  }, [rows, loadedAt]);
 
   const initial = (user.displayName || user.email || "?").trim()[0]?.toUpperCase();
 
