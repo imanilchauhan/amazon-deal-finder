@@ -82,7 +82,7 @@ EXTRACT_PRODUCT_JS = """
   if (!gallery.length) {
     for (const el of document.querySelectorAll('#altImages li.imageThumbnail img, #altImages li.item:not(.videoThumbnail) img')) {
       const src = el.getAttribute('src') || '';
-      if (src.startsWith('https://')) gallery.push(src.replace(/\._[^/]*_\.(jpg|jpeg|png|webp)$/i, '._AC_SL1200_.$1'));
+      if (src.startsWith('https://')) gallery.push(src.replace(/\\._[^/]*_\\.(jpg|jpeg|png|webp)$/i, '._AC_SL1200_.$1'));
     }
   }
   return {
