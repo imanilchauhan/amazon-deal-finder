@@ -20,12 +20,21 @@ export const VIDEO_THEMES = {
   deal: { label: "DEAL ALERT", accent: "#E5484D", soft: "#fde8e8" },
 } satisfies Record<string, VideoTheme>;
 
-export type DealVideo = { blob: Blob; mime: string; ext: "mp4" | "webm"; seconds: number };
+export type DealVideo = { blob: Blob; mime: string; ext: "mp4" | "webm"; seconds: number; music: boolean };
 
 /** The best container this browser can record, MP4 first because Instagram wants it. */
-export function videoMime(): { mime: string; ext: "mp4" | "webm" } | null {
+export function videoMime(withAudio = false): { mime: string; ext: "mp4" | "webm" } | null {
   if (typeof MediaRecorder === "undefined") return null;
+  const audio: [string, "mp4" | "webm"][] = withAudio
+    ? [
+        ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "mp4"],
+        ["video/mp4;codecs=avc1,mp4a.40.2", "mp4"],
+        ["video/webm;codecs=vp9,opus", "webm"],
+        ["video/webm;codecs=vp8,opus", "webm"],
+      ]
+    : [];
   const options: [string, "mp4" | "webm"][] = [
+    ...audio,
     ["video/mp4;codecs=avc1.42E01E", "mp4"],
     ["video/mp4;codecs=avc1", "mp4"],
     ["video/mp4", "mp4"],
@@ -269,12 +278,55 @@ export async function dealVideoPoster(d: Shareable, theme: VideoTheme, at = 99):
 }
 
 /** Record the video in real time (about `seconds` long); `onProgress` gets 0…1. */
+export type VideoMusic = { url: string; start: number; gain: number };
+
+/** Decode the track and route it, faded in and out, into a stream the recorder can capture (not the speakers). */
+async function musicStream(m: VideoMusic, seconds: number) {
+  const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  const ctx = new AC();
+  const data = await (await fetch(m.url)).arrayBuffer();
+  const buffer = await ctx.decodeAudioData(data);
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  const gain = ctx.createGain();
+  const dest = ctx.createMediaStreamDestination();
+  source.connect(gain).connect(dest);
+  if (ctx.state === "suspended") await ctx.resume();
+  return {
+    track: dest.stream.getAudioTracks()[0],
+    start() {
+      const t = ctx.currentTime;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(m.gain, t + 0.3);
+      gain.gain.setValueAtTime(m.gain, t + Math.max(0.3, seconds - 0.8));
+      gain.gain.linearRampToValueAtTime(0, t + seconds);
+      source.start(t, m.start);
+    },
+    stop() {
+      try {
+        source.stop();
+      } catch {
+        /* already stopped */
+      }
+      void ctx.close();
+    },
+  };
+}
+
 export async function renderDealVideo(
   d: Shareable,
   theme: VideoTheme,
-  { seconds = 8, onProgress }: { seconds?: number; onProgress?: (p: number) => void } = {},
+  { seconds = 8, onProgress, music }: { seconds?: number; onProgress?: (p: number) => void; music?: VideoMusic | null } = {},
 ): Promise<DealVideo> {
-  const fmt = videoMime();
+  let audio: Awaited<ReturnType<typeof musicStream>> | null = null;
+  if (music) {
+    try {
+      audio = await musicStream(music, seconds);
+    } catch (e) {
+      console.warn("music unavailable, recording without it", e);
+    }
+  }
+  const fmt = videoMime(!!audio);
   if (!fmt) throw new Error("This browser can't record video. Use Chrome or Safari on a computer or phone.");
   const photos = await loadPhotos(d);
   const canvas = document.createElement("canvas");
@@ -285,13 +337,15 @@ export async function renderDealVideo(
   const draw = scene(ctx, d, photos, theme, seconds);
   draw(0);
 
-  const stream = canvas.captureStream(FPS);
-  const rec = new MediaRecorder(stream, { mimeType: fmt.mime, videoBitsPerSecond: 8_000_000 });
+  const canvasStream = canvas.captureStream(FPS);
+  const stream = audio ? new MediaStream([...canvasStream.getVideoTracks(), audio.track]) : canvasStream;
+  const rec = new MediaRecorder(stream, { mimeType: fmt.mime, videoBitsPerSecond: 8_000_000, audioBitsPerSecond: 160_000 });
   const chunks: Blob[] = [];
   rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
   const stopped = new Promise<void>((resolve) => (rec.onstop = () => resolve()));
 
   rec.start(250);
+  audio?.start();
   const t0 = performance.now();
   // A timer, not requestAnimationFrame, so recording keeps going if the tab loses focus.
   await new Promise<void>((resolve) => {
@@ -307,9 +361,10 @@ export async function renderDealVideo(
   });
   rec.stop();
   await stopped;
+  audio?.stop();
   stream.getTracks().forEach((tr) => tr.stop());
   const type = fmt.mime.split(";")[0];
-  return { blob: new Blob(chunks, { type }), mime: type, ext: fmt.ext, seconds };
+  return { blob: new Blob(chunks, { type }), mime: type, ext: fmt.ext, seconds, music: !!audio };
 }
 
 /** Phone share sheet with the video attached. */

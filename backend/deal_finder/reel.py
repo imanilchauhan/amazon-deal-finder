@@ -288,8 +288,10 @@ class _Scene:
 
 
 def render_reel(deal: Deal, photos: list[Image.Image], *, brand: str = "", theme: str = "",
-                seconds: float = 8.0, fps: int = FPS) -> bytes:
-    """Return the MP4 bytes of the deal video."""
+                seconds: float = 8.0, fps: int = FPS, music: str | None = None,
+                music_start: float = 0.0, music_gain: float = 0.85) -> bytes:
+    """Return the MP4 bytes of the deal video. `music` is an MP3 path (faded in and out);
+    without it the video gets a silent track, which Instagram still expects."""
     style = STYLES.get(theme, STYLES[""])
     scene = _Scene(deal, photos, brand, style, seconds)
     import os
@@ -300,11 +302,13 @@ def render_reel(deal: Deal, photos: list[Image.Image], *, brand: str = "", theme
     cmd = [
         ffmpeg_exe(), "-y", "-loglevel", "error",
         "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(fps), "-i", "-",
-        "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
-        "-map", "0:v", "-map", "1:a", "-shortest",
+        *(["-ss", f"{music_start:.2f}", "-i", str(music)] if music else ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"]),
+        "-map", "0:v", "-map", "1:a", "-t", f"{seconds:.2f}",
+        *(["-af", f"afade=t=in:d=0.3,afade=t=out:st={max(0.0, seconds - 0.8):.2f}:d=0.8,volume={music_gain:.2f}"]
+          if music else []),
         "-c:v", "libx264", "-preset", "veryfast", "-crf", "21", "-pix_fmt", "yuv420p",
         "-profile:v", "high", "-level", "4.1",
-        "-c:a", "aac", "-b:a", "96k",
+        "-c:a", "aac", "-b:a", "160k" if music else "96k",
         "-movflags", "+faststart", path,
     ]
     try:
@@ -354,7 +358,8 @@ class ReelPoster:
     wants_doc = True
 
     def __init__(self, zernio, uploader, fallback, *, platform: str, caption, fetch_image=None,
-                 render=render_reel, clock=lambda: datetime.now(timezone.utc), seconds: float = 8.0):
+                 render=render_reel, clock=lambda: datetime.now(timezone.utc), seconds: float = 8.0,
+                 music=None):
         from . import cardart
 
         self._zernio = zernio            # ZernioPoster for this platform (has post_video)
@@ -366,6 +371,7 @@ class ReelPoster:
         self._render = render
         self._clock = clock
         self._seconds = seconds
+        self._music = music              # music.MusicLibrary, or None for silent reels
 
     def post(self, deal: Deal, due_at: datetime | None = None, doc: dict | None = None) -> str:
         from .picker import theme as pick_theme
@@ -379,11 +385,22 @@ class ReelPoster:
             url = _HOSTED.get(key)
             if url is None:
                 photos = product_photos(deal, doc, self._fetch)
-                mp4 = self._render(deal, photos, brand=str(doc.get("brand") or ""), theme=th, seconds=self._seconds)
+                extra = {}
+                track = None
+                if self._music is not None:
+                    from .music import TRACKS, pick_track
+
+                    track = pick_track({**doc, "discount_pct": deal.discount_pct}, th)
+                    path = self._music.path(track)
+                    if path is not None:
+                        extra = {"music": str(path), "music_start": TRACKS[track]["start"],
+                                 "music_gain": TRACKS[track]["gain"]}
+                mp4 = self._render(deal, photos, brand=str(doc.get("brand") or ""), theme=th,
+                                   seconds=self._seconds, **extra)
                 url = self._uploader.upload_video(f"{deal.asin}-{stamp}-reel", mp4)
                 _HOSTED[key] = url
-                log.info("reel for %s (%s, %d photos, %.1f MB): %s", deal.asin, th or "default",
-                         len(photos), len(mp4) / 1e6, url)
+                log.info("reel for %s (%s, music %s, %d photos, %.1f MB): %s", deal.asin, th or "default",
+                         track if extra else "none", len(photos), len(mp4) / 1e6, url)
             text = self._caption(deal, theme=th, department=str(doc.get("department") or ""))
             post_id = self._zernio.post_video(text, due_at, url, title=short_title(deal.title, 90))
             log.info("%s reel scheduled for %s", self._platform, deal.asin)

@@ -315,13 +315,18 @@ def with_reels(posters: dict[str, object], env_bool: Callable[[str], bool] = _bo
     from .zernio import ZernioPoster
 
     seconds = float(os.environ.get("REEL_SECONDS") or 8)
+    music = None
+    if os.environ.get("REEL_MUSIC", "true").strip().lower() not in {"0", "false", "no", "off"}:
+        from .music import MusicLibrary
+
+        music = MusicLibrary(cards_url)
     for platform, acc_env, caption in (("facebook", "ZERNIO_FB_ACCOUNT_ID", build_facebook_post),
                                        ("instagram", "ZERNIO_IG_ACCOUNT_ID", build_instagram_post)):
         acc = _str(acc_env)
         if platform in posters and acc:
             z = ZernioPoster(zkey, platform, acc, text_builder=lambda d: "")
             posters[platform] = ReelPoster(z, CardUploader(cards_url, cards_secret), posters[platform],
-                                           platform=platform, caption=caption, seconds=seconds)
+                                           platform=platform, caption=caption, seconds=seconds, music=music)
     return posters
 
 

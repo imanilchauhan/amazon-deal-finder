@@ -72,9 +72,43 @@ async function catalog(request, env) {
   return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD, PUT' } });
 }
 
+// Background music for deal videos (royalty-free tracks; see backend/deal_finder/music.py).
+export const MAX_MUSIC_BYTES = 5 * 1024 * 1024;
+const MUSIC = /^\/m\/([a-z0-9-]{1,40})\.mp3$/;
+
+async function music(request, env, name) {
+  const key = `music:${name}`;
+  if (request.method === 'GET' || request.method === 'HEAD') {
+    const body = await env.CARDS.get(key, 'arrayBuffer');
+    if (!body) return new Response('Not found', { status: 404, headers: CORS });
+    return new Response(request.method === 'HEAD' ? null : body, {
+      headers: { ...CORS, 'Content-Type': 'audio/mpeg', 'Cache-Control': 'public, max-age=86400', 'Content-Length': String(body.byteLength) },
+    });
+  }
+  if (request.method === 'PUT') {
+    const auth = request.headers.get('Authorization') || '';
+    if (!env.UPLOAD_SECRET || !timingSafeEqual(auth, `Bearer ${env.UPLOAD_SECRET}`)) {
+      return new Response('Unauthorized', { status: 401 });
+    }
+    const body = await request.arrayBuffer();
+    const h = new Uint8Array(body.slice(0, 3));
+    const isMp3 = (h[0] === 0x49 && h[1] === 0x44 && h[2] === 0x33) || (h[0] === 0xff && (h[1] & 0xe0) === 0xe0);
+    if (body.byteLength === 0 || body.byteLength > MAX_MUSIC_BYTES || !isMp3) {
+      return new Response('Expected an MP3 under 5 MB', { status: 400 });
+    }
+    await env.CARDS.put(key, body);
+    return new Response(JSON.stringify({ url: `${new URL(request.url).origin}/m/${name}.mp3` }), {
+      status: 201, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD, PUT' } });
+}
+
 export async function handle(request, env) {
   const url = new URL(request.url);
   if (url.pathname === '/catalog.json') return catalog(request, env);
+  const mm = url.pathname.match(MUSIC);
+  if (mm) return music(request, env, mm[1]);
   const m = url.pathname.match(NAME);
   if (!m) return new Response('Not found', { status: 404 });
   const [, name, ext] = m;

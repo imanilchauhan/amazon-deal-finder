@@ -13,6 +13,7 @@ import {
   whatsappUrl,
 } from "@/lib/socialshare";
 import { isForHer, isWinter } from "@/lib/themes";
+import { pickTrack, trackUrl, TRACKS, type TrackId } from "@/lib/music";
 import { buildPostText, xIntentUrl } from "@/lib/xshare";
 import { PLATFORMS, type PlatformId } from "./ShareKit";
 import s from "./admin.module.css";
@@ -42,6 +43,9 @@ export function VideoStudio({ deal, onClose, onTogglePosted }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const [theme, setTheme] = useState<ThemeId>(() => defaultTheme(deal));
   const [seconds, setSeconds] = useState(8);
+  const [music, setMusic] = useState<TrackId | "none" | "auto">("auto");
+  const autoTrack = pickTrack(deal, theme);
+  const track: TrackId | null = music === "none" ? null : music === "auto" ? autoTrack : music;
   const [video, setVideo] = useState<DealVideo | null>(null);
   const [url, setUrl] = useState("");
   const [progress, setProgress] = useState(0);
@@ -65,7 +69,8 @@ export function VideoStudio({ deal, onClose, onTogglePosted }: Props) {
     setNote("");
     setProgress(0);
     try {
-      const v = await renderDealVideo(deal, VIDEO_THEMES[theme], { seconds, onProgress: setProgress });
+      const m = track ? { url: trackUrl(track), start: TRACKS[track].start, gain: TRACKS[track].gain } : null;
+      const v = await renderDealVideo(deal, VIDEO_THEMES[theme], { seconds, onProgress: setProgress, music: m });
       setVideo(v);
       setUrl(URL.createObjectURL(v.blob));
     } catch (e) {
@@ -73,7 +78,7 @@ export function VideoStudio({ deal, onClose, onTogglePosted }: Props) {
     } finally {
       setBusy(false);
     }
-  }, [deal, theme, seconds]);
+  }, [deal, theme, seconds, track]);
 
   // Make the first video as soon as the studio opens.
   useEffect(() => {
@@ -195,6 +200,15 @@ export function VideoStudio({ deal, onClose, onTogglePosted }: Props) {
               ))}
             </div>
             <div className={s.actions} style={{ marginTop: 8 }}>
+              <select className={s.select} value={music} onChange={(e) => setMusic(e.target.value as TrackId | "none" | "auto")} disabled={busy} aria-label="Music">
+                <option value="auto">Music: auto ({TRACKS[autoTrack].label})</option>
+                {(["gadget", "desi", "light", "winter"] as TrackId[]).map((id) => (
+                  <option key={id} value={id}>
+                    Music: {TRACKS[id].label}
+                  </option>
+                ))}
+                <option value="none">No music</option>
+              </select>
               <select className={s.select} value={seconds} onChange={(e) => setSeconds(Number(e.target.value))} disabled={busy} aria-label="Length">
                 <option value={6}>6 seconds</option>
                 <option value={8}>8 seconds</option>
@@ -218,7 +232,7 @@ export function VideoStudio({ deal, onClose, onTogglePosted }: Props) {
             </div>
             {video && (
               <p className={s.hint}>
-                {`1080×1920 · ${video.seconds}s · ${sizeMb} MB`}
+                {`1080×1920 · ${video.seconds}s · ${sizeMb} MB · ${video.music ? "with music" : "no music"}`}
                 {video.ext === "webm" && " · WebM: Instagram prefers MP4, so record in Safari or a newer Chrome if upload fails."}
               </p>
             )}

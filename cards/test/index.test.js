@@ -94,3 +94,16 @@ test('catalog: PUT needs the secret, GET is public JSON with CORS', async () => 
   const bad = await handle(req('PUT', '/catalog.json', { body: JPEG, headers: auth }), e);
   assert.equal(bad.status, 400);
 });
+
+test('music: MP3 upload needs the secret; GET is public audio/mpeg with CORS', async () => {
+  const e = env();
+  const mp3 = new Uint8Array([0x49, 0x44, 0x33, 4, 0, 0, 1, 2]).buffer;
+  assert.equal((await handle(req('PUT', '/m/gadget.mp3', { body: mp3 }), e)).status, 401);
+  assert.equal((await handle(req('PUT', '/m/gadget.mp3', { body: JPEG, headers: auth }), e)).status, 400);
+  assert.equal((await handle(req('PUT', '/m/gadget.mp3', { body: mp3, headers: auth }), e)).status, 201);
+  const r = await handle(req('GET', '/m/gadget.mp3'), e);
+  assert.equal(r.status, 200);
+  assert.equal(r.headers.get('Content-Type'), 'audio/mpeg');
+  assert.equal(r.headers.get('Access-Control-Allow-Origin'), '*');
+  assert.equal((await handle(req('GET', '/m/../x.mp3'), e)).status, 404);
+});
