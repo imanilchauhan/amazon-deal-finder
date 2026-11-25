@@ -100,7 +100,7 @@ export function ShareKit({ deal, onTogglePosted }: Props) {
     <div className={s.shareKit}>
       <div className={s.actions}>
         <a
-          className={s.primary}
+          className={`${s.primary} ${s.small}`}
           href={xIntentUrl(buildPostText(deal))}
           target="_blank"
           rel="noopener"
@@ -108,14 +108,11 @@ export function ShareKit({ deal, onTogglePosted }: Props) {
         >
           Post on X
         </a>
-        <button type="button" className={s.secondary} disabled={busy} onClick={facebookAndInstagram}>
+        <button type="button" className={`${s.secondary} ${s.small}`} disabled={busy} onClick={facebookAndInstagram}>
           Facebook + Instagram
         </button>
-        <button type="button" className={s.secondary} disabled={busy} onClick={phoneShare}>
-          Share card…
-        </button>
         <a
-          className={s.secondary}
+          className={`${s.secondary} ${s.small}`}
           href={whatsappUrl(whatsappText(share))}
           target="_blank"
           rel="noopener"
@@ -126,36 +123,20 @@ export function ShareKit({ deal, onTogglePosted }: Props) {
         >
           WhatsApp
         </a>
-        <button type="button" className={s.linkBtn} disabled={busy} onClick={downloadOnly}>
+        <button type="button" className={`${s.secondary} ${s.small}`} disabled={busy} onClick={phoneShare}>
+          Share card…
+        </button>
+        <span style={{ flex: 1 }} />
+        <button type="button" className={`${s.ghost} ${s.small}`} disabled={busy} onClick={downloadOnly}>
           Download card
         </button>
-        <button type="button" className={s.linkBtn} onClick={() => copy(instagramText(share), "Instagram")}>
-          Copy Instagram caption
+        <button type="button" className={`${s.ghost} ${s.small}`} onClick={() => copy(instagramText(share), "Instagram")}>
+          Copy IG caption
         </button>
       </div>
-      <div className={s.postedRow} role="group" aria-label="Where this deal has been posted">
-        <span className={s.muted}>Posted on (tap to undo):</span>
-        {PLATFORMS.map((p) => {
-          const on = deal.postedOn.includes(p.id);
-          return (
-            <button
-              key={p.id}
-              type="button"
-              className={on ? s.chipOn : s.chip}
-              aria-pressed={on}
-              onClick={() => onTogglePosted(p.id, !on)}
-            >
-              {on ? "✓ " : ""}
-              {p.label}
-            </button>
-          );
-        })}
-      </div>
-      {note && (
-        <p className={s.muted} role="status">
-          {note}
-        </p>
-      )}
+      <p className={s.hint} role="status">
+        {note || "Each button prepares the post and ticks the channel. Use the X / FB / IG / WA badges to undo a tick."}
+      </p>
     </div>
   );
 }

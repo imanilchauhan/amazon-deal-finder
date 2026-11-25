@@ -91,11 +91,12 @@ export function CollectionsAdmin() {
   const col = COLLECTIONS.find((c) => c.slug === slug)!;
 
   return (
-    <section className={s.digest}>
-      <div className={s.actions}>
-        <label>
-          <b>Collection </b>
-          <select className={s.search} value={slug} onChange={(e) => setSlug(e.target.value)}>
+    <section className={s.card}>
+      <h2>Collection picks</h2>
+      <div className={s.toolbar}>
+        <label className={s.field} style={{ flex: "1 1 320px" }}>
+          <span>Collection</span>
+          <select value={slug} onChange={(e) => setSlug(e.target.value)}>
             {COLLECTIONS.map((c) => (
               <option key={c.slug} value={c.slug}>
                 {c.group} · {c.h1}
@@ -103,8 +104,8 @@ export function CollectionsAdmin() {
             ))}
           </select>
         </label>
-        <a className={s.linkBtn} href={`/collections/${slug}`} target="_blank" rel="noopener">
-          View page
+        <a className={s.ghost} style={{ alignSelf: "end" }} href={`/collections/${slug}`} target="_blank" rel="noopener">
+          View page ↗
         </a>
       </div>
       <p className={s.muted}>
@@ -131,13 +132,14 @@ export function CollectionsAdmin() {
           {note}
         </p>
       )}
-      <ul className={s.list}>
+      {picks.length > 0 && <p className={s.section}>{picks.length} picks</p>}
+      <ul className={s.list} hidden={!picks.length}>
         {picks.map(({ asin, deal }) => (
           <li key={asin} className={s.item}>
-            {deal ? <img src={deal.imageUrl} alt="" width={64} height={64} /> : <span className={s.muted}>{asin}</span>}
+            {deal ? <img className={s.thumb} src={deal.imageUrl} alt="" width={64} height={64} /> : <span className={s.thumbEmpty}>New</span>}
             <div className={s.itemMain}>
-              <b>{deal ? deal.shortTitle : asin}</b>
-              <span className={s.muted}>
+              <span className={s.itemTitle}>{deal ? deal.title : asin}</span>
+              <span className={s.meta}>
                 {!deal
                   ? "Waiting for its first price check"
                   : deal.active
@@ -145,7 +147,7 @@ export function CollectionsAdmin() {
                     : "Hidden: no fresh price in the last 24 hours (re-checked automatically)"}
               </span>
             </div>
-            <button type="button" className={s.linkBtn} disabled={busy} onClick={() => remove(asin)}>
+            <button type="button" className={`${s.ghost} ${s.small}`} disabled={busy} onClick={() => remove(asin)}>
               Remove
             </button>
           </li>

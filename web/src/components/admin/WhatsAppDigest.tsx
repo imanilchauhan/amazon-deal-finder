@@ -69,26 +69,40 @@ export function WhatsAppDigest({ rows, onMarkSent }: Props) {
   if (!open) {
     return (
       <div className={s.digest}>
-        <button
-          type="button"
-          className={s.primary}
-          onClick={() => {
-            setNow(Date.now());
-            setOpen(true);
-          }}
-        >
-          WhatsApp daily digest
-        </button>
-        <span className={s.muted}>Today&apos;s top 5 deals as one channel message, ready to paste.</span>
+        <div className={s.digestBar}>
+          <span className={s.digestIcon} aria-hidden>
+            WA
+          </span>
+          <div>
+            <b>WhatsApp daily digest</b>
+            <span className={s.hint}>Today&apos;s top 5 deals as one channel message, ready to paste.</span>
+          </div>
+          <button
+            type="button"
+            className={s.secondary}
+            onClick={() => {
+              setNow(Date.now());
+              setOpen(true);
+            }}
+          >
+            Prepare digest
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className={s.digest}>
-      <div className={s.actions}>
-        <b>WhatsApp daily digest</b>
-        <button type="button" className={s.linkBtn} onClick={() => setOpen(false)}>
+      <div className={s.digestBar}>
+        <span className={s.digestIcon} aria-hidden>
+          WA
+        </span>
+        <div>
+          <b>WhatsApp daily digest</b>
+          <span className={s.hint}>{picks.length} deals picked</span>
+        </div>
+        <button type="button" className={s.ghost} onClick={() => setOpen(false)}>
           Close
         </button>
       </div>
