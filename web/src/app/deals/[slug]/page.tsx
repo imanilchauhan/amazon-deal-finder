@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element -- Amazon product images are linked, not proxied */
 import type { Metadata } from "next";
 import { Gallery } from "@/components/Gallery";
 import Link from "next/link";
