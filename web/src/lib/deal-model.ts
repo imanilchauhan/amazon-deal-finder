@@ -11,6 +11,8 @@ export type Deal = {
   discountPct: number;
   currency: string;
   imageUrl: string;
+  /** Product photos, main one first (at least the main image). */
+  images: string[];
   url: string;
   active: boolean;
   /** ISO time the price was last checked */
@@ -24,6 +26,11 @@ export type Deal = {
   /** Platforms this deal has gone out on (x, facebook, instagram, whatsapp) */
   postedOn: string[];
 };
+
+function gallery(v: unknown, main: string): string[] {
+  const list = Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && x.startsWith("https://")) : [];
+  return list.length ? list : main ? [main] : [];
+}
 
 function iso(v: unknown): string {
   // duck-typed so it works with both the lite and the full Firestore SDK's Timestamp
@@ -49,6 +56,7 @@ export function toDeal(asin: string, d: Record<string, unknown>): Deal {
     discountPct: Number(d.discount_pct ?? 0),
     currency: String(d.currency ?? "INR"),
     imageUrl: String(d.image_url ?? ""),
+    images: gallery(d.images, String(d.image_url ?? "")),
     url: String(d.url ?? ""),
     active: d.active === true,
     checkedAt: iso(d.updated_at) || iso(d.scraped_at),

@@ -32,6 +32,11 @@ DEAL_SCHEMA: dict = {
         "discount_pct": {"type": "integer", "minimum": 0, "maximum": 95},
         "currency": {"type": "string", "enum": ["INR", "USD"]},
         "image_url": {"type": "string", "pattern": "^https://"},
+        "images": {
+            "type": "array",
+            "maxItems": 8,
+            "items": {"type": "string", "pattern": "^https://"},
+        },
         "url": {
             "type": "string",
             "pattern": r"^https://www\.amazon\.(in|com)/dp/[A-Z0-9]{10}/\?tag=[A-Za-z0-9_-]{3,64}$",
@@ -60,9 +65,16 @@ class Deal:
     url: str
     marketplace: str
     scraped_at: str
+    images: tuple[str, ...] = ()
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        d = asdict(self)
+        # Only write a gallery when we found one, so a run that missed it keeps the old photos.
+        if self.images:
+            d["images"] = list(self.images)
+        else:
+            d.pop("images")
+        return d
 
     @property
     def savings(self) -> float:
@@ -96,7 +108,7 @@ def validate_deal(payload: dict) -> Deal:
     errors = schema_errors(payload)
     if errors:
         raise InvalidDeal("; ".join(errors))
-    return Deal(**payload)
+    return Deal(**{**payload, "images": tuple(payload.get("images") or ())})
 
 
 def parse_price(text: str | None) -> float | None:

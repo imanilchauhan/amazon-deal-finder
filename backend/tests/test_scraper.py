@@ -152,3 +152,54 @@ def test_focus_searches_rotate_through_women_and_winter_lists():
     start = datetime(2026, 11, 22, 0, 0, tzinfo=timezone.utc)
     seen = {q for i in range(48) for q in focus_searches(start + timedelta(minutes=15 * i))}
     assert set(WOMEN_SEARCHES) <= seen and set(WINTER_SEARCHES) <= seen
+
+
+def test_gallery_images_dedupes_keeps_main_first_and_caps():
+    from deal_finder.scraper import MAX_IMAGES, gallery_images
+
+    main = "https://m.media-amazon.com/images/I/71main._SL1500_.jpg"
+    raw = [
+        "https://m.media-amazon.com/images/I/71main._AC_SL1200_.jpg",  # same photo, other size
+        "https://m.media-amazon.com/images/I/61b.jpg",
+        "https://evil.example.com/images/I/x.jpg",
+        "http://m.media-amazon.com/images/I/insecure.jpg",
+        *[f"https://m.media-amazon.com/images/I/8{i}x.jpg" for i in range(10)],
+    ]
+    out = gallery_images(raw, main)
+    assert out[0] == main
+    assert out[1] == "https://m.media-amazon.com/images/I/61b.jpg"
+    assert len(out) == MAX_IMAGES
+    assert all(u.startswith("https://m.media-amazon.com/") for u in out)
+
+
+def test_gallery_images_empty_when_only_the_main_photo():
+    from deal_finder.scraper import gallery_images
+
+    main = "https://m.media-amazon.com/images/I/71main.jpg"
+    assert gallery_images([main], main) == []
+    assert gallery_images(None, main) == []
+
+
+def test_deal_to_dict_omits_empty_gallery_and_lists_it_otherwise():
+    from deal_finder.models import validate_deal
+
+    base = {
+        "asin": "B0TEST1234", "title": "Test product", "price": 50.0, "original_price": 100.0,
+        "discount_pct": 50, "currency": "INR", "image_url": "https://m.media-amazon.com/images/I/a.jpg",
+        "url": "https://www.amazon.in/dp/B0TEST1234/?tag=cartcrush004-21", "marketplace": "in",
+        "scraped_at": "2026-11-25T10:00:00+00:00",
+    }
+    assert "images" not in validate_deal(base).to_dict()
+    pics = ["https://m.media-amazon.com/images/I/a.jpg", "https://m.media-amazon.com/images/I/b.jpg"]
+    assert validate_deal({**base, "images": pics}).to_dict()["images"] == pics
+
+
+def test_gallery_images_drops_amazon_measurement_path():
+    from deal_finder.scraper import gallery_images
+
+    main = "https://m.media-amazon.com/images/I/71Q3OAOmstL._SL1500_.jpg"
+    raw = [
+        "https://m.media-amazon.com/images/W/BW_MEDIAX_AVIF_MEASUREMENT_1306696-T4/images/I/71Q3OAOmstL._SL1500_.jpg",
+        "https://m.media-amazon.com/images/W/BW_MEDIAX_AVIF_MEASUREMENT_1306696-T4/images/I/81W+YLXXUJL._SL1500_.jpg",
+    ]
+    assert gallery_images(raw, main) == [main, "https://m.media-amazon.com/images/I/81W+YLXXUJL._SL1500_.jpg"]

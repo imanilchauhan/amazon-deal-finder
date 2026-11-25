@@ -14,6 +14,7 @@ it stops and returns what it has.
 from __future__ import annotations
 
 import logging
+import re
 import random
 import time
 from datetime import datetime, timezone
@@ -69,6 +70,21 @@ EXTRACT_PRODUCT_JS = """
     }
     if (!image) image = img.getAttribute('src');
   }
+  // Gallery: hi-res photos from the page's image data, else the thumbnail strip upsized.
+  const gallery = [];
+  for (const sc of document.querySelectorAll('script')) {
+    const t = sc.textContent || '';
+    if (!t.includes('colorImages')) continue;
+    for (const m of t.matchAll(/"hiRes":"(https:[^"]+)"/g)) gallery.push(m[1]);
+    if (!gallery.length) for (const m of t.matchAll(/"large":"(https:[^"]+)"/g)) gallery.push(m[1]);
+    if (gallery.length) break;
+  }
+  if (!gallery.length) {
+    for (const el of document.querySelectorAll('#altImages li.imageThumbnail img, #altImages li.item:not(.videoThumbnail) img')) {
+      const src = el.getAttribute('src') || '';
+      if (src.startsWith('https://')) gallery.push(src.replace(/\._[^/]*_\.(jpg|jpeg|png|webp)$/i, '._AC_SL1200_.$1'));
+    }
+  }
   return {
     title: text('#productTitle'),
     price_text: firstText([
@@ -91,6 +107,7 @@ EXTRACT_PRODUCT_JS = """
       '.savingsPercentage',
     ]),
     image: image,
+    images: gallery,
     captcha: !!document.querySelector('form[action*="validateCaptcha"]'),
   };
 }
@@ -183,6 +200,35 @@ def collect_asins(hrefs: Iterable[str], limit: int) -> list[str]:
     return list(seen)
 
 
+MAX_IMAGES = 6
+_AMAZON_IMG = re.compile(r"^https://(m\.media-amazon\.com|images-[a-z]+\.ssl-images-amazon\.com)/images/I/")
+_MEASUREMENT = re.compile(r"/images/W/[^/]+/images/I/")
+_IMG_ID = re.compile(r"/images/I/([A-Za-z0-9+%-]+)")
+
+
+def gallery_images(raw: object, main: str) -> list[str]:
+    """Up to MAX_IMAGES distinct Amazon product photos, main image first. Empty if none extra."""
+    if not isinstance(raw, list):
+        return []
+    out: list[str] = []
+    seen: set[str] = set()
+    for url in [main, *raw]:
+        if not isinstance(url, str):
+            continue
+        url = _MEASUREMENT.sub("/images/I/", url.strip())
+        if not _AMAZON_IMG.match(url):
+            continue
+        m = _IMG_ID.search(url)
+        key = m.group(1) if m else url
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(url)
+        if len(out) >= MAX_IMAGES:
+            break
+    return out if len(out) > 1 else []
+
+
 def normalize_product(
     raw: dict,
     *,
@@ -221,6 +267,7 @@ def normalize_product(
         log.info("skip %s: discount %s%% below threshold", asin, discount)
         return None
 
+    images = gallery_images(raw.get("images"), image)
     payload = {
         "asin": asin,
         "title": title,
@@ -229,6 +276,7 @@ def normalize_product(
         "discount_pct": discount,
         "currency": currency,
         "image_url": image,
+        **({"images": images} if images else {}),
         "url": affiliate_url(asin, tag, domain),
         "marketplace": marketplace,
         "scraped_at": (now or datetime.now(timezone.utc)).replace(microsecond=0).isoformat(),

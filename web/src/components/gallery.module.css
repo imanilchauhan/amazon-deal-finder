@@ -1,0 +1,9 @@
+.wrap { display: grid; gap: 12px; min-width: 0; }
+.main { animation: fade 0.25s ease both; }
+@keyframes fade { from { opacity: 0.4; } to { opacity: 1; } }
+.thumbs { display: flex; gap: 8px; overflow-x: auto; padding: 2px; scrollbar-width: thin; }
+.thumb { flex: none; width: 68px; height: 68px; padding: 4px; border-radius: 12px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+.thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.thumb[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.thumb:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .main { animation: none; } }

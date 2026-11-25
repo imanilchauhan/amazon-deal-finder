@@ -48,7 +48,22 @@ const easeBack = (x: number) => {
 
 type Frame = (t: number) => void;
 
-function scene(ctx: CanvasRenderingContext2D, d: Shareable, img: HTMLImageElement, theme: VideoTheme, seconds: number): Frame {
+const MAX_PHOTOS = 5;
+
+/** Load the product photos (main first); photos that fail to load are skipped. */
+async function loadPhotos(d: Shareable): Promise<HTMLImageElement[]> {
+  const urls = [...new Set([d.imageUrl, ...(d.images ?? [])])].filter(Boolean).slice(0, MAX_PHOTOS);
+  const loaded = await Promise.all(urls.map((u) => loadImage(u).catch(() => null)));
+  const ok = loaded.filter((x): x is HTMLImageElement => !!x);
+  if (!ok.length) throw new Error("Could not load the product image");
+  return ok;
+}
+
+function scene(ctx: CanvasRenderingContext2D, d: Shareable, photos: HTMLImageElement[], theme: VideoTheme, seconds: number): Frame {
+  // Photo slideshow: each photo in turn, then back to the main one for the ending.
+  const slides = photos.length > 1 ? [...photos, photos[0]] : photos;
+  const slideLen = (seconds - 0.2) / slides.length;
+  const FADE = 0.35;
   const cur = d.currency ?? "INR";
   ctx.font = `800 60px ${FONT}`;
   const titleLines = wrapLines((s) => ctx.measureText(s).width, shortTitle(d.title, 90), 900, 2);
@@ -114,14 +129,33 @@ function scene(ctx: CanvasRenderingContext2D, d: Shareable, img: HTMLImageElemen
     ctx.save();
     roundRect(ctx, -cw / 2, -ch / 2, cw, ch, 56);
     ctx.clip();
-    const zoom = 1 + 0.08 * (t / seconds);
-    const fit = Math.min(760 / img.width, 680 / img.height) * zoom;
-    const iw = img.width * fit;
-    const ih = img.height * fit;
-    ctx.drawImage(img, -iw / 2, -ih / 2, iw, ih);
+    const drawPhoto = (img: HTMLImageElement, alpha: number, local: number, dx: number) => {
+      const zoom = 1 + 0.07 * clamp(local / Math.max(slideLen, 1));
+      const fit = Math.min(760 / img.width, 680 / img.height) * zoom;
+      const iw = img.width * fit;
+      const ih = img.height * fit;
+      ctx.globalAlpha = alpha * clamp(pIn * 1.4);
+      ctx.drawImage(img, -iw / 2 + dx, -ih / 2, iw, ih);
+    };
+    const k = Math.min(slides.length - 1, Math.floor(Math.max(0, t - 0.2) / slideLen));
+    const local = Math.max(0, t - 0.2) - k * slideLen;
+    const fade = k > 0 ? easeOut(clamp(local / FADE)) : 1;
+    if (k > 0 && fade < 1) drawPhoto(slides[k - 1], 1 - fade, slideLen + local, -60 * fade);
+    drawPhoto(slides[k], fade, local, 60 * (1 - fade));
     ctx.restore();
     ctx.restore();
     ctx.globalAlpha = 1;
+    if (photos.length > 1 && pIn > 0.5) {
+      const on = k % photos.length;
+      const gap = 30;
+      const x0 = cx - ((photos.length - 1) * gap) / 2;
+      photos.forEach((_, n) => {
+        ctx.fillStyle = n === on ? theme.accent : "rgba(22,24,29,0.18)";
+        ctx.beginPath();
+        ctx.arc(x0 + n * gap, cy + ch / 2 - 34, n === on ? 9 : 7, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
 
     // discount badge pops with a little wobble
     const b = easeBack(span(t, 1.0, 0.7));
@@ -230,7 +264,7 @@ export async function dealVideoPoster(d: Shareable, theme: VideoTheme, at = 99):
   canvas.width = VIDEO_W;
   canvas.height = VIDEO_H;
   const ctx = canvas.getContext("2d")!;
-  scene(ctx, d, await loadImage(d.imageUrl), theme, 8)(at);
+  scene(ctx, d, await loadPhotos(d), theme, 8)(at);
   return canvas.toDataURL("image/jpeg", 0.85);
 }
 
@@ -242,13 +276,13 @@ export async function renderDealVideo(
 ): Promise<DealVideo> {
   const fmt = videoMime();
   if (!fmt) throw new Error("This browser can't record video. Use Chrome or Safari on a computer or phone.");
-  const img = await loadImage(d.imageUrl);
+  const photos = await loadPhotos(d);
   const canvas = document.createElement("canvas");
   canvas.width = VIDEO_W;
   canvas.height = VIDEO_H;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas is not available in this browser");
-  const draw = scene(ctx, d, img, theme, seconds);
+  const draw = scene(ctx, d, photos, theme, seconds);
   draw(0);
 
   const stream = canvas.captureStream(FPS);

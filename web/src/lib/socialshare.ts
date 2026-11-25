@@ -13,6 +13,8 @@ export type Shareable = {
   discountPct: number;
   url: string;
   imageUrl: string;
+  /** Extra product photos (main first); the deal video cycles through them. */
+  images?: string[];
   currency?: string;
 };
 

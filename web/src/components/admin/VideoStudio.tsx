@@ -145,7 +145,9 @@ export function VideoStudio({ deal, onClose, onTogglePosted }: Props) {
     <dialog ref={ref} className={s.studio} onClose={onClose} aria-label={`Video for ${deal.shortTitle}`}>
       <div className={s.studioHead}>
         <div>
-          <b>Deal video</b>
+          <b>
+            Deal video · {deal.images.length} photo{deal.images.length === 1 ? "" : "s"}
+          </b>
           <span className={s.hint}>{deal.shortTitle}</span>
         </div>
         <button type="button" className={s.ghost} onClick={() => ref.current?.close()} aria-label="Close">

@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- Amazon product images are linked, not proxied */
 import type { Metadata } from "next";
+import { Gallery } from "@/components/Gallery";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -69,7 +70,7 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
               "@type": "Product",
               name: deal.shortTitle,
               description: deal.title,
-              image: deal.imageUrl,
+              image: deal.images,
               sku: deal.asin,
               url: pageUrl,
               ...(deal.active && {
@@ -99,10 +100,12 @@ async function DealDetails({ params }: { params: PageProps<"/deals/[slug]">["par
       </nav>
 
       <div className={s.layout}>
-        <div className={s.media}>
-          {deal.active && deal.discountPct > 0 && <span className={s.badge}>-{deal.discountPct}%</span>}
-          <img src={deal.imageUrl} alt={deal.shortTitle} width={600} height={600} />
-        </div>
+        <Gallery
+          images={deal.images}
+          alt={deal.shortTitle}
+          mediaClass={s.media}
+          badge={deal.active && deal.discountPct > 0 ? <span className={s.badge}>-{deal.discountPct}%</span> : null}
+        />
 
         <div className={s.info}>
           <h1>{deal.shortTitle}</h1>

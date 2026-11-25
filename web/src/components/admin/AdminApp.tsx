@@ -236,6 +236,7 @@ function AddProduct({ onSaved }: { onSaved: () => void }) {
   const [price, setPrice] = useState("");
   const [mrp, setMrp] = useState("");
   const [image, setImage] = useState("");
+  const [extra, setExtra] = useState("");
   const [dep, setDep] = useState("uncategorised");
   const [cat, setCat] = useState("uncategorised");
   const [brand, setBrand] = useState("");
@@ -250,6 +251,7 @@ function AddProduct({ onSaved }: { onSaved: () => void }) {
   const p = Number(price);
   const m = Number(mrp);
   const pct = m > p && p > 0 ? Math.round(((m - p) / m) * 100) : 0;
+  const extras = [...new Set(extra.split(/\s+/).filter((u) => /^https:\/\//.test(u) && u !== image.trim()))].slice(0, 7);
 
   // Suggest category / brand / gender from the title until the owner picks one by hand.
   useEffect(() => {
@@ -294,6 +296,7 @@ function AddProduct({ onSaved }: { onSaved: () => void }) {
           discount_pct: pct,
           currency: "INR",
           image_url: image.trim(),
+          ...(extras.length ? { images: [image.trim(), ...extras] } : {}),
           url: link,
           marketplace: "in",
           scraped_at: new Date().toISOString(),
@@ -317,6 +320,7 @@ function AddProduct({ onSaved }: { onSaved: () => void }) {
       setPrice("");
       setMrp("");
       setImage("");
+      setExtra("");
       setBrand("");
       setGender("");
       setTouchedCat(false);
@@ -371,6 +375,10 @@ function AddProduct({ onSaved }: { onSaved: () => void }) {
         <label className={s.field}>
           <span>Image URL</span>
           <input value={image} onChange={(e) => setImage(e.target.value)} placeholder="Right-click the product image on Amazon → Copy image address" />
+        </label>
+        <label className={s.field}>
+          <span>More photos (optional, one URL per line)</span>
+          <textarea className={s.digestText} rows={3} value={extra} onChange={(e) => setExtra(e.target.value)} placeholder="Used in the product gallery and the deal video. The scraper also fills these in on its next price check." />
         </label>
 
         <p className={s.section}>Price</p>
@@ -468,6 +476,13 @@ function AddProduct({ onSaved }: { onSaved: () => void }) {
         <div className={s.previewMedia}>
           {/^https:\/\//.test(image.trim()) ? <img src={image.trim()} alt="" /> : <span>Image appears here</span>}
         </div>
+        {extras.length > 0 && (
+          <div className={s.badges}>
+            {extras.slice(0, 5).map((u) => (
+              <img key={u} className={s.thumb} style={{ width: 44, height: 44 }} src={u} alt="" />
+            ))}
+          </div>
+        )}
         <div className={s.previewTitle}>{title.trim() || "Product title"}</div>
         <div className={s.priceLine}>
           <b>{p > 0 ? money(p) : "₹–"}</b>

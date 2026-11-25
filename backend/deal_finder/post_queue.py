@@ -23,7 +23,7 @@ from .store import DealStore, StoreError, needs_post
 log = logging.getLogger("deal_finder.post_queue")
 
 FRESH_HOURS = 24  # never post a price older than this (Amazon prices change fast)
-DEAL_FIELDS = [f.name for f in fields(Deal)]
+DEAL_FIELDS = [f.name for f in fields(Deal) if f.name != "images"]
 
 
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -68,9 +68,11 @@ def doc_to_deal(doc: dict) -> Deal | None:
         payload = {k: doc[k] for k in DEAL_FIELDS}
     except KeyError:
         return None
+    if isinstance(doc.get("images"), list) and doc["images"]:
+        payload["images"] = doc["images"]
     if schema_errors(payload):
         return None
-    return Deal(**payload)
+    return Deal(**{**payload, "images": tuple(payload.get("images") or ())})
 
 
 def pick_deal(docs: list[dict], platforms: list[str], now: datetime,
