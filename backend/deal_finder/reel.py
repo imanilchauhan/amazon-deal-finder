@@ -36,7 +36,7 @@ MUTED = "#5b6170"
 BRAND = "#e5484d"
 GOOD = "#137a3e"
 GOOD_SOFT = "#e7f4ec"
-SITE = "cartcrush.pages.dev"
+SITE = "cartcrush.in"
 
 # Same names as captions.THEMES; soft = the background glow.
 STYLES = {

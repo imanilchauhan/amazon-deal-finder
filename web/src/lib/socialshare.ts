@@ -18,7 +18,7 @@ export type Shareable = {
   currency?: string;
 };
 
-export const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://cartcrush.pages.dev").replace(/\/$/, "");
+export const SITE = (process.env.NEXT_PUBLIC_SITE_URL || "https://cartcrush.in").replace(/\/$/, "");
 const DISCLOSURE = "As an Amazon Associate I earn from qualifying purchases.";
 
 /** Facebook Page: the link goes in the post (no "comment for link" bait). */

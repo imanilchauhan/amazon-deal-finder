@@ -67,5 +67,5 @@ jobs:
           ZERNIO_IG_ACCOUNT_ID: ${{ vars.ZERNIO_IG_ACCOUNT_ID }}
           REELS_ENABLED: ${{ vars.REELS_ENABLED || 'true' }}
           COLLECTION_POSTS: ${{ vars.COLLECTION_POSTS || 'true' }}
-          SITE_URL: ${{ vars.SITE_URL || 'https://cartcrush.pages.dev' }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://cartcrush.in' }}
         run: python -m deal_finder.post_queue
