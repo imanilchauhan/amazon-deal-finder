@@ -1,7 +1,7 @@
 export const SITE = {
   name: "CartCrush",
   tagline: "Daily price drops worth crushing on",
-  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://deal-finder-d7a62.web.app").replace(/\/$/, ""),
+  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://cartcrush.in").replace(/\/$/, ""),
   xHandle: "@cartcrushdeals",
   xUrl: "https://x.com/cartcrushdeals",
   email: "crushcart004.21@gmail.com",

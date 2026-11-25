@@ -137,7 +137,7 @@ if [[ "${LOCAL_POSTING:-true}" == "true" ]] && post_due; then
       export BUFFER_FB_CHANNEL_ID="${BUFFER_FB_CHANNEL_ID:-6af59bff62b70b94b006343c}"
       export BUFFER_IG_CHANNEL_ID="${BUFFER_IG_CHANNEL_ID:-6afc311fece6dfde5ff59e1e}"
       export CARDS_BASE_URL="${CARDS_BASE_URL:-https://cartcrush-cards.imanilchauhan3.workers.dev}"
-      export SITE_URL="${SITE_URL:-https://cartcrush.pages.dev}"
+      export SITE_URL="${SITE_URL:-https://cartcrush.in}"
       "$BACKEND/.venv/bin/python" -m deal_finder.post_queue 2>&1 | grep -E 'post_queue: |ERROR' >> "$LOG"
     )
   fi

@@ -63,7 +63,7 @@ def wrap_lines(measure, text: str, width: float, max_lines: int) -> list[str]:
 
 
 FOOTERS = {
-    "instagram": "Link in bio → cartcrush.pages.dev",
+    "instagram": "Link in bio → cartcrush.in",
     "facebook": "Tap the link in the post to shop",
 }
 

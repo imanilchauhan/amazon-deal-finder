@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 from .captions import AMAZON_DISCLOSURE
 
 IST = timezone(timedelta(hours=5, minutes=30))
-SITE_URL = "https://cartcrush.pages.dev"
+SITE_URL = "https://cartcrush.in"
 EMPTY_MARKER = "Nothing in this collection is live right now"
 
 # slug, name, one-line pitch. Keep slugs in sync with web/src/data/collections.ts (a test checks).
