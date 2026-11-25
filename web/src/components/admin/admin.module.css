@@ -1,6 +1,6 @@
 /* Admin studio: a calm working surface in the site's design language. */
 
-.wrap { padding-top: 24px; display: grid; gap: 20px; }
+.wrap { padding-top: 24px; display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); }
 
 /* ---------- header ---------- */
 .top { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
@@ -20,7 +20,7 @@
 @media (max-width: 720px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kpi b { font-size: 22px; } }
 
 /* ---------- segmented controls ---------- */
-.tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); max-width: 100%; overflow-x: auto; }
+.tabs { display: inline-flex; min-width: 0; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); max-width: 100%; overflow-x: auto; }
 .tabs button { border: 0; background: none; color: var(--muted); padding: 7px 14px; border-radius: 999px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .tabs button:hover { color: var(--ink); }
 .tabs button[aria-selected="true"], .tabs button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / 8%); }
@@ -109,7 +109,13 @@
   .thumb, .thumbEmpty { width: 56px; height: 56px; }
   .itemTitle { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .itemSide { grid-column: 1 / -1; justify-content: space-between; }
-  .panel { grid-column: 1 / -1; }
+  .panel { grid-column: 1 / -1; padding-top: 4px; }
+  .itemSide .actions { flex-wrap: nowrap; gap: 2px; }
+  .itemSide .ghost { padding: 0 8px; }
+  .toolbar > .tabs { flex: 1 1 100%; }
+  .toolbar > .select { flex: 1 1 40%; }
+  .top .tabs { order: 3; flex: 1 1 100%; }
+  .tabs button { flex: 1; }
 }
 
 /* share kit */

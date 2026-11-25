@@ -579,6 +579,7 @@ function Library({
   }
 
   const depLabel = (slug: string) => getDepartment(slug)?.name ?? slug;
+  const catLabel = (d: string, c: string) => getDepartment(d)?.categories.find((x) => x.slug === c)?.name ?? c.replace(/-/g, " ");
 
   return (
     <section style={{ display: "grid", gap: 14 }}>
@@ -652,7 +653,7 @@ function Library({
                   <b>{money(r.price)}</b>
                   {r.discountPct > 0 && <span className={s.off}>{r.discountPct}% off</span>}
                   <span>
-                    {depLabel(r.department)} › {r.category}
+                    {depLabel(r.department)} › {catLabel(r.department, r.category)}
                   </span>
                   {!r.active && <span className={`${s.tag} ${s.tagWarn}`}>Hidden</span>}
                   {r.source === "manual" && <span className={s.tag}>Manual</span>}
