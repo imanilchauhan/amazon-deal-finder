@@ -11,11 +11,13 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   // Push is optional: without Firebase config the app still works, just without notifications.
-  await Push.init(prefs);
+  await Push.init();
   runApp(ProviderScope(
     overrides: [prefsProvider.overrideWithValue(prefs)],
     child: const CartCrushApp(),
   ));
+  // Ask for notification permission a moment after the first deals are drawn, not on a blank screen.
+  Future.delayed(const Duration(seconds: 4), () => Push.start(prefs));
 }
 
 class CartCrushApp extends StatelessWidget {

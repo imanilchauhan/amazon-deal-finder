@@ -16,16 +16,21 @@ class Push {
 
   static bool get available => _ready;
 
-  /// Call once at start-up. Safe when Firebase isn't configured: the app works without push.
-  static Future<void> init(SharedPreferences prefs) async {
+  /// Call once before runApp. Only sets Firebase up (fast, no prompt). Safe when Firebase isn't
+  /// configured: the app works without push.
+  static Future<void> init() async {
     try {
       await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
       _ready = true;
     } catch (e) {
       debugPrint('push unavailable: $e');
-      return;
     }
-    if (prefs.getBool(_key) ?? true) {
+  }
+
+  /// Call once the deals are on screen: asks for permission (first launch only) and joins the
+  /// daily topic, so the system prompt never covers an empty app.
+  static Future<void> start(SharedPreferences prefs) async {
+    if (_ready && (prefs.getBool(_key) ?? true)) {
       await setEnabled(prefs, true);
     }
   }
