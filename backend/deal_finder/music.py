@@ -6,9 +6,13 @@ public repo, because the licence does not allow redistributing the files on thei
 The same rules live in web/src/lib/music.ts for the admin's in-browser videos.
 
   gadget  Upbeat Future Bass "So Easy" (BombinSound)          electronics, watches, big discounts
-  desi    Fateh Asmaan (Spotlight_States)                       ethnic and women's fashion
+  desi    instrument-only, one of four per product (rotates):  ethnic and women's fashion
+          Indian Sitar / Indian Flute (JonasBlakewood), Santoor Sunrise (Turning_Pages),
+          Fire in Rain – Flute & Tabla (31Strings); each trimmed to 30 s past its intro
   light   Sunlit Ukulele, 30-sec edit (Kaazoom)                 baby, home, kitchen, beauty
   winter  Relaxing Acoustic Guitar 30s (Universfield)           winter items (Nov–Feb)
+
+Instrumental only (no singing or voices), mixed at background level under the video.
 """
 from __future__ import annotations
 
@@ -21,14 +25,24 @@ from pathlib import Path
 
 log = logging.getLogger(__name__)
 
-# start = seconds to skip (the ukulele opens with ~0.4 s of silence); gain = loudness 0..1.5
+# start = seconds to skip (the ukulele opens with ~0.4 s of silence); gain = loudness, kept at
+# background level so the music sits under the video instead of in front of it.
 TRACKS: dict[str, dict] = {
-    "gadget": {"file": "gadget", "start": 0.0, "gain": 0.85},
-    "desi": {"file": "desi", "start": 0.0, "gain": 0.85},
-    "light": {"file": "light", "start": 0.45, "gain": 0.9},
-    "winter": {"file": "winter", "start": 0.0, "gain": 1.3},
-    "default": {"file": "gadget", "start": 0.0, "gain": 0.7},
+    "gadget": {"file": "gadget", "start": 0.0, "gain": 0.5},
+    "desi-sitar": {"file": "desi-sitar", "start": 0.0, "gain": 0.5},
+    "desi-flute": {"file": "desi-flute", "start": 0.0, "gain": 0.5},
+    "desi-santoor": {"file": "desi-santoor", "start": 0.0, "gain": 0.5},
+    "desi-tabla": {"file": "desi-tabla", "start": 0.0, "gain": 0.5},
+    "light": {"file": "light", "start": 0.45, "gain": 0.55},
+    "winter": {"file": "winter", "start": 0.0, "gain": 0.75},
+    "default": {"file": "gadget", "start": 0.0, "gain": 0.42},
 }
+DESI = ("desi-sitar", "desi-flute", "desi-santoor", "desi-tabla")
+
+
+def desi_for(asin: str) -> str:
+    """Same product, same track; different products spread across the four."""
+    return DESI[sum(ord(c) for c in asin or "") % len(DESI)]
 
 ETHNIC_RX = re.compile(
     r"\b(kurta|kurti|kurtis|saree|sari|lehenga|salwar|dupatta|anarkali|sherwani|ethnic|churidar|palazzo set)\b", re.I)
@@ -45,7 +59,7 @@ def pick_track(doc: dict, theme: str = "") -> str:
     if theme == "winter":
         return "winter"
     if ETHNIC_RX.search(title) or (doc.get("gender") == "women" and dept == "fashion"):
-        return "desi"
+        return desi_for(str(doc.get("asin") or ""))
     if dept in GADGET_DEPTS or cat in GADGET_CATS:
         return "gadget"
     if dept in LIGHT_DEPTS:

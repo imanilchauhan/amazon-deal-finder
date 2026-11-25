@@ -350,7 +350,7 @@ def render_reel(deal: Deal, photos: list[Image.Image], *, brand: str = "", theme
         "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(fps), "-i", "-",
         *(["-ss", f"{music_start:.2f}", "-i", str(music)] if music else ["-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo"]),
         "-map", "0:v", "-map", "1:a", "-t", f"{seconds:.2f}",
-        *(["-af", f"afade=t=in:d=0.3,afade=t=out:st={max(0.0, seconds - 0.8):.2f}:d=0.8,volume={music_gain:.2f}"]
+        *(["-af", f"afade=t=in:d=0.4,afade=t=out:st={max(0.0, seconds - 1.0):.2f}:d=1.0,volume={music_gain:.2f}"]
           if music else []),
         "-c:v", "libx264", "-preset", "veryfast", "-crf", "21", "-pix_fmt", "yuv420p",
         "-profile:v", "high", "-level", "4.1",
@@ -404,7 +404,7 @@ class ReelPoster:
     wants_doc = True
 
     def __init__(self, zernio, uploader, fallback, *, platform: str, caption, fetch_image=None,
-                 render=render_reel, clock=lambda: datetime.now(timezone.utc), seconds: float = 8.0,
+                 render=render_reel, clock=lambda: datetime.now(timezone.utc), seconds: float = 16.0,
                  music=None):
         from . import cardart
 
@@ -436,7 +436,7 @@ class ReelPoster:
                 if self._music is not None:
                     from .music import TRACKS, pick_track
 
-                    track = pick_track({**doc, "discount_pct": deal.discount_pct}, th)
+                    track = pick_track({**doc, "asin": deal.asin, "discount_pct": deal.discount_pct}, th)
                     path = self._music.path(track)
                     if path is not None:
                         extra = {"music": str(path), "music_start": TRACKS[track]["start"],

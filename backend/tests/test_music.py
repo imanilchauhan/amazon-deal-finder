@@ -8,8 +8,8 @@ from deal_finder.music import TRACKS, MusicLibrary, pick_track
 
 @pytest.mark.parametrize("doc,theme,track", [
     ({"title": "Woolen cardigan for women", "department": "fashion", "gender": "women"}, "winter", "winter"),
-    ({"title": "ANNI Designer Embroidered Kurta Set", "department": "fashion"}, "", "desi"),
-    ({"title": "Women's floral top", "department": "fashion", "gender": "women"}, "her", "desi"),
+    ({"title": "ANNI Designer Embroidered Kurta Set", "department": "fashion", "asin": "B0G4RV39CP"}, "", "DESI"),
+    ({"title": "Women's floral top", "department": "fashion", "gender": "women", "asin": "B0X"}, "her", "DESI"),
     ({"title": "Kratos TW04 earbuds", "department": "electronics"}, "", "gadget"),
     ({"title": "Analog watch for men", "department": "fashion", "category": "watches"}, "", "gadget"),
     ({"title": "Stainless steel sipper", "department": "baby"}, "", "light"),
@@ -18,11 +18,22 @@ from deal_finder.music import TRACKS, MusicLibrary, pick_track
     ({"title": "Car phone mount", "department": "automotive", "discount_pct": 40}, "", "default"),
 ])
 def test_pick_track(doc, theme, track):
-    assert pick_track(doc, theme) == track
+    from deal_finder.music import DESI
+
+    got = pick_track(doc, theme)
+    assert got in DESI if track == "DESI" else got == track
+
+
+def test_desi_tracks_rotate_by_product_and_stay_put():
+    from deal_finder.music import DESI, desi_for
+
+    picks = {desi_for(f"B0TEST{i:04d}") for i in range(40)}
+    assert picks == set(DESI)
+    assert desi_for("B0G4RV39CP") == desi_for("B0G4RV39CP")
 
 
 def test_every_track_has_settings():
-    for name in ("gadget", "desi", "light", "winter", "default"):
+    for name in ("gadget", "desi-sitar", "desi-flute", "desi-santoor", "desi-tabla", "light", "winter", "default"):
         assert set(TRACKS[name]) == {"file", "start", "gain"}
 
 
@@ -51,7 +62,7 @@ def test_library_downloads_once_and_survives_failures(tmp_path):
         def get(self, url, timeout=None):
             raise OSError("offline")
 
-    assert MusicLibrary("https://x", session=Down(), cache_dir=str(tmp_path / "n")).path("desi") is None
+    assert MusicLibrary("https://x", session=Down(), cache_dir=str(tmp_path / "n")).path("desi-flute") is None
 
 
 def test_render_reel_mixes_the_music(tmp_path):

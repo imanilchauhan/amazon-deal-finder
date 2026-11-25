@@ -42,7 +42,7 @@ type Props = {
 export function VideoStudio({ deal, onClose, onTogglePosted }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const [theme, setTheme] = useState<ThemeId>(() => defaultTheme(deal));
-  const [seconds, setSeconds] = useState(8);
+  const [seconds, setSeconds] = useState(16);
   const [music, setMusic] = useState<TrackId | "none" | "auto">("auto");
   const autoTrack = pickTrack(deal, theme);
   const track: TrackId | null = music === "none" ? null : music === "auto" ? autoTrack : music;
@@ -202,7 +202,7 @@ export function VideoStudio({ deal, onClose, onTogglePosted }: Props) {
             <div className={s.actions} style={{ marginTop: 8 }}>
               <select className={s.select} value={music} onChange={(e) => setMusic(e.target.value as TrackId | "none" | "auto")} disabled={busy} aria-label="Music">
                 <option value="auto">Music: auto ({TRACKS[autoTrack].label})</option>
-                {(["gadget", "desi", "light", "winter"] as TrackId[]).map((id) => (
+                {(["gadget", "desi-sitar", "desi-flute", "desi-santoor", "desi-tabla", "light", "winter"] as TrackId[]).map((id) => (
                   <option key={id} value={id}>
                     Music: {TRACKS[id].label}
                   </option>
@@ -210,9 +210,9 @@ export function VideoStudio({ deal, onClose, onTogglePosted }: Props) {
                 <option value="none">No music</option>
               </select>
               <select className={s.select} value={seconds} onChange={(e) => setSeconds(Number(e.target.value))} disabled={busy} aria-label="Length">
-                <option value={6}>6 seconds</option>
                 <option value={8}>8 seconds</option>
                 <option value={12}>12 seconds</option>
+                <option value={16}>16 seconds</option>
               </select>
               <button type="button" className={s.secondary} onClick={() => void make()} disabled={busy || !supported}>
                 {busy ? `Recording ${Math.round(progress * 100)}%` : video ? "Make again" : "Make video"}

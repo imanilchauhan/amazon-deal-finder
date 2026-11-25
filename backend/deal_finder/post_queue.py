@@ -314,7 +314,7 @@ def with_reels(posters: dict[str, object], env_bool: Callable[[str], bool] = _bo
     from .reel import ReelPoster
     from .zernio import ZernioPoster
 
-    seconds = float(os.environ.get("REEL_SECONDS") or 8)
+    seconds = float(os.environ.get("REEL_SECONDS") or 16)
     music = None
     if os.environ.get("REEL_MUSIC", "true").strip().lower() not in {"0", "false", "no", "off"}:
         from .music import MusicLibrary

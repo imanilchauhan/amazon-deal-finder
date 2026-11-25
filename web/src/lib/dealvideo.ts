@@ -69,14 +69,29 @@ async function loadPhotos(d: Shareable): Promise<HTMLImageElement[]> {
 }
 
 function scene(ctx: CanvasRenderingContext2D, d: Shareable, photos: HTMLImageElement[], theme: VideoTheme, seconds: number): Frame {
-  // Photo slideshow: each photo in turn, then back to the main one for the ending.
-  const slides = photos.length > 1 ? [...photos, photos[0]] : photos;
-  const slideLen = (seconds - 0.2) / slides.length;
+  // Same timeline as backend/deal_finder/reel.py. Videos of 12 s or more get three acts:
+  // hook (price, 0–5 s), showcase (big photos, 5 s → end−4.6 s), close (price + call to action).
+  const long = seconds >= 12;
+  const act2In = 5.0;
+  const act2Out = seconds - 4.6;
+  const ctaAt = long ? seconds - 4.0 : 4.6;
+  const n = photos.length;
+  let segments: [number, number][];
+  if (long) {
+    const show = n > 1 ? photos.map((_, i) => i).slice(1) : [0];
+    const len = act2Out - act2In;
+    segments = [[0, 0], ...show.map((k, i) => [act2In + 0.3 + (i * len) / show.length, k] as [number, number]), [act2Out + 0.3, 0]];
+  } else {
+    const order = n > 1 ? [...photos.map((_, i) => i), 0] : [0];
+    const step = (seconds - 0.2) / order.length;
+    segments = order.map((k, i) => [0.2 + i * step, k] as [number, number]);
+  }
   const FADE = 0.35;
   const cur = d.currency ?? "INR";
   ctx.font = `800 60px ${FONT}`;
   const titleLines = wrapLines((s) => ctx.measureText(s).width, shortTitle(d.title, 90), 900, 2);
   const site = SITE.replace(/^https?:\/\//, "");
+  const expand = (t: number) => (long ? easeOut(span(t, act2In, 0.6)) - easeOut(span(t, act2Out, 0.6)) : 0);
 
   return (t) => {
     const W = VIDEO_W;
@@ -117,112 +132,54 @@ function scene(ctx: CanvasRenderingContext2D, d: Shareable, photos: HTMLImageEle
     ctx.fillText(theme.label, W - 90 - pw + 30, 153);
     ctx.restore();
     ctx.textBaseline = "alphabetic";
+    ctx.globalAlpha = 1;
 
-    // product card: scales in, then a slow Ken Burns zoom on the photo
     const pIn = easeBack(span(t, 0.2, 0.8));
+    const e = expand(t);
+    const vis = 1 - e; // text panels give way to the big photo in act 2
+    const cardW = 900 + 60 * e;
+    const cardH = 820 + 560 * e;
+    const cy = 640 + 330 * e;
     const cx = W / 2;
-    const cy = 640;
-    const cw = 900;
-    const ch = 820;
-    ctx.globalAlpha = clamp(pIn * 1.4);
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.scale(0.8 + 0.2 * pIn, 0.8 + 0.2 * pIn);
-    ctx.shadowColor = "rgba(22,24,29,0.12)";
-    ctx.shadowBlur = 50;
-    ctx.shadowOffsetY = 20;
-    roundRect(ctx, -cw / 2, -ch / 2, cw, ch, 56);
-    ctx.fillStyle = "#ffffff";
-    ctx.fill();
-    ctx.shadowColor = "transparent";
-    ctx.save();
-    roundRect(ctx, -cw / 2, -ch / 2, cw, ch, 56);
-    ctx.clip();
-    const drawPhoto = (img: HTMLImageElement, alpha: number, local: number, dx: number) => {
-      const zoom = 1 + 0.07 * clamp(local / Math.max(slideLen, 1));
-      const fit = Math.min(760 / img.width, 680 / img.height) * zoom;
-      const iw = img.width * fit;
-      const ih = img.height * fit;
-      ctx.globalAlpha = alpha * clamp(pIn * 1.4);
-      ctx.drawImage(img, -iw / 2 + dx, -ih / 2, iw, ih);
-    };
-    const k = Math.min(slides.length - 1, Math.floor(Math.max(0, t - 0.2) / slideLen));
-    const local = Math.max(0, t - 0.2) - k * slideLen;
-    const fade = k > 0 ? easeOut(clamp(local / FADE)) : 1;
-    if (k > 0 && fade < 1) drawPhoto(slides[k - 1], 1 - fade, slideLen + local, -60 * fade);
-    drawPhoto(slides[k], fade, local, 60 * (1 - fade));
-    ctx.restore();
-    ctx.restore();
-    ctx.globalAlpha = 1;
-    if (photos.length > 1 && pIn > 0.5) {
-      const on = k % photos.length;
-      const gap = 30;
-      const x0 = cx - ((photos.length - 1) * gap) / 2;
-      photos.forEach((_, n) => {
-        ctx.fillStyle = n === on ? theme.accent : "rgba(22,24,29,0.18)";
-        ctx.beginPath();
-        ctx.arc(x0 + n * gap, cy + ch / 2 - 34, n === on ? 9 : 7, 0, Math.PI * 2);
-        ctx.fill();
-      });
-    }
 
-    // discount badge pops with a little wobble
-    const b = easeBack(span(t, 1.0, 0.7));
-    if (b > 0) {
-      ctx.save();
-      ctx.translate(W - 190, 520);
-      ctx.rotate(((-10 + 4 * Math.sin(t * 3)) * Math.PI) / 180);
-      ctx.scale(b, b);
-      ctx.fillStyle = theme.accent;
-      ctx.beginPath();
-      ctx.arc(0, 0, 150, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.textAlign = "center";
-      ctx.font = `900 112px ${FONT}`;
-      ctx.fillText(`${d.discountPct}%`, 0, 18);
-      ctx.font = `800 40px ${FONT}`;
-      ctx.fillText("OFF", 0, 80);
-      ctx.restore();
-      ctx.textAlign = "left";
+    // title slides up (behind the card while it grows)
+    const ti = easeOut(span(t, 1.6, 0.7)) * vis;
+    if (ti > 0.01) {
+      ctx.globalAlpha = ti;
+      ctx.fillStyle = "#16181d";
+      ctx.font = `800 60px ${FONT}`;
+      titleLines.forEach((line, i) => ctx.fillText(line, 90, 1150 + i * 74 + (1 - ti) * 40));
+      if (d.brand && !d.title.toLowerCase().startsWith(d.brand.toLowerCase())) {
+        ctx.fillStyle = "#5b6170";
+        ctx.font = `600 34px ${FONT}`;
+        ctx.fillText(d.brand, 90, 1092 + (1 - ti) * 40);
+      }
+      ctx.globalAlpha = 1;
     }
-
-    // title slides up
-    const ti = easeOut(span(t, 1.6, 0.7));
-    ctx.globalAlpha = ti;
-    ctx.fillStyle = "#16181d";
-    ctx.font = `800 60px ${FONT}`;
-    titleLines.forEach((line, i) => ctx.fillText(line, 90, 1150 + i * 74 + (1 - ti) * 40));
-    if (d.brand) {
-      ctx.fillStyle = "#5b6170";
-      ctx.font = `600 34px ${FONT}`;
-      ctx.fillText(d.brand, 90, 1092 + (1 - ti) * 40);
-    }
-    ctx.globalAlpha = 1;
 
     // MRP appears and gets struck through, then the price counts down to the deal price
-    if (t >= 2.3) {
-      const m = easeOut(span(t, 2.3, 0.4));
-      ctx.globalAlpha = m;
+    if (t >= 2.3 && vis > 0.01) {
+      ctx.globalAlpha = easeOut(span(t, 2.3, 0.4)) * vis;
       ctx.fillStyle = "#5b6170";
       ctx.font = `600 46px ${FONT}`;
       const mrp = `MRP ${money(d.originalPrice, cur)}`;
       ctx.fillText(mrp, 90, 1330);
-      const strike = easeOut(span(t, 2.6, 0.5));
-      ctx.fillRect(90, 1314, ctx.measureText(mrp).width * strike, 5);
+      ctx.fillRect(90, 1314, ctx.measureText(mrp).width * easeOut(span(t, 2.6, 0.5)), 5);
       ctx.globalAlpha = 1;
     }
     const pr = span(t, 2.7, 1.2);
-    if (t >= 2.7) {
+    if (t >= 2.7 && vis > 0.01) {
       const shown = Math.round(d.originalPrice - (d.originalPrice - d.price) * easeOut(pr));
+      ctx.globalAlpha = vis;
       ctx.fillStyle = pr >= 1 ? theme.accent : "#16181d";
       ctx.font = `900 160px ${FONT}`;
-      ctx.fillText(money(shown, cur), 82, 1480);
+      ctx.fillText(money(shown, cur), 82, 1480 + (1 - vis) * 40);
+      ctx.globalAlpha = 1;
     }
 
     // "you save" pill
-    const sv = easeBack(span(t, 3.8, 0.5));
-    if (sv > 0) {
+    const sv = easeBack(span(t, 3.8, 0.5)) * vis;
+    if (sv > 0.02) {
       const save = `You save ${money(d.originalPrice - d.price, cur)}`;
       ctx.font = `800 40px ${FONT}`;
       const sw = ctx.measureText(save).width + 60;
@@ -239,10 +196,101 @@ function scene(ctx: CanvasRenderingContext2D, d: Shareable, photos: HTMLImageEle
       ctx.textBaseline = "alphabetic";
     }
 
-    // call to action: slides in, then breathes
-    const ca = easeOut(span(t, 4.6, 0.6));
-    if (ca > 0) {
-      const pulse = 1 + 0.025 * Math.sin((t - 4.6) * 5) * (t > 5.2 ? 1 : 0);
+    // product card over the text: scales in, grows for the showcase, photos cross-fade with a slow zoom
+    let on = 0;
+    if (pIn > 0) {
+      const k = segments.reduce((acc, [st], i) => (st <= Math.max(t, segments[0][0]) ? i : acc), 0);
+      const [segStart, idx] = segments[k];
+      const segLen = (k + 1 < segments.length ? segments[k + 1][0] : seconds) - segStart;
+      const local = Math.max(0, t - segStart);
+      const fade = k > 0 ? easeOut(clamp(local / FADE)) : 1;
+      on = idx;
+      const sc = 0.8 + 0.2 * pIn;
+      ctx.globalAlpha = clamp(pIn * 1.4);
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(sc, sc);
+      ctx.shadowColor = "rgba(22,24,29,0.12)";
+      ctx.shadowBlur = 50;
+      ctx.shadowOffsetY = 20;
+      roundRect(ctx, -cardW / 2, -cardH / 2, cardW, cardH, 56);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+      ctx.shadowColor = "transparent";
+      ctx.save();
+      roundRect(ctx, -cardW / 2, -cardH / 2, cardW, cardH, 56);
+      ctx.clip();
+      const boxW = 760 + 100 * e;
+      const boxH = 680 + 560 * e;
+      const drawPhoto = (img: HTMLImageElement, alpha: number, lt: number, len: number, dx: number) => {
+        const zoom = 1 + 0.07 * clamp(lt / Math.max(len, 1));
+        const fit = Math.min(boxW / img.width, boxH / img.height) * zoom;
+        ctx.globalAlpha = alpha * clamp(pIn * 1.4);
+        ctx.drawImage(img, (-img.width * fit) / 2 + dx, (-img.height * fit) / 2, img.width * fit, img.height * fit);
+      };
+      if (k > 0 && fade < 1) {
+        const prevLen = segStart - segments[k - 1][0];
+        drawPhoto(photos[segments[k - 1][1]], 1 - fade, prevLen + local, prevLen, -60 * fade);
+      }
+      drawPhoto(photos[idx], fade, local, segLen, 60 * (1 - fade));
+      ctx.restore();
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      if (n > 1 && pIn > 0.5) {
+        const gap = 30;
+        const x0 = cx - ((n - 1) * gap) / 2;
+        photos.forEach((_, i) => {
+          ctx.fillStyle = i === on ? theme.accent : "#d5d5d6";
+          ctx.beginPath();
+          ctx.arc(x0 + i * gap, cy + cardH / 2 - 34, i === on ? 9 : 7, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+    }
+
+    // discount badge pops with a little wobble; a bit smaller in the showcase
+    const b = easeBack(span(t, 1.0, 0.7)) * (1 - 0.25 * e);
+    if (b > 0) {
+      ctx.save();
+      ctx.translate(W - 190 + 20 * e, 520 - 120 * e);
+      ctx.rotate(((-10 + 4 * Math.sin(t * 3)) * Math.PI) / 180);
+      ctx.scale(b, b);
+      ctx.fillStyle = theme.accent;
+      ctx.beginPath();
+      ctx.arc(0, 0, 150, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "center";
+      ctx.font = `900 112px ${FONT}`;
+      ctx.fillText(`${d.discountPct}%`, 0, 18);
+      ctx.font = `800 40px ${FONT}`;
+      ctx.fillText("OFF", 0, 80);
+      ctx.restore();
+      ctx.textAlign = "left";
+    }
+
+    // showcase: a price chip under the big photo
+    if (e > 0.15) {
+      const chip = `${money(d.price, cur)}  ·  ${d.discountPct}% OFF  ·  link in bio`;
+      ctx.font = `800 44px ${FONT}`;
+      const chipW = ctx.measureText(chip).width + 80;
+      ctx.globalAlpha = e * e;
+      roundRect(ctx, W / 2 - chipW / 2, cy + cardH / 2 + 40 + (1 - e) * 40, chipW, 96, 48);
+      ctx.fillStyle = theme.accent;
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(chip, W / 2, cy + cardH / 2 + 90 + (1 - e) * 40);
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
+      ctx.globalAlpha = 1;
+    }
+
+    // call to action: slides in, then breathes (in the close for long videos)
+    const ca = easeOut(span(t, ctaAt, 0.6)) * (1 - e);
+    if (ca > 0.02) {
+      const pulse = 1 + 0.025 * Math.sin((t - ctaAt) * 5) * (t > ctaAt + 0.6 ? 1 : 0);
       ctx.save();
       ctx.globalAlpha = ca;
       ctx.translate(W / 2, 1700 + (1 - ca) * 60);
@@ -273,7 +321,7 @@ export async function dealVideoPoster(d: Shareable, theme: VideoTheme, at = 99):
   canvas.width = VIDEO_W;
   canvas.height = VIDEO_H;
   const ctx = canvas.getContext("2d")!;
-  scene(ctx, d, await loadPhotos(d), theme, 8)(at);
+  scene(ctx, d, await loadPhotos(d), theme, 16)(at);
   return canvas.toDataURL("image/jpeg", 0.85);
 }
 
@@ -297,8 +345,8 @@ async function musicStream(m: VideoMusic, seconds: number) {
     start() {
       const t = ctx.currentTime;
       gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(m.gain, t + 0.3);
-      gain.gain.setValueAtTime(m.gain, t + Math.max(0.3, seconds - 0.8));
+      gain.gain.linearRampToValueAtTime(m.gain, t + 0.4);
+      gain.gain.setValueAtTime(m.gain, t + Math.max(0.4, seconds - 1));
       gain.gain.linearRampToValueAtTime(0, t + seconds);
       source.start(t, m.start);
     },
@@ -316,7 +364,7 @@ async function musicStream(m: VideoMusic, seconds: number) {
 export async function renderDealVideo(
   d: Shareable,
   theme: VideoTheme,
-  { seconds = 8, onProgress, music }: { seconds?: number; onProgress?: (p: number) => void; music?: VideoMusic | null } = {},
+  { seconds = 16, onProgress, music }: { seconds?: number; onProgress?: (p: number) => void; music?: VideoMusic | null } = {},
 ): Promise<DealVideo> {
   let audio: Awaited<ReturnType<typeof musicStream>> | null = null;
   if (music) {
