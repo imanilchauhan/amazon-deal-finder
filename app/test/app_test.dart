@@ -46,11 +46,19 @@ Widget app(FakeLinks links) => ProviderScope(
       child: const CartCrushApp(useGoogleFonts: false),
     );
 
+Future<void> pumpApp(WidgetTester tester, FakeLinks links) async {
+  // A tall phone screen so the cards under the hero are laid out.
+  tester.view.physicalSize = const Size(1170, 6000);
+  tester.view.devicePixelRatio = 3;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(app(links));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('home shows the deal of the hour and opens Amazon only from a button', (tester) async {
     final links = FakeLinks();
-    await tester.pumpWidget(app(links));
-    await tester.pumpAndSettle();
+    await pumpApp(tester, links);
     expect(find.text('DEAL OF THE HOUR'), findsOneWidget);
     expect(find.textContaining('ANNI Designer Embroidered Kurta Set'), findsWidgets);
     expect(find.textContaining('As an Amazon Associate'), findsWidgets);
@@ -59,8 +67,7 @@ void main() {
   });
 
   testWidgets('Ask from home filters the Deals tab', (tester) async {
-    await tester.pumpWidget(app(FakeLinks()));
-    await tester.pumpAndSettle();
+    await pumpApp(tester, FakeLinks());
     await tester.enterText(find.byType(TextField).first, 'jacket under 1000 for dad');
     await tester.testTextInput.receiveAction(TextInputAction.search);
     await tester.pumpAndSettle();
@@ -69,8 +76,7 @@ void main() {
   });
 
   testWidgets('saving a deal shows it on the Saved tab', (tester) async {
-    await tester.pumpWidget(app(FakeLinks()));
-    await tester.pumpAndSettle();
+    await pumpApp(tester, FakeLinks());
     await tester.tap(find.byTooltip('Save deal').first);
     await tester.pump();
     await tester.tap(find.text('Saved'));
@@ -80,8 +86,7 @@ void main() {
 
   testWidgets('deal page shows price time, gallery and the Amazon button', (tester) async {
     final links = FakeLinks();
-    await tester.pumpWidget(app(links));
-    await tester.pumpAndSettle();
+    await pumpApp(tester, links);
     await tester.tap(find.text('Deals'));
     await tester.pumpAndSettle();
     await tester.tap(find.textContaining('Prestige Non-stick Kadai').first);
