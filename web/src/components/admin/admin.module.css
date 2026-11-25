@@ -108,7 +108,7 @@
   .item { grid-template-columns: 56px minmax(0, 1fr); padding: 12px; }
   .thumb, .thumbEmpty { width: 56px; height: 56px; }
   .itemTitle { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-  .itemSide { grid-column: 1 / -1; justify-content: space-between; }
+  .itemSide { grid-column: 1 / -1; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
   .panel { grid-column: 1 / -1; padding-top: 4px; }
   .itemSide .actions { flex-wrap: nowrap; gap: 2px; }
   .itemSide .ghost { padding: 0 8px; }
