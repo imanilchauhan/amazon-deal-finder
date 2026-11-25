@@ -49,6 +49,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
             onChanged: !Push.available || _busy || prefs == null
                 ? null
                 : (on) async {
+                    final messenger = ScaffoldMessenger.of(context);
                     setState(() => _busy = true);
                     final result = await Push.setEnabled(prefs, on);
                     if (!mounted) return;
@@ -57,7 +58,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                       _busy = false;
                     });
                     if (on && !result) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      messenger.showSnackBar(const SnackBar(
                           content: Text('Notifications are off for CartCrush in your phone settings.')));
                     }
                   },
