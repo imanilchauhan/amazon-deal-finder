@@ -68,26 +68,53 @@ class CachedJson {
     return File('${(await _dir()).path}/$fileName');
   }
 
-  /// Returns (body, fromCache).
+  /// The copy kept on the phone from the last successful download, if any.
+  Future<String?> saved() async {
+    try {
+      final f = await _file();
+      if (f != null && await f.exists()) return await f.readAsString();
+    } catch (_) {
+      // An unreadable copy is the same as none.
+    }
+    return null;
+  }
+
+  /// Downloads the current document and keeps a copy on the phone.
+  Future<String> fetch() async {
+    final res = await _client.get(Uri.parse(url), headers: {'Cache-Control': 'no-cache'}).timeout(
+          const Duration(seconds: 20),
+        );
+    if (res.statusCode != 200 || !res.body.trim().startsWith('{')) throw HttpException('HTTP ${res.statusCode}');
+    final body = utf8.decode(res.bodyBytes);
+    try {
+      await (await _file())?.writeAsString(body, flush: true);
+    } catch (_) {
+      // A full disk only costs the offline copy.
+    }
+    return body;
+  }
+
+  /// Network first, the saved copy when offline. Returns (body, fromCache).
   Future<(String, bool)> load() async {
     try {
-      final res = await _client.get(Uri.parse(url), headers: {'Cache-Control': 'no-cache'}).timeout(
-            const Duration(seconds: 20),
-          );
-      if (res.statusCode == 200 && res.body.trim().startsWith('{')) {
-        final body = utf8.decode(res.bodyBytes);
-        try {
-          await (await _file())?.writeAsString(body, flush: true);
-        } catch (_) {
-          // A full disk only costs the offline copy.
-        }
-        return (body, false);
-      }
-      throw HttpException('HTTP ${res.statusCode}');
+      return (await fetch(), false);
     } catch (e) {
-      final f = await _file();
-      if (f != null && await f.exists()) return (await f.readAsString(), true);
+      final body = await saved();
+      if (body != null) return (body, true);
       rethrow;
+    }
+  }
+
+  /// Instant open: the saved copy first (if any), then the fresh download. A failed download
+  /// after a saved copy is not an error: the copy stays, now flagged as offline (fromCache).
+  Stream<(String, bool)> watch() async* {
+    final body = await saved();
+    if (body != null) yield (body, false);
+    try {
+      yield (await fetch(), false);
+    } catch (e) {
+      if (body == null) rethrow;
+      yield (body, true);
     }
   }
 }
@@ -101,4 +128,6 @@ class CatalogRepository {
     final (body, fromCache) = await _source.load();
     return Catalog.parse(body, fromCache: fromCache);
   }
+
+  Stream<Catalog> watch() => _source.watch().map((r) => Catalog.parse(r.$1, fromCache: r.$2));
 }

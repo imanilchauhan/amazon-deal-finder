@@ -20,9 +20,10 @@ final catalogRepositoryProvider = Provider<CatalogRepository>((ref) => CatalogRe
 final collectionsRepositoryProvider =
     Provider<CollectionsRepository>((ref) => CollectionsRepository(dir: _cacheDir));
 
-final catalogProvider = FutureProvider<Catalog>((ref) => ref.watch(catalogRepositoryProvider).load());
+/// Saved copy first (instant open, works offline), then the fresh download replaces it.
+final catalogProvider = StreamProvider<Catalog>((ref) => ref.watch(catalogRepositoryProvider).watch());
 final collectionsProvider =
-    FutureProvider<Collections>((ref) => ref.watch(collectionsRepositoryProvider).load());
+    StreamProvider<Collections>((ref) => ref.watch(collectionsRepositoryProvider).watch());
 final taxonomyProvider = FutureProvider<Taxonomy>((ref) => Taxonomy.load());
 
 /// Set in main() once SharedPreferences is ready (null in tests = in-memory only).

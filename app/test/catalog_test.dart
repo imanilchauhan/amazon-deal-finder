@@ -50,6 +50,42 @@ void main() {
     await dir.delete(recursive: true);
   });
 
+  test('opens instantly from the saved copy, then shows the fresh download', () async {
+    final dir = await Directory.systemTemp.createTemp('cc');
+    final first = CatalogRepository(
+      client: MockClient((_) async => http.Response(catalogJson({'B0A0000001': entry()}), 200)),
+      dir: () async => dir,
+    );
+    expect((await first.watch().toList()).map((c) => c.live.single.asin), ['B0A0000001']);
+
+    final next = CatalogRepository(
+      client: MockClient((_) async => http.Response(catalogJson({'B0A0000002': entry()}), 200)),
+      dir: () async => dir,
+    );
+    final seen = await next.watch().toList();
+    expect(seen.map((c) => c.live.single.asin), ['B0A0000001', 'B0A0000002']);
+    expect(seen.every((c) => !c.fromCache), isTrue);
+
+    final offline = CatalogRepository(
+      client: MockClient((_) async => throw const SocketException('offline')),
+      dir: () async => dir,
+    );
+    final off = await offline.watch().toList();
+    expect(off.map((c) => c.fromCache), [false, true]);
+    expect(off.last.live.single.asin, 'B0A0000002');
+    await dir.delete(recursive: true);
+  });
+
+  test('with no saved copy and no network the error reaches the screen', () async {
+    final dir = await Directory.systemTemp.createTemp('cc');
+    final repo = CatalogRepository(
+      client: MockClient((_) async => throw const SocketException('offline')),
+      dir: () async => dir,
+    );
+    expect(repo.watch().toList(), throwsA(isA<SocketException>()));
+    await dir.delete(recursive: true);
+  });
+
   test('parses collections', () {
     final cs = Collections.parse('{"groups":["Winter"],"collections":[{"slug":"winter-essentials","group":"Winter",'
         '"title":"Winter essentials","description":"d","intro":["i"],"picks":["B0A"],"topDeals":["B0B"],'

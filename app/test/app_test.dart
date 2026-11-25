@@ -36,11 +36,11 @@ Catalog sample() => Catalog.parse(catalogJson({
 Widget app(FakeLinks links) => ProviderScope(
       overrides: [
         nowProvider.overrideWithValue(() => now),
-        catalogProvider.overrideWith((ref) async => sample()),
-        collectionsProvider.overrideWith((ref) async => const Collections(['Winter'], [
+        catalogProvider.overrideWith((ref) => Stream.value(sample())),
+        collectionsProvider.overrideWith((ref) => Stream.value(const Collections(['Winter'], [
               DealCollection(slug: 'winter-essentials', group: 'Winter', title: 'Winter essentials',
                   description: 'd', topDeals: ['B0JACKET01', 'B0HEADPH01', 'B0KURTA001']),
-            ])),
+            ]))),
         linksProvider.overrideWithValue(links),
       ],
       child: const CartCrushApp(useGoogleFonts: false),

@@ -79,4 +79,6 @@ class CollectionsRepository {
   final CachedJson _source;
 
   Future<Collections> load() async => Collections.parse((await _source.load()).$1);
+
+  Stream<Collections> watch() => _source.watch().map((r) => Collections.parse(r.$1));
 }
