@@ -20,6 +20,7 @@ dependencies:
   cached_network_image: ^3.4.1
   google_fonts: ^6.2.1
   intl: ">=0.19.0 <0.21.0"
+  flutter_native_splash: ^2.4.6
 
 dev_dependencies:
   flutter_test:
@@ -39,3 +40,15 @@ flutter_launcher_icons:
   adaptive_icon_background: "#E5484D"
   adaptive_icon_foreground: assets/icon-foreground.png
   remove_alpha_ios: true
+
+# Launch screen: logo + name on the brand coral. Regenerate with `dart run flutter_native_splash:create`.
+flutter_native_splash:
+  color: "#E5484D"
+  image: assets/splash.png
+  android_12:
+    color: "#E5484D"
+    icon_background_color: "#E5484D"
+    image: assets/splash-android12.png
+    branding: assets/splash-name.png
+  fullscreen: false
+  web: false

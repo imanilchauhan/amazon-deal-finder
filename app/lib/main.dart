@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -8,7 +9,10 @@ import 'ui/app_shell.dart';
 import 'ui/theme.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final binding = WidgetsFlutterBinding.ensureInitialized();
+  // Keep the launch screen (logo + name) up until the home page has loaded; never longer than 6 s.
+  FlutterNativeSplash.preserve(widgetsBinding: binding);
+  Future.delayed(const Duration(seconds: 6), FlutterNativeSplash.remove);
   final prefs = await SharedPreferences.getInstance();
   // Push is optional: without Firebase config the app still works, just without notifications.
   await Push.init();
@@ -16,8 +20,6 @@ Future<void> main() async {
     overrides: [prefsProvider.overrideWithValue(prefs)],
     child: const CartCrushApp(),
   ));
-  // Ask for notification permission a moment after the first deals are drawn, not on a blank screen.
-  Future.delayed(const Duration(seconds: 4), () => Push.start(prefs));
 }
 
 class CartCrushApp extends StatelessWidget {

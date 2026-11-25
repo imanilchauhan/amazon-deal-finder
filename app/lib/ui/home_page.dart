@@ -9,6 +9,7 @@ import '../data/taxonomy.dart';
 import '../logic/format.dart';
 import '../logic/rules.dart';
 import '../models/deal.dart';
+import '../services/landing.dart';
 import 'collections_page.dart';
 import 'deal_page.dart';
 import 'theme.dart';
@@ -22,6 +23,10 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final catalog = ref.watch(catalogProvider);
+    if (!catalog.isLoading) {
+      // Notification permission is asked here, once the user has landed on the home page.
+      WidgetsBinding.instance.addPostFrameCallback((_) => Landing.landed(ref.read(prefsProvider)));
+    }
     return catalog.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => StateMessage(

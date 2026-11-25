@@ -27,8 +27,8 @@ class Push {
     }
   }
 
-  /// Call once the deals are on screen: asks for permission (first launch only) and joins the
-  /// daily topic, so the system prompt never covers an empty app.
+  /// Called by Landing once the home page is showing: asks for permission (only the first time;
+  /// a "Don't allow" is remembered) and joins the daily topic.
   static Future<void> start(SharedPreferences prefs) async {
     if (_ready && (prefs.getBool(_key) ?? true)) {
       await setEnabled(prefs, true);
