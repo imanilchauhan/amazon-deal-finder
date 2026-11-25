@@ -129,3 +129,36 @@
 .digestBar > div { flex: 1 1 220px; display: grid; gap: 2px; }
 .digestBar b { font-size: 15px; }
 .digestText { width: 100%; font: inherit; font-size: 14px; line-height: 1.5; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--ink); resize: vertical; box-sizing: border-box; }
+
+/* video studio */
+.studio { width: min(1080px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid var(--line); border-radius: 20px; background: var(--bg); color: var(--ink); box-shadow: 0 30px 80px rgb(0 0 0 / 30%); overflow: hidden; }
+.studio[open] { display: flex; flex-direction: column; }
+.studio::backdrop { background: rgb(15 16 19 / 55%); backdrop-filter: blur(3px); }
+.studioHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.studioHead > div { display: grid; gap: 2px; min-width: 0; }
+.studioHead .hint { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studioBody { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; padding: 18px; overflow: auto; }
+.stage { height: min(72dvh, 680px); aspect-ratio: 9 / 16; border-radius: 16px; overflow: hidden; background: #111; display: grid; }
+.stage video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.stageEmpty { display: grid; place-content: center; gap: 12px; padding: 20px; text-align: center; color: #d6d8de; font-size: 14px; background: linear-gradient(160deg, #23252c, #121317); }
+.stageEmpty small { color: #9aa0ab; }
+.bar { width: 200px; height: 6px; border-radius: 99px; background: rgb(255 255 255 / 15%); overflow: hidden; justify-self: center; }
+.bar i { display: block; height: 100%; background: #fff; transition: width 0.2s linear; }
+.controls { display: grid; gap: 18px; align-content: start; }
+.controls section { display: grid; gap: 8px; }
+.controls .section { margin: 0; }
+.swatch { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.swatch i { width: 12px; height: 12px; border-radius: 50%; }
+.swatchOn { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.postGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.postBtn { display: grid; gap: 2px; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; text-decoration: none; }
+.postBtn:hover { border-color: var(--muted); }
+.postBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+.postBtn b { font-size: 14px; }
+.postBtn span { font-size: 12px; color: var(--muted); }
+.chipOn { border-color: transparent; background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good); font-weight: 600; }
+@media (max-width: 760px) {
+  .studio { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; margin: 0; }
+  .studioBody { grid-template-columns: 1fr; padding: 14px; }
+  .stage { height: auto; width: min(100%, 300px); justify-self: center; }
+}

@@ -13,6 +13,7 @@ import {
   whatsappUrl,
 } from "@/lib/socialshare";
 import { buildPostText, xIntentUrl } from "@/lib/xshare";
+import { VideoStudio } from "./VideoStudio";
 import s from "./admin.module.css";
 
 export const PLATFORMS = [
@@ -36,6 +37,7 @@ type Props = {
 export function ShareKit({ deal, onTogglePosted }: Props) {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [studio, setStudio] = useState(false);
   const file = `cartcrush-${deal.asin}.jpg`;
   const share = { ...deal, brand: deal.brand };
 
@@ -99,8 +101,11 @@ export function ShareKit({ deal, onTogglePosted }: Props) {
   return (
     <div className={s.shareKit}>
       <div className={s.actions}>
+        <button type="button" className={`${s.primary} ${s.small}`} onClick={() => setStudio(true)}>
+          ▶ Make video
+        </button>
         <a
-          className={`${s.primary} ${s.small}`}
+          className={`${s.secondary} ${s.small}`}
           href={xIntentUrl(buildPostText(deal))}
           target="_blank"
           rel="noopener"
@@ -137,6 +142,7 @@ export function ShareKit({ deal, onTogglePosted }: Props) {
       <p className={s.hint} role="status">
         {note || "Each button prepares the post and ticks the channel. Use the X / FB / IG / WA badges to undo a tick."}
       </p>
+      {studio && <VideoStudio deal={deal} onClose={() => setStudio(false)} onTogglePosted={onTogglePosted} />}
     </div>
   );
 }
