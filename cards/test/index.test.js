@@ -44,3 +44,38 @@ test('serves stored images publicly, 404 otherwise', async () => {
   assert.equal((await handle(req('GET', '/c/../etc.jpg'), e)).status, 404);
   assert.equal((await handle(req('DELETE', '/c/abc.jpg'), e)).status, 405);
 });
+
+const MP4 = new Uint8Array([0, 0, 0, 0x20, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 9, 8, 7, 6]).buffer;
+const auth = { Authorization: 'Bearer s3cret' };
+
+test('videos: stores an MP4 next to the card and serves it as video/mp4', async () => {
+  const e = env();
+  const r = await handle(req('PUT', '/c/B0TEST-1-instagram-reel.mp4', { body: MP4, headers: auth }), e);
+  assert.equal(r.status, 201);
+  assert.equal((await r.json()).url, 'https://cards.example/c/B0TEST-1-instagram-reel.mp4');
+  assert.ok(e.CARDS.m.has('B0TEST-1-instagram-reel.mp4'));
+  const g = await handle(req('GET', '/c/B0TEST-1-instagram-reel.mp4'), e);
+  assert.equal(g.status, 200);
+  assert.equal(g.headers.get('Content-Type'), 'video/mp4');
+  assert.equal(g.headers.get('Accept-Ranges'), 'bytes');
+  assert.equal((await g.arrayBuffer()).byteLength, 16);
+});
+
+test('videos: range requests get 206 with the slice', async () => {
+  const e = env();
+  await handle(req('PUT', '/c/v.mp4', { body: MP4, headers: auth }), e);
+  const r = await handle(req('GET', '/c/v.mp4', { headers: { Range: 'bytes=4-7' } }), e);
+  assert.equal(r.status, 206);
+  assert.equal(r.headers.get('Content-Range'), 'bytes 4-7/16');
+  assert.deepEqual([...new Uint8Array(await r.arrayBuffer())], [0x66, 0x74, 0x79, 0x70]);
+  const bad = await handle(req('GET', '/c/v.mp4', { headers: { Range: 'bytes=99-' } }), e);
+  assert.equal(bad.status, 416);
+});
+
+test('videos: a JPEG is not accepted as an MP4, and a video name does not shadow a card', async () => {
+  const e = env();
+  const r = await handle(req('PUT', '/c/x.mp4', { body: JPEG, headers: auth }), e);
+  assert.equal(r.status, 400);
+  await handle(req('PUT', '/c/x.jpg', { body: JPEG, headers: auth }), e);
+  assert.equal((await handle(req('GET', '/c/x.mp4'), e)).status, 404);
+});

@@ -59,15 +59,29 @@ class ZernioPoster:
             raise ZernioError("Instagram can't take a text-only post")
         return self._create(text, due_at, image_url)
 
-    def _create(self, text: str, due_at: datetime | None, image_url: str | None) -> str:
+    def post_video(self, text: str, due_at: datetime | None, video_url: str, *, title: str = "") -> str:
+        """Schedule a Reel: a single video on Instagram publishes as a Reel; Facebook needs
+        platformSpecificData.contentType = "reel" (9:16, 3–60 s)."""
+        extra: dict = {}
+        if self._platform == "facebook":
+            extra = {"contentType": "reel", **({"title": title[:100]} if title else {})}
+        return self._create(text, due_at, None, video_url=video_url, platform_data=extra)
+
+    def _create(self, text: str, due_at: datetime | None, image_url: str | None, *,
+                video_url: str | None = None, platform_data: dict | None = None) -> str:
         when = due_at if due_at is not None else self._clock() + timedelta(minutes=self._delay)
+        target: dict = {"platform": self._platform, "accountId": self._account}
+        if platform_data:
+            target["platformSpecificData"] = platform_data
         body: dict = {
             "content": text,
-            "platforms": [{"platform": self._platform, "accountId": self._account}],
+            "platforms": [target],
             "scheduledFor": when.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
             "timezone": "UTC",
         }
-        if image_url:
+        if video_url:
+            body["mediaItems"] = [{"type": "video", "url": video_url}]
+        elif image_url:
             body["mediaItems"] = [{"type": "image", "url": image_url}]
         data = self._call("POST", "/posts", body)
         post = data.get("post") or {}

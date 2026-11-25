@@ -30,7 +30,7 @@ jobs:
   post:
     if: ${{ github.event_name == 'workflow_dispatch' || vars.POSTING_ENABLED == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: backend
@@ -65,6 +65,7 @@ jobs:
           ZERNIO_API_KEY: ${{ secrets.ZERNIO_API_KEY }}
           ZERNIO_FB_ACCOUNT_ID: ${{ vars.ZERNIO_FB_ACCOUNT_ID }}
           ZERNIO_IG_ACCOUNT_ID: ${{ vars.ZERNIO_IG_ACCOUNT_ID }}
+          REELS_ENABLED: ${{ vars.REELS_ENABLED || 'true' }}
           COLLECTION_POSTS: ${{ vars.COLLECTION_POSTS || 'true' }}
           SITE_URL: ${{ vars.SITE_URL || 'https://cartcrush.pages.dev' }}
         run: python -m deal_finder.post_queue

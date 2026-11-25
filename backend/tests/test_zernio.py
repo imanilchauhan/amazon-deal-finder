@@ -122,12 +122,20 @@ def test_build_posters_routes_facebook_and_instagram_through_zernio(monkeypatch)
            "ZERNIO_API_KEY": "zk", "ZERNIO_FB_ACCOUNT_ID": "zf", "ZERNIO_IG_ACCOUNT_ID": "zi"}
     for k, v in env.items():
         monkeypatch.setenv(k, v)
+    from deal_finder.reel import ReelPoster
+
     posters = build_posters(lambda name: True)
-    assert isinstance(posters["facebook"], InstagramPoster)  # card poster, link in the caption
-    assert [n for n, _ in posters["facebook"]._buffer._providers] == ["zernio", "buffer"]
-    assert isinstance(posters["instagram"], InstagramPoster)
-    assert [n for n, _ in posters["instagram"]._buffer._providers] == ["zernio", "buffer"]
+    for ch in ("facebook", "instagram"):
+        assert isinstance(posters[ch], ReelPoster)              # Reel first…
+        card = posters[ch]._fallback
+        assert isinstance(card, InstagramPoster)                 # …photo card as the fallback
+        assert [n for n, _ in card._buffer._providers] == ["zernio", "buffer"]
     assert type(posters["x"]).__name__ == "BufferPoster"
+
+    monkeypatch.setenv("REELS_ENABLED", "false")
+    posters = build_posters(lambda name: True)
+    assert isinstance(posters["facebook"], InstagramPoster)
+    assert isinstance(posters["instagram"], InstagramPoster)
 
 
 def test_card_poster_themes_the_card_and_caption():
@@ -154,3 +162,114 @@ def test_card_poster_themes_the_card_and_caption():
     text, image = sender.sent
     assert text.startswith("❄️ Winter steal") and deal.url in text and "#winterwear" in text
     assert image == "https://cards/c/B0WINTER01-202611230430-facebook.jpg"
+
+
+def test_post_video_sends_a_reel(monkeypatch):
+    from datetime import datetime, timezone
+
+    from deal_finder.zernio import ZernioPoster
+
+    sent = []
+
+    class Resp:
+        status_code = 200
+
+        def json(self):
+            return {"post": {"_id": "p1"}}
+
+    class Http:
+        def request(self, method, url, json=None, timeout=None, headers=None):
+            sent.append(json)
+            return Resp()
+
+    due = datetime(2026, 11, 26, 6, 30, tzinfo=timezone.utc)
+    fb = ZernioPoster("k", "facebook", "acc", text_builder=str, session=Http())
+    assert fb.post_video("cap", due, "https://c/v.mp4", title="Sipper") == "p1"
+    assert sent[-1]["mediaItems"] == [{"type": "video", "url": "https://c/v.mp4"}]
+    assert sent[-1]["platforms"][0]["platformSpecificData"] == {"contentType": "reel", "title": "Sipper"}
+    ig = ZernioPoster("k", "instagram", "acc", text_builder=str, session=Http())
+    ig.post_video("cap", due, "https://c/v.mp4")
+    assert "platformSpecificData" not in sent[-1]["platforms"][0]   # one video = a Reel on Instagram
+    assert sent[-1]["scheduledFor"] == "2026-11-26T06:30:00.000Z"
+
+
+def _deal():
+    from deal_finder.models import validate_deal
+
+    return validate_deal({
+        "asin": "B0TEST1234", "title": "Warm fleece hoodie for men", "price": 499.0, "original_price": 999.0,
+        "discount_pct": 50, "currency": "INR", "image_url": "https://m.media-amazon.com/images/I/a.jpg",
+        "url": "https://www.amazon.in/dp/B0TEST1234/?tag=cartcrush004-21", "marketplace": "in",
+        "scraped_at": "2026-11-25T10:00:00+00:00",
+    })
+
+
+def test_reel_poster_renders_uploads_and_schedules():
+    from datetime import datetime, timezone
+
+    from PIL import Image
+
+    from deal_finder.reel import ReelPoster
+
+    calls = {}
+
+    class Z:
+        def post_video(self, text, due_at, url, title=""):
+            calls["video"] = (text, url, title)
+            return "r1"
+
+    class Up:
+        def upload_video(self, name, mp4):
+            calls["upload"] = (name, mp4)
+            return f"https://cards/c/{name}.mp4"
+
+    def render(deal, photos, brand, theme, seconds):
+        calls["render"] = (len(photos), theme)
+        return b"MP4"
+
+    fetched = []
+    poster = ReelPoster(Z(), Up(), fallback=None, platform="instagram",
+                        caption=lambda d, theme, department: f"cap-{theme}",
+                        fetch_image=lambda u: fetched.append(u) or Image.new("RGB", (10, 10)), render=render)
+    due = datetime(2026, 12, 1, 6, 30, tzinfo=timezone.utc)
+    doc = {"images": ["https://m.media-amazon.com/images/I/a.jpg", "https://m.media-amazon.com/images/I/b.jpg"]}
+    assert poster.post(_deal(), due, doc=doc) == "zernio:r1"
+    assert fetched == ["https://m.media-amazon.com/images/I/a.jpg", "https://m.media-amazon.com/images/I/b.jpg"]
+    assert calls["render"] == (2, "winter")          # hoodie in December -> winter style
+    assert calls["upload"][0] == "B0TEST1234-202612010630-reel"
+    calls.clear()
+    poster.post(_deal(), due, doc=doc)                # the other platform reuses the same video
+    assert "render" not in calls and "upload" not in calls and calls["video"]
+    assert calls["video"][0] == "cap-winter" and calls["video"][1].endswith("-reel.mp4")
+
+
+def test_reel_poster_falls_back_to_the_photo_card():
+    from deal_finder.reel import ReelPoster
+
+    class Card:
+        def post(self, deal, due_at=None, doc=None):
+            return "card-1"
+
+    def boom(*a, **k):
+        raise RuntimeError("ffmpeg missing")
+
+    poster = ReelPoster(object(), object(), Card(), platform="facebook",
+                        caption=lambda d, theme, department: "", fetch_image=lambda u: None, render=boom)
+    assert poster.post(_deal(), None, doc={}) == "card-1"
+
+
+def test_render_reel_makes_a_vertical_mp4():
+    import shutil
+
+    import pytest
+    from PIL import Image
+
+    from deal_finder import reel
+
+    try:
+        reel.ffmpeg_exe()
+    except reel.ReelError:
+        if not shutil.which("ffmpeg"):
+            pytest.skip("no ffmpeg here")
+    mp4 = reel.render_reel(_deal(), [Image.new("RGB", (400, 500), "white")], seconds=1.0, fps=10)
+    assert mp4[4:8] == b"ftyp" and len(mp4) > 1000

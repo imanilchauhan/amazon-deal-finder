@@ -296,6 +296,32 @@ def build_posters(env_bool: Callable[[str], bool] = _bool) -> dict[str, object]:
                               "BUFFER_API_KEY + BUFFER_IG_CHANNEL_ID or ZERNIO_API_KEY + ZERNIO_IG_ACCOUNT_ID")
         posters["instagram"] = build_instagram_poster(key or "", chan or "", cards_url, cards_secret,
                                                       zernio_key=zkey or "", zernio_account=zacc or "")
+    return with_reels(posters, env_bool)
+
+
+def with_reels(posters: dict[str, object], env_bool: Callable[[str], bool] = _bool) -> dict[str, object]:
+    """Facebook and Instagram post an 8-second deal video as a Reel (through Zernio) instead of
+    the photo card, falling back to the card if the video can't be made. REELS_ENABLED=false
+    turns it off; it needs ZERNIO_API_KEY, the account id and the card host."""
+    if os.environ.get("REELS_ENABLED", "true").strip().lower() in {"0", "false", "no", "off"}:
+        return posters
+    zkey = _str("ZERNIO_API_KEY")
+    cards_url, cards_secret = _str("CARDS_BASE_URL"), _str("CARDS_UPLOAD_SECRET")
+    if not (zkey and cards_url and cards_secret):
+        return posters
+    from .captions import build_facebook_post, build_instagram_post
+    from .instagram import CardUploader
+    from .reel import ReelPoster
+    from .zernio import ZernioPoster
+
+    seconds = float(os.environ.get("REEL_SECONDS") or 8)
+    for platform, acc_env, caption in (("facebook", "ZERNIO_FB_ACCOUNT_ID", build_facebook_post),
+                                       ("instagram", "ZERNIO_IG_ACCOUNT_ID", build_instagram_post)):
+        acc = _str(acc_env)
+        if platform in posters and acc:
+            z = ZernioPoster(zkey, platform, acc, text_builder=lambda d: "")
+            posters[platform] = ReelPoster(z, CardUploader(cards_url, cards_secret), posters[platform],
+                                           platform=platform, caption=caption, seconds=seconds)
     return posters
 
 

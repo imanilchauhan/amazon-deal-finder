@@ -43,6 +43,17 @@ class CardUploader:
             raise CardUploadError(f"card upload failed: HTTP {resp.status_code} {resp.text[:120]}")
         return resp.json().get("url") or url
 
+    def upload_video(self, name: str, mp4: bytes) -> str:
+        url = f"{self._base}/c/{name}.mp4"
+        try:
+            resp = self._http.put(url, data=mp4, timeout=max(self._timeout, 60), headers={
+                "Authorization": f"Bearer {self._secret}", "Content-Type": "video/mp4"})
+        except Exception as exc:  # noqa: BLE001
+            raise CardUploadError(f"video upload failed: {exc}") from exc
+        if resp.status_code != 201:
+            raise CardUploadError(f"video upload failed: HTTP {resp.status_code} {resp.text[:120]}")
+        return resp.json().get("url") or url
+
 
 class InstagramPoster:
     """Deal card poster (Instagram, and Facebook too): draws the themed card, hosts it and
