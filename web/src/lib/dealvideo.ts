@@ -127,7 +127,7 @@ function scene(ctx: CanvasRenderingContext2D, d: Shareable, img: HTMLImageElemen
     const b = easeBack(span(t, 1.0, 0.7));
     if (b > 0) {
       ctx.save();
-      ctx.translate(W - 200, 330);
+      ctx.translate(W - 190, 520);
       ctx.rotate(((-10 + 4 * Math.sin(t * 3)) * Math.PI) / 180);
       ctx.scale(b, b);
       ctx.fillStyle = theme.accent;
@@ -157,21 +157,24 @@ function scene(ctx: CanvasRenderingContext2D, d: Shareable, img: HTMLImageElemen
     }
     ctx.globalAlpha = 1;
 
-    // price counts down from MRP to the deal price
-    const pr = span(t, 2.4, 1.3);
-    if (t >= 2.4) {
+    // MRP appears and gets struck through, then the price counts down to the deal price
+    if (t >= 2.3) {
+      const m = easeOut(span(t, 2.3, 0.4));
+      ctx.globalAlpha = m;
+      ctx.fillStyle = "#5b6170";
+      ctx.font = `600 46px ${FONT}`;
+      const mrp = `MRP ${money(d.originalPrice, cur)}`;
+      ctx.fillText(mrp, 90, 1330);
+      const strike = easeOut(span(t, 2.6, 0.5));
+      ctx.fillRect(90, 1314, ctx.measureText(mrp).width * strike, 5);
+      ctx.globalAlpha = 1;
+    }
+    const pr = span(t, 2.7, 1.2);
+    if (t >= 2.7) {
       const shown = Math.round(d.originalPrice - (d.originalPrice - d.price) * easeOut(pr));
       ctx.fillStyle = pr >= 1 ? theme.accent : "#16181d";
-      ctx.font = `900 150px ${FONT}`;
-      const priceText = money(shown, cur);
-      ctx.fillText(priceText, 90, 1460);
-      const px = 90 + ctx.measureText(money(d.price, cur)).width + 34;
-      ctx.fillStyle = "#5b6170";
-      ctx.font = `600 44px ${FONT}`;
-      const mrp = `MRP ${money(d.originalPrice, cur)}`;
-      ctx.fillText(mrp, px, 1446);
-      const strike = easeOut(span(t, 2.6, 0.5));
-      ctx.fillRect(px, 1431, ctx.measureText(mrp).width * strike, 4);
+      ctx.font = `900 160px ${FONT}`;
+      ctx.fillText(money(shown, cur), 82, 1480);
     }
 
     // "you save" pill
@@ -181,7 +184,7 @@ function scene(ctx: CanvasRenderingContext2D, d: Shareable, img: HTMLImageElemen
       ctx.font = `800 40px ${FONT}`;
       const sw = ctx.measureText(save).width + 60;
       ctx.save();
-      ctx.translate(90 + sw / 2, 1530);
+      ctx.translate(90 + sw / 2, 1560);
       ctx.scale(sv, sv);
       roundRect(ctx, -sw / 2, -40, sw, 80, 22);
       ctx.fillStyle = "#e7f4ec";
@@ -199,7 +202,7 @@ function scene(ctx: CanvasRenderingContext2D, d: Shareable, img: HTMLImageElemen
       const pulse = 1 + 0.025 * Math.sin((t - 4.6) * 5) * (t > 5.2 ? 1 : 0);
       ctx.save();
       ctx.globalAlpha = ca;
-      ctx.translate(W / 2, 1660 + (1 - ca) * 60);
+      ctx.translate(W / 2, 1700 + (1 - ca) * 60);
       ctx.scale(pulse, pulse);
       roundRect(ctx, -450, -60, 900, 120, 60);
       ctx.fillStyle = "#16181d";
@@ -214,7 +217,7 @@ function scene(ctx: CanvasRenderingContext2D, d: Shareable, img: HTMLImageElemen
       ctx.textAlign = "center";
       ctx.fillStyle = "#5b6170";
       ctx.font = `500 28px ${FONT}`;
-      ctx.fillText(`${site}  ·  #ad  ·  price when posted, Amazon prices change fast`, W / 2, 1780);
+      ctx.fillText(`${site}  ·  #ad  ·  price when posted, Amazon prices change fast`, W / 2, 1815);
       ctx.globalAlpha = 1;
       ctx.textAlign = "left";
     }
