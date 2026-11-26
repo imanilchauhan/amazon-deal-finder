@@ -1,9 +1,9 @@
 /// Where the app gets its data and what it says. Override at build time with
-/// `--dart-define=SITE_URL=https://cartcrush.in` once the domain is live.
+/// `--dart-define=SITE_URL=...` (e.g. a preview deploy).
 class AppConfig {
   AppConfig._();
 
-  static const siteUrl = String.fromEnvironment('SITE_URL', defaultValue: 'https://cartcrush.pages.dev');
+  static const siteUrl = String.fromEnvironment('SITE_URL', defaultValue: 'https://cartcrush.in');
 
   /// Product cache written by the scraper after every run (no Firestore reads).
   static const catalogUrl = String.fromEnvironment(

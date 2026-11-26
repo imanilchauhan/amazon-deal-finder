@@ -17,4 +17,4 @@ flutter build ios --release                   # iOS (needs Xcode + Apple develop
 
 App id: `com.cartcrush.app` (Android and iOS). Firebase project `deal-finder-d7a62`
 (`flutterfire configure --project=deal-finder-d7a62 --platforms=android,ios`).
-Override the site with `--dart-define=SITE_URL=https://cartcrush.in` once the domain is live.
+The site defaults to https://cartcrush.in (override with `--dart-define=SITE_URL=...`).
