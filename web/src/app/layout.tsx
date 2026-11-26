@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import { Footer, Header, JsonLd } from "@/components/SiteChrome";
 import { getDeals, lastChecked } from "@/lib/deals";
 import { SITE, SOCIALS } from "@/lib/site";
+import { ADSENSE_CLIENT, adsEnabled } from "@/lib/ads";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -39,6 +40,8 @@ export const metadata: Metadata = {
   // Google Search Console ownership (public by design: it appears in the page head).
   verification: { google: "f4J5jy714hQbYwgNYIr-thm-04zeb2r6kesYM2vxf9c" },
   category: "shopping",
+  // AdSense site ownership (only once an AdSense account id is configured).
+  ...(adsEnabled() ? { other: { "google-adsense-account": ADSENSE_CLIENT } } : {}),
 };
 
 export const viewport: Viewport = {

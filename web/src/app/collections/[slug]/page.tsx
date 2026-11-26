@@ -9,6 +9,7 @@ import { getActiveProducts, getCollectionPicks, lastChecked } from "@/lib/deals"
 import { istDateTime } from "@/lib/format";
 import { PRICE_DISCLAIMER, SITE } from "@/lib/site";
 import c from "@/components/content.module.css";
+import { AdSlot, AdsScript } from "@/components/Ads";
 
 export function generateStaticParams() {
   return COLLECTIONS.map((col) => ({ slug: col.slug }));
@@ -96,6 +97,8 @@ export default async function CollectionPage({ params }: PageProps<"/collections
         )}
         {checked && <p className={c.meta}>Prices last checked {istDateTime(checked)}. Amazon prices change often.</p>}
       </article>
+      {all.length > 0 && <AdsScript />}
+      {all.length > 0 && <AdSlot kind="article" />}
 
       {topDeals.length > 0 && (
         <section className={c.deals}>

@@ -7,6 +7,7 @@ import { getDeals, lastChecked } from "@/lib/deals";
 import { istDateTime } from "@/lib/format";
 import { PRICE_DISCLAIMER, SITE } from "@/lib/site";
 import c from "@/components/content.module.css";
+import { AdSlot, AdsScript } from "@/components/Ads";
 
 /**
  * Black Friday 2026 page. Update EVENT when Amazon announces its sale window; until then the
@@ -142,6 +143,8 @@ export default async function BlackFridayPage() {
           ))}
         </div>
       </article>
+      <AdsScript />
+      <AdSlot kind="article" />
 
       <section className={c.deals} id="deals">
         <h2>Live deals at {EVENT.minDiscount}% off or more</h2>

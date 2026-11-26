@@ -9,6 +9,7 @@ import type { Deal } from "@/lib/deal-model";
 import { getActiveProducts, getCollectionPicks, getDeals } from "@/lib/deals";
 import { money } from "@/lib/format";
 import { PRICE_DISCLAIMER, SITE, SOCIALS } from "@/lib/site";
+import { AdSlot, AdsScript } from "@/components/Ads";
 import { DEPARTMENTS } from "@/lib/taxonomy";
 import { isForHer, isWinter, moodsOf, snippet } from "@/lib/themes";
 import { withoutVariants } from "@/lib/variants";
@@ -247,6 +248,9 @@ export default async function Home() {
           )}
         </div>
       </section>
+
+      <AdsScript />
+      <AdSlot kind="display" />
 
       <section className={h.section} aria-labelledby="cats">
         <div className={h.head}>

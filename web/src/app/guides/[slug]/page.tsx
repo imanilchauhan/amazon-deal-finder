@@ -8,6 +8,7 @@ import { getDeals, lastChecked } from "@/lib/deals";
 import { istDateTime } from "@/lib/format";
 import { PRICE_DISCLAIMER, SITE } from "@/lib/site";
 import c from "@/components/content.module.css";
+import { AdSlot, AdsScript } from "@/components/Ads";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -109,6 +110,8 @@ export default async function GuidePage({ params }: PageProps<"/guides/[slug]">)
           ))}
         </div>
       </article>
+      <AdsScript />
+      <AdSlot kind="article" />
 
       <section className={c.deals} id="deals">
         <h2>{g.dealsHeading}</h2>
