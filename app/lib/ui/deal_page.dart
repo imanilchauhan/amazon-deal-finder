@@ -204,9 +204,8 @@ class _DealPageState extends ConsumerState<DealPage> {
             strength: 1.15,
             padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
             child: Row(children: [
-              if (d.active && fresh)
-                Expanded(
-                  child: Column(
+              if (d.active && fresh) ...[
+                Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -215,17 +214,21 @@ class _DealPageState extends ConsumerState<DealPage> {
                         Text('${d.discountPct}% off', style: TextStyle(color: context.tones.good, fontWeight: FontWeight.w700)),
                     ],
                   ),
-                )
-              else
-                const Spacer(),
-              FilledButton.icon(
-                onPressed: openAmazon,
-                icon: const Icon(Icons.open_in_new, size: 18),
-                label: Text(d.active ? 'Get this deal on Amazon' : 'See it on Amazon'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(0, 52),
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: openAmazon,
+                  icon: const Icon(Icons.open_in_new, size: 18),
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(d.active ? 'Get this deal on Amazon' : 'See it on Amazon'),
+                  ),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 52),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  ),
                 ),
               ),
             ]),
