@@ -38,11 +38,14 @@
   height: 100%;
   object-fit: contain;
 }
+/* Above the photo: the photo's fade-in and hover zoom give it its own layer. */
 .badge {
   position: absolute;
+  z-index: 2;
   top: 16px;
   left: 16px;
-  background: var(--brand-deep);
+  background: var(--cta);
+  box-shadow: 0 6px 14px rgb(211 47 47 / 30%);
   color: #fff;
   font-weight: 700;
   padding: 5px 12px;
