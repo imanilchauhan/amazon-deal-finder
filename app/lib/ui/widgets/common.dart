@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/config.dart';
 import '../../logic/format.dart';
+import '../glass.dart';
 import '../theme.dart';
 
 /// A product photo on white, never cropped (Amazon photos are on white backgrounds).
@@ -52,7 +53,12 @@ class DiscountBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: big ? 12 : 8, vertical: big ? 6 : 4),
-      decoration: BoxDecoration(color: Brand.coral, borderRadius: BorderRadius.circular(999)),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [Color(0xFFFF6B6F), Brand.coral]),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.55)),
+        boxShadow: [BoxShadow(color: Brand.coral.withValues(alpha: 0.30), blurRadius: 10, offset: const Offset(0, 3))],
+      ),
       child: Text('−$pct%',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: big ? 16 : 12)),
     );
@@ -187,13 +193,11 @@ class Freshness extends StatelessWidget {
         : checked == null
             ? 'Prices checked recently'
             : 'Prices checked ${ago(checked!, now)}';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: context.tones.surface,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: context.tones.line),
-      ),
+    return Glass(
+      radius: 999,
+      blur: false,
+      shadow: false,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Container(
           width: 8,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
+import '../glass.dart';
 import '../theme.dart';
 
 /// "Ask: gift for mom under ₹500" — sends the sentence to the Deals tab, which turns it into
@@ -43,17 +44,35 @@ class _AskBarState extends ConsumerState<AskBar> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: _c,
-      textInputAction: TextInputAction.search,
-      onSubmitted: _submit,
-      decoration: InputDecoration(
-        hintText: 'Ask: gift for mom under ₹500',
-        prefixIcon: const Icon(Icons.auto_awesome, color: Brand.coral),
-        suffixIcon: IconButton(
-          tooltip: 'Find deals',
-          icon: const Icon(Icons.arrow_forward),
-          onPressed: () => _submit(_c.text),
+    // A frosted field: blurs whatever scrolls behind it.
+    return Glass(
+      radius: 999,
+      sigma: 18,
+      strength: 1.1,
+      child: TextField(
+        controller: _c,
+        textInputAction: TextInputAction.search,
+        onSubmitted: _submit,
+        decoration: InputDecoration(
+          filled: false,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(999), borderSide: const BorderSide(color: Brand.coral, width: 1.5)),
+          hintText: 'Ask: gift for mom under ₹500',
+          prefixIcon: const Icon(Icons.auto_awesome, color: Brand.coral),
+          suffixIcon: Padding(
+            padding: const EdgeInsets.all(5),
+            child: Material(
+              color: Brand.coral,
+              shape: const CircleBorder(),
+              child: IconButton(
+                tooltip: 'Find deals',
+                icon: const Icon(Icons.arrow_forward, color: Colors.white, size: 20),
+                onPressed: () => _submit(_c.text),
+              ),
+            ),
+          ),
         ),
       ),
     );

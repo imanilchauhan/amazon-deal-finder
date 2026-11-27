@@ -5,6 +5,7 @@ import '../core/providers.dart';
 import '../data/catalog.dart';
 import '../data/collections.dart';
 import '../models/deal.dart';
+import 'glass.dart';
 import 'theme.dart';
 import 'widgets/common.dart';
 import 'widgets/deal_card.dart';
@@ -35,12 +36,14 @@ class CollectionsPage extends ConsumerWidget {
             (g, cs.items.where((c) => c.group == g && c.allAsins.isNotEmpty).toList()),
         ].where((x) => x.$2.isNotEmpty).toList();
         return RefreshIndicator(
+          edgeOffset: MediaQuery.paddingOf(context).top,
           onRefresh: () async {
             ref.invalidate(collectionsProvider);
             await ref.read(collectionsProvider.future);
           },
           child: CustomScrollView(
             slivers: [
+              const GlassTopGap(extra: 4),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
@@ -67,6 +70,7 @@ class CollectionsPage extends ConsumerWidget {
                 ),
               ],
               const SliverToBoxAdapter(child: Disclosure()),
+              const GlassBottomGap(),
             ],
           ),
         );
@@ -136,20 +140,27 @@ class CollectionPage extends ConsumerWidget {
             for (final s in col.sections) (s.heading, _resolve(catalog, s.asins, now)),
           ].where((b) => b.$2.isNotEmpty).toList();
     return Scaffold(
-      appBar: AppBar(
+      extendBodyBehindAppBar: true,
+      appBar: GlassAppBar(
         title: Text(col.group),
         actions: [
-          IconButton(
-            tooltip: 'Open on the website',
-            icon: const Icon(Icons.public),
-            onPressed: () => ref.read(linksProvider).openExternal(col.pageUrl),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: GlassIconButton(
+              size: 40,
+              tooltip: 'Open on the website',
+              icon: Icons.public,
+              onPressed: () => ref.read(linksProvider).openExternal(col.pageUrl),
+            ),
           ),
         ],
       ),
-      body: catalog == null
+      body: GlassBackdrop(
+        child: catalog == null
           ? const Center(child: CircularProgressIndicator())
           : CustomScrollView(
               slivers: [
+                const GlassTopGap(extra: 4),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
@@ -178,8 +189,10 @@ class CollectionPage extends ConsumerWidget {
                   DealGrid(deals),
                 ],
                 const SliverToBoxAdapter(child: Disclosure(withPriceNote: true)),
+                const GlassBottomGap(),
               ],
             ),
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/config.dart';
 import '../core/providers.dart';
 import '../services/push.dart';
+import 'glass.dart';
 import 'theme.dart';
 import 'widgets/common.dart';
 
@@ -28,8 +29,10 @@ class _AboutPageState extends ConsumerState<AboutPage> {
     final prefs = ref.read(prefsProvider);
     final t = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('About CartCrush')),
-      body: ListView(
+      extendBodyBehindAppBar: true,
+      appBar: const GlassAppBar(title: Text('About CartCrush')),
+      body: GlassBackdrop(
+        child: ListView(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
@@ -106,6 +109,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
           const Disclosure(withPriceNote: true),
         ],
       ),
+      )
     );
   }
 }

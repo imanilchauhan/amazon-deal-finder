@@ -71,6 +71,9 @@ ThemeData buildTheme(Brightness b, {bool useGoogleFonts = true}) {
     surface: tones.surface,
   );
   final base = ThemeData(useMaterial3: true, colorScheme: scheme, brightness: b);
+  // Glass surfaces (see glass.dart): translucent fills with a light edge over the colour field.
+  final glassFill = dark ? Colors.white.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.58);
+  final glassEdge = dark ? Colors.white.withValues(alpha: 0.14) : Colors.white.withValues(alpha: 0.85);
   final text = useGoogleFonts ? GoogleFonts.interTextTheme(base.textTheme) : base.textTheme;
   return base.copyWith(
     scaffoldBackgroundColor: tones.bg,
@@ -90,14 +93,18 @@ ThemeData buildTheme(Brightness b, {bool useGoogleFonts = true}) {
       ),
     ),
     cardTheme: CardThemeData(
-      color: tones.surface,
+      color: glassFill,
       elevation: 0,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18), side: BorderSide(color: tones.line)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22), side: BorderSide(color: glassEdge)),
     ),
     chipTheme: base.chipTheme.copyWith(
-      backgroundColor: tones.surface,
-      side: BorderSide(color: tones.line),
+      backgroundColor: glassFill,
+      selectedColor: dark ? Colors.white : Brand.ink,
+      secondaryLabelStyle: TextStyle(fontWeight: FontWeight.w700, color: dark ? Brand.ink : Colors.white),
+      checkmarkColor: dark ? Brand.ink : Colors.white,
+      showCheckmark: false,
+      side: BorderSide(color: glassEdge),
       shape: const StadiumBorder(),
       labelStyle: TextStyle(fontWeight: FontWeight.w600, color: dark ? Colors.white : Brand.ink),
     ),
@@ -118,16 +125,23 @@ ThemeData buildTheme(Brightness b, {bool useGoogleFonts = true}) {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(48, 48),
-        side: BorderSide(color: tones.line),
+        backgroundColor: glassFill,
+        side: BorderSide(color: glassEdge),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     ),
+    bottomSheetTheme: const BottomSheetThemeData(backgroundColor: Colors.transparent, elevation: 0),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: dark ? const Color(0xF02A2D35) : const Color(0xF016181D),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: tones.surface,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(999), borderSide: BorderSide(color: tones.line)),
+      fillColor: glassFill,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(999), borderSide: BorderSide(color: glassEdge)),
       enabledBorder:
-          OutlineInputBorder(borderRadius: BorderRadius.circular(999), borderSide: BorderSide(color: tones.line)),
+          OutlineInputBorder(borderRadius: BorderRadius.circular(999), borderSide: BorderSide(color: glassEdge)),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(999), borderSide: const BorderSide(color: Brand.coral, width: 1.5)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),

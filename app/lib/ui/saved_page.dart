@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/providers.dart';
 import '../models/deal.dart';
 import 'deal_page.dart';
+import 'glass.dart';
 import 'theme.dart';
 import 'widgets/common.dart';
 import 'widgets/deal_card.dart';
@@ -38,6 +39,7 @@ class SavedPage extends ConsumerWidget {
     }
     return CustomScrollView(
       slivers: [
+        const GlassTopGap(extra: 4),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
@@ -68,6 +70,7 @@ class SavedPage extends ConsumerWidget {
           ),
         ],
         const SliverToBoxAdapter(child: Disclosure()),
+        const GlassBottomGap(),
       ],
     );
   }

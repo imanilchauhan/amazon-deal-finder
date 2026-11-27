@@ -5,6 +5,7 @@ import '../../core/providers.dart';
 import '../../logic/rules.dart';
 import '../../models/deal.dart';
 import '../deal_page.dart';
+import '../glass.dart';
 import '../theme.dart';
 import 'common.dart';
 
@@ -30,24 +31,28 @@ class DealCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: Stack(
-                children: [
-                  Positioned.fill(child: ProductImage(deal.imageUrl, radius: 0)),
-                  if (fresh && deal.discountPct > 0)
-                    Positioned(left: 8, top: 8, child: DiscountBadge(deal.discountPct)),
-                  Positioned(
-                    right: 2,
-                    top: 2,
-                    child: IconButton(
-                      tooltip: saved ? 'Remove from saved' : 'Save deal',
-                      onPressed: () => ref.read(savedProvider.notifier).toggle(deal.asin),
-                      icon: Icon(saved ? Icons.favorite : Icons.favorite_border,
-                          color: saved ? Brand.coral : const Color(0xFF8A8F99)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 6, 6, 0),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Stack(
+                  children: [
+                    Positioned.fill(child: ProductImage(deal.imageUrl, radius: 17)),
+                    if (fresh && deal.discountPct > 0)
+                      Positioned(left: 8, top: 8, child: DiscountBadge(deal.discountPct)),
+                    Positioned(
+                      right: 6,
+                      top: 6,
+                      child: GlassIconButton(
+                        size: 36,
+                        tooltip: saved ? 'Remove from saved' : 'Save deal',
+                        onPressed: () => ref.read(savedProvider.notifier).toggle(deal.asin),
+                        icon: saved ? Icons.favorite : Icons.favorite_border,
+                        color: saved ? Brand.coral : const Color(0xFF6B707B),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             Padding(

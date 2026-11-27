@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/providers.dart';
 import '../logic/format.dart';
 import '../logic/rules.dart';
+import 'glass.dart';
 import 'theme.dart';
 import 'widgets/ask_bar.dart';
 import 'widgets/common.dart';
@@ -59,12 +60,14 @@ class DealsPage extends ConsumerWidget {
           ..sort((a, b) => counts[b.slug]! - counts[a.slug]!);
 
         return RefreshIndicator(
+          edgeOffset: MediaQuery.paddingOf(context).top,
           onRefresh: () async {
             ref.invalidate(catalogProvider);
             await ref.read(catalogProvider.future);
           },
           child: CustomScrollView(
             slivers: [
+              const GlassTopGap(extra: 4),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -111,19 +114,36 @@ class DealsPage extends ConsumerWidget {
                   child: Row(
                     children: [
                       Expanded(child: _Summary(count: deals.length, ask: ask, raw: query)),
-                      PopupMenuButton<Sort>(
-                        tooltip: 'Sort',
-                        initialValue: sort,
-                        onSelected: (s) => ref.read(dealsSortProvider.notifier).state = s,
-                        itemBuilder: (_) => [
-                          for (final s in Sort.values) PopupMenuItem(value: s, child: Text(_sortLabels[s]!)),
-                        ],
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Row(mainAxisSize: MainAxisSize.min, children: [
-                            Text(_sortLabels[sort]!, style: const TextStyle(fontWeight: FontWeight.w600)),
-                            const Icon(Icons.expand_more),
-                          ]),
+                      Tooltip(
+                        message: 'Sort',
+                        child: GlassChip(
+                          label: _sortLabels[sort]!,
+                          icon: Icons.swap_vert,
+                          onTap: () => showGlassSheet<void>(
+                            context,
+                            builder: (ctx) => Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(22, 14, 22, 6),
+                                  child: Text('Sort deals',
+                                      style: Theme.of(ctx).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                                ),
+                                for (final s in Sort.values)
+                                  ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 22),
+                                    title: Text(_sortLabels[s]!),
+                                    trailing: s == sort ? const Icon(Icons.check_rounded, color: Brand.coral) : null,
+                                    onTap: () {
+                                      ref.read(dealsSortProvider.notifier).state = s;
+                                      Navigator.of(ctx).pop();
+                                    },
+                                  ),
+                                const SizedBox(height: 12),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -147,6 +167,7 @@ class DealsPage extends ConsumerWidget {
               else
                 DealGrid(deals),
               const SliverToBoxAdapter(child: Disclosure(withPriceNote: true)),
+              const GlassBottomGap(),
             ],
           ),
         );

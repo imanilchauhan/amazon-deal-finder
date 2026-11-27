@@ -12,6 +12,7 @@ import '../models/deal.dart';
 import '../services/landing.dart';
 import 'collections_page.dart';
 import 'deal_page.dart';
+import 'glass.dart';
 import 'theme.dart';
 import 'widgets/ask_bar.dart';
 import 'widgets/common.dart';
@@ -37,6 +38,7 @@ class HomePage extends ConsumerWidget {
         onAction: () => ref.invalidate(catalogProvider),
       ),
       data: (c) => RefreshIndicator(
+        edgeOffset: MediaQuery.paddingOf(context).top,
         onRefresh: () async {
           ref.invalidate(catalogProvider);
           ref.invalidate(collectionsProvider);
@@ -82,6 +84,7 @@ class _HomeBody extends ConsumerWidget {
 
     return CustomScrollView(
       slivers: [
+        const GlassTopGap(extra: 4),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
@@ -163,6 +166,7 @@ class _HomeBody extends ConsumerWidget {
           SliverToBoxAdapter(child: _Departments(tax, deals)),
         ],
         const SliverToBoxAdapter(child: Disclosure(withPriceNote: true)),
+        const GlassBottomGap(),
       ],
     );
   }
@@ -305,6 +309,7 @@ class _Tiles extends ConsumerWidget {
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
+      padding: EdgeInsets.zero, // the glass bars' insets belong to the outer scroll view
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
@@ -332,7 +337,7 @@ class _Tile extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     return Card(
       clipBehavior: Clip.antiAlias,
-      color: Color.alphaBlend(tint.withValues(alpha: 0.08), context.tones.surface),
+      color: Color.alphaBlend(tint.withValues(alpha: 0.10), Theme.of(context).cardTheme.color ?? context.tones.surface),
       child: InkWell(
         onTap: onTap,
         child: Padding(

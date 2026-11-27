@@ -6,6 +6,7 @@ import '../core/providers.dart';
 import '../logic/format.dart';
 import '../logic/rules.dart';
 import '../models/deal.dart';
+import 'glass.dart';
 import 'theme.dart';
 import 'widgets/common.dart';
 import 'widgets/deal_card.dart';
@@ -43,35 +44,36 @@ class _DealPageState extends ConsumerState<DealPage> {
     final t = Theme.of(context).textTheme;
     final photos = d.gallery;
 
+    Future<void> openAmazon() async {
+      final ok = await links.openExternal(d.url);
+      if (!ok && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Couldn\'t open Amazon. Try again.')));
+      }
+    }
+
+    final top = MediaQuery.paddingOf(context).top;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(tax?.departmentName(d.department) ?? 'Deal'),
-        actions: [
-          IconButton(
-            tooltip: saved ? 'Remove from saved' : 'Save deal',
-            onPressed: () => ref.read(savedProvider.notifier).toggle(d.asin),
-            icon: Icon(saved ? Icons.favorite : Icons.favorite_border, color: saved ? Brand.coral : null),
-          ),
-          IconButton(
-            tooltip: 'Share',
-            onPressed: () => links.shareDeal(d, showPrice: fresh),
-            icon: const Icon(Icons.ios_share),
-          ),
-        ],
-      ),
-      body: CustomScrollView(
+      extendBody: true,
+      body: GlassBackdrop(
+        child: Stack(children: [
+          CustomScrollView(
         slivers: [
+          SliverToBoxAdapter(child: SizedBox(height: top + 64)),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-              child: AspectRatio(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+              child: Glass(
+                radius: 30,
+                blur: false,
+                padding: const EdgeInsets.all(8),
+                child: AspectRatio(
                 aspectRatio: 1,
                 child: Stack(
                   children: [
                     PageView.builder(
                       itemCount: photos.length,
                       onPageChanged: (i) => setState(() => _photo = i),
-                      itemBuilder: (_, i) => ProductImage(photos[i], radius: 20, padding: 18),
+                      itemBuilder: (_, i) => ProductImage(photos[i], radius: 23, padding: 18),
                     ),
                     if (fresh && d.discountPct > 0)
                       Positioned(left: 12, top: 12, child: DiscountBadge(d.discountPct, big: true)),
@@ -99,6 +101,7 @@ class _DealPageState extends ConsumerState<DealPage> {
                       ),
                   ],
                 ),
+              ),
               ),
             ),
           ),
@@ -139,20 +142,7 @@ class _DealPageState extends ConsumerState<DealPage> {
                           style: t.bodySmall?.copyWith(color: context.tones.muted)),
                     ],
                   ],
-                  const SizedBox(height: 18),
-                  FilledButton.icon(
-                    onPressed: () async {
-                      final ok = await links.openExternal(d.url);
-                      if (!ok && context.mounted) {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(content: Text('Couldn\'t open Amazon. Try again.')));
-                      }
-                    },
-                    icon: const Icon(Icons.open_in_new),
-                    label: Text(d.active ? 'Get this deal on Amazon' : 'See it on Amazon'),
-                    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(54)),
-                  ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 14),
                   Text('Opens Amazon. ${AppConfig.amazonDisclosure}',
                       style: t.bodySmall?.copyWith(color: context.tones.muted)),
                   if (tax != null) ...[
@@ -171,7 +161,76 @@ class _DealPageState extends ConsumerState<DealPage> {
             SliverToBoxAdapter(child: DealRow(similar)),
           ],
           SliverToBoxAdapter(child: Disclosure(withPriceNote: d.active)),
+          SliverToBoxAdapter(child: SizedBox(height: MediaQuery.paddingOf(context).bottom + 96)),
         ],
+          ),
+          // Floating glass controls over the photo.
+          Positioned(
+            top: top + 8,
+            left: 16,
+            right: 16,
+            child: Row(children: [
+              GlassIconButton(
+                tooltip: 'Back',
+                icon: Icons.arrow_back_ios_new_rounded,
+                onPressed: () => Navigator.of(context).maybePop(),
+              ),
+              const Spacer(),
+              GlassIconButton(
+                tooltip: saved ? 'Remove from saved' : 'Save deal',
+                icon: saved ? Icons.favorite : Icons.favorite_border,
+                color: saved ? Brand.coral : null,
+                onPressed: () => ref.read(savedProvider.notifier).toggle(d.asin),
+              ),
+              const SizedBox(width: 10),
+              GlassIconButton(
+                tooltip: 'Share',
+                icon: Icons.ios_share,
+                onPressed: () => links.shareDeal(d, showPrice: fresh),
+              ),
+            ]),
+          ),
+        ]),
+      ),
+      // Floating glass action bar: price on the left, Amazon on the right.
+      bottomNavigationBar: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.only(bottom: 10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Glass(
+            radius: 26,
+            sigma: 26,
+            strength: 1.15,
+            padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
+            child: Row(children: [
+              if (d.active && fresh)
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(money(d.price, d.currency), style: t.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                      if (d.discountPct > 0)
+                        Text('${d.discountPct}% off', style: TextStyle(color: context.tones.good, fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                )
+              else
+                const Spacer(),
+              FilledButton.icon(
+                onPressed: openAmazon,
+                icon: const Icon(Icons.open_in_new, size: 18),
+                label: Text(d.active ? 'Get this deal on Amazon' : 'See it on Amazon'),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, 52),
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                ),
+              ),
+            ]),
+          ),
+        ),
       ),
     );
   }
