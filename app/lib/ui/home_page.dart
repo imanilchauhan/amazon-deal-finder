@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../core/providers.dart';
+import '../core/screenshots.dart';
 import '../data/catalog.dart';
 import '../data/collections.dart';
 import '../data/taxonomy.dart';
@@ -50,6 +51,8 @@ class HomePage extends ConsumerWidget {
   }
 }
 
+bool _shotDone = false; // screenshot builds only
+
 class _HomeBody extends ConsumerWidget {
   const _HomeBody(this.c);
   final Catalog c;
@@ -64,6 +67,18 @@ class _HomeBody extends ConsumerWidget {
 
     final deals = withoutVariants(c.live.where((d) => d.priceFresh(now)));
     final hero = dealOfTheHour(deals, now);
+    if (Screenshots.openHero && hero != null && !_shotDone) {
+      _shotDone = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) => DealPage.open(context, hero));
+    }
+    if (Screenshots.savedCount > 0 && !_shotDone) {
+      _shotDone = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        for (final d in deals.take(Screenshots.savedCount)) {
+          if (!ref.read(savedProvider).contains(d.asin)) ref.read(savedProvider.notifier).toggle(d.asin);
+        }
+      });
+    }
     final rest = deals.where((d) => d != hero).toList();
     final winter = rest.where((d) => isWinter(d, now)).take(3).toList();
     Deal? firstWhere(bool Function(Deal) f) {

@@ -9,6 +9,7 @@ import '../data/collections.dart';
 import '../data/saved.dart';
 import '../data/taxonomy.dart';
 import '../logic/rules.dart';
+import 'screenshots.dart';
 import '../services/links.dart';
 
 /// The clock, overridable in tests.
@@ -34,7 +35,7 @@ final savedProvider =
 final linksProvider = Provider<Links>((ref) => const Links());
 
 /// Bottom navigation tab, and the query the Deals tab should show (set from the home Ask bar).
-final tabProvider = StateProvider<int>((ref) => 0);
+final tabProvider = StateProvider<int>((ref) => Screenshots.startTab);
 final dealsQueryProvider = StateProvider<String>((ref) => '');
 final dealsDepartmentProvider = StateProvider<String?>((ref) => null);
 final homeMoodProvider = StateProvider<Mood>((ref) => Mood.all);
