@@ -4,7 +4,7 @@ import { AMAZON_DISCLOSURE, SITE, SOCIALS } from "@/lib/site";
 import { AskBar } from "./AskBar";
 import c from "./chrome.module.css";
 import { Freshness } from "./Freshness";
-import { SavedLink } from "./SaveButton";
+import { HeaderNav, TabBar } from "./MainNav";
 import s from "./ui.module.css";
 
 export function Header({ checked = "" }: { checked?: string }) {
@@ -17,13 +17,7 @@ export function Header({ checked = "" }: { checked?: string }) {
         </Link>
         <Freshness checked={checked} short />
         <AskBar />
-        <nav className={c.nav} aria-label="Main">
-          <Link href="/deals">Deals</Link>
-          <Link href="/collections">Collections</Link>
-          <Link href="/guides">Guides</Link>
-          <Link href="/contact">Contact</Link>
-          <SavedLink />
-        </nav>
+        <HeaderNav />
       </div>
     </header>
   );
@@ -31,6 +25,8 @@ export function Header({ checked = "" }: { checked?: string }) {
 
 export function Footer() {
   return (
+    <>
+    <TabBar />
     <footer className={s.footer}>
       <div className={s.footerInner}>
         <div>
@@ -57,6 +53,7 @@ export function Footer() {
       </div>
       <p className={s.disclosure}>{AMAZON_DISCLOSURE} Amazon and the Amazon logo are trademarks of Amazon.com, Inc. or its affiliates.</p>
     </footer>
+    </>
   );
 }
 

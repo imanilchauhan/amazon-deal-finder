@@ -49,15 +49,21 @@
   gap: 4px;
   min-width: 0;
   padding: 22px;
-  border-radius: 28px;
+  border-radius: 30px;
   overflow: hidden;
   text-decoration: none;
   color: var(--ink);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2), box-shadow 0.35s ease;
 }
-a.tile:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 32px rgb(21 22 26 / 10%);
+@media (hover: hover) {
+  a.tile:hover {
+    transform: perspective(1000px) translateY(-6px) rotateX(4deg) rotateY(-2deg);
+    box-shadow: var(--lift-shadow);
+  }
 }
 a.tile:focus-visible,
 .heroCta:focus-visible,
@@ -162,28 +168,32 @@ a.tile:focus-visible,
 .why li {
   font-size: 13px;
   background: var(--surface-2);
-  border-radius: 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
   padding: 6px 10px;
 }
 .heroCta {
   margin-top: auto;
   text-align: center;
   text-decoration: none;
-  background: var(--brand);
+  background: var(--cta);
   color: #fff;
-  font-weight: 700;
-  border-radius: 14px;
-  padding: 14px 16px;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 15px 18px;
+  box-shadow: 0 12px 26px rgb(211 47 47 / 30%);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .heroCta:hover {
-  background: var(--brand-deep);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgb(211 47 47 / 38%);
   color: #fff;
 }
 .heroImg {
   position: relative;
   display: block;
   min-height: 280px;
-  border-radius: 20px;
+  border-radius: 24px;
   background: var(--tile);
   overflow: hidden;
 }
@@ -199,12 +209,12 @@ a.tile:focus-visible,
   position: absolute;
   top: 14px;
   right: 14px;
-  background: #15161a;
+  background: var(--cta);
   color: #fff;
   font-family: var(--font-display), sans-serif;
-  font-weight: 700;
+  font-weight: 800;
   font-size: 22px;
-  border-radius: 16px;
+  border-radius: 999px;
   padding: 6px 12px;
 }
 
@@ -252,7 +262,8 @@ a.tile:focus-visible,
   padding: 6px;
 }
 .dark {
-  background: #15161a;
+  background: rgb(22 24 29 / 90%);
+  border-color: rgb(255 255 255 / 10%);
   color: #fff;
 }
 .dark .kicker {
@@ -318,8 +329,10 @@ a.tile:focus-visible,
   height: 44px;
   padding: 0 18px;
   border-radius: 999px;
-  border: 1.5px solid var(--line);
+  border: 1px solid var(--glass-edge);
   background: var(--surface);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   color: var(--ink);
   font: inherit;
   font-size: 15px;
@@ -327,7 +340,7 @@ a.tile:focus-visible,
   cursor: pointer;
 }
 .mood:hover {
-  border-color: var(--ink);
+  background: var(--surface-2);
 }
 .mood[aria-pressed="true"] {
   background: var(--ink);
@@ -361,15 +374,21 @@ a.tile:focus-visible,
   flex-direction: column;
   gap: 14px;
   padding: 16px;
-  border-radius: 24px;
+  border-radius: 30px;
   background: var(--surface);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow);
   text-decoration: none;
   color: var(--ink);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2), box-shadow 0.35s ease;
 }
-.col:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 32px rgb(21 22 26 / 10%);
+@media (hover: hover) {
+  .col:hover {
+    transform: perspective(1000px) translateY(-6px) rotateX(4deg);
+    box-shadow: var(--lift-shadow);
+  }
 }
 .collage {
   display: grid;
@@ -384,7 +403,7 @@ a.tile:focus-visible,
   min-height: 0;
   object-fit: contain;
   background: var(--tile);
-  border-radius: 14px;
+  border-radius: 18px;
   padding: 6px;
 }
 .collage img:first-child {
@@ -417,8 +436,10 @@ a.tile:focus-visible,
 .join {
   margin-top: 64px;
   padding: 40px 44px;
-  border-radius: 32px;
-  background: #15161a;
+  border-radius: 34px;
+  background: rgb(22 24 29 / 90%);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   color: #fff;
   display: flex;
   align-items: center;
@@ -447,7 +468,7 @@ a.tile:focus-visible,
 .joinBtns a {
   text-decoration: none;
   font-weight: 700;
-  border-radius: 14px;
+  border-radius: 999px;
   padding: 15px 22px;
 }
 .joinBtns a:focus-visible {

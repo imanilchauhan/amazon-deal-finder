@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { Footer, Header, JsonLd } from "@/components/SiteChrome";
 import { getDeals, lastChecked } from "@/lib/deals";
 import { SITE, SOCIALS } from "@/lib/site";
@@ -7,7 +7,7 @@ import { ADSENSE_CLIENT, adsEnabled } from "@/lib/ads";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
-const display = Space_Grotesk({ variable: "--font-display", subsets: ["latin"], weight: ["500", "700"] });
+const display = Plus_Jakarta_Sans({ variable: "--font-display", subsets: ["latin"], weight: ["600", "700", "800"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
@@ -46,8 +46,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f3ef" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f1013" },
+    { media: "(prefers-color-scheme: light)", color: "#fff8f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#120f14" },
   ],
 };
 

@@ -38,18 +38,3 @@ export function SaveButton({ deal, className }: { deal: Deal; className?: string
     </button>
   );
 }
-
-/** Header link with the number of saved deals. */
-export function SavedLink({ className }: { className?: string }) {
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    const sync = () => setN(readSaved().length);
-    sync();
-    return onSavedChange(sync);
-  }, []);
-  return (
-    <a href="/saved" className={className}>
-      Saved{n ? ` (${n})` : ""}
-    </a>
-  );
-}

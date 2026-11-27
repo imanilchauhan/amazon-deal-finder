@@ -24,8 +24,9 @@
 .media {
   position: relative;
   background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 20px;
+  border: 1px solid var(--glass-edge);
+  border-radius: 30px;
+  box-shadow: var(--glass-shadow);
   aspect-ratio: 1;
   display: flex;
   align-items: center;
@@ -61,9 +62,12 @@
 }
 .priceBox {
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 18px;
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+  border-radius: 26px;
+  padding: 20px;
   display: grid;
   gap: 6px;
 }
@@ -92,12 +96,13 @@
   font-weight: 700;
   font-size: 17px;
   padding: 15px 18px;
-  border-radius: 14px;
-  background: var(--brand);
+  border-radius: 999px;
+  background-color: var(--cta);
   color: #fff;
+  box-shadow: 0 12px 26px rgb(211 47 47 / 30%);
 }
 .buy:hover {
-  background: var(--brand-deep);
+  background-color: var(--brand-deep);
 }
 .ended {
   background: var(--surface-2);
