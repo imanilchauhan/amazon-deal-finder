@@ -205,7 +205,7 @@ class Freshness extends StatelessWidget {
           decoration: BoxDecoration(shape: BoxShape.circle, color: offline ? Colors.orange : context.tones.good),
         ),
         const SizedBox(width: 6),
-        Text(label, style: Theme.of(context).textTheme.labelMedium),
+        Flexible(child: Text(label, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.labelMedium)),
       ]),
     );
   }
