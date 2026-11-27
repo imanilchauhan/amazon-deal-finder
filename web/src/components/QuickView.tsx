@@ -51,10 +51,14 @@ export function QuickView({ deal, onClose }: { deal: Deal | null; onClose: () =>
       aria-label={deal ? `Quick view: ${deal.shortTitle}` : "Quick view"}
     >
       {deal && (
+        <button type="button" className={s.qvClose} onClick={onClose} aria-label="Close quick view">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+      )}
+      {deal && (
         <div className={s.qvBody}>
-          <button type="button" className={s.qvClose} onClick={onClose} aria-label="Close quick view">
-            ×
-          </button>
           <div className={s.qvMedia}>
             {deal.discountPct > 0 && <span className={s.badge}>-{deal.discountPct}%</span>}
             <img src={deal.imageUrl} alt={deal.shortTitle} width={420} height={420} />

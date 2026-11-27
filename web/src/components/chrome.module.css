@@ -2,9 +2,24 @@
 /* A floating glass pill, 12 px from the top of the window. */
 .header {
   position: sticky;
-  top: 12px;
+  top: 0;
   z-index: 10;
-  padding: 12px 16px 0;
+  padding: 12px 16px 14px;
+  isolation: isolate;
+}
+/* The page's own background behind the floating bar, fading out at its bottom edge, so scrolled
+   content never shows above or through the bar. */
+.header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--bg);
+  background-image: var(--backdrop);
+  background-attachment: fixed;
+  -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  pointer-events: none;
 }
 .inner {
   max-width: 1248px;
@@ -14,7 +29,7 @@
   align-items: center;
   gap: 18px;
   border-radius: 999px;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
   -webkit-backdrop-filter: var(--glass-blur);
   backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-edge);
@@ -166,6 +181,9 @@
     position: relative;
     top: 0;
     padding: 10px 12px 0;
+  }
+  .header::before {
+    display: none;
   }
   .inner {
     flex-wrap: wrap;
