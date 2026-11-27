@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -6,6 +9,14 @@ plugins {
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Play upload key: kept outside the repo (default ~/.secrets/cartcrush-upload.properties, or set
+// CARTCRUSH_KEY_PROPERTIES). Without it, release builds fall back to the debug key.
+val keyPropsFile = file(
+    System.getenv("CARTCRUSH_KEY_PROPERTIES")
+        ?: "${System.getProperty("user.home")}/.secrets/cartcrush-upload.properties"
+)
+val keyProps = Properties().apply { if (keyPropsFile.exists()) load(FileInputStream(keyPropsFile)) }
 
 android {
     namespace = "com.cartcrush.app"
@@ -18,7 +29,6 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.cartcrush.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
@@ -32,11 +42,21 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (keyPropsFile.exists()) {
+            create("upload") {
+                storeFile = file(keyProps.getProperty("storeFile"))
+                storePassword = keyProps.getProperty("storePassword")
+                keyAlias = keyProps.getProperty("keyAlias")
+                keyPassword = keyProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig =
+                if (keyPropsFile.exists()) signingConfigs.getByName("upload") else signingConfigs.getByName("debug")
         }
     }
 }
