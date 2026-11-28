@@ -13,7 +13,7 @@ type Answers = Record<string, string | string[]>;
 
 export default function SurveyForm() {
   const [answers, setAnswers] = useState<Answers>({});
-  const [other, setOther] = useState("");
+  const [others, setOthers] = useState<Record<string, string>>({});
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   const [digest, setDigest] = useState(false);
@@ -75,7 +75,7 @@ export default function SurveyForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          answers: { ...answers, categories_other: other },
+          answers: { ...answers, ...Object.fromEntries(Object.entries(others).map(([k, v]) => [`${k}_other`, v])) },
           email: email.trim(),
           consent,
           digest,
@@ -160,10 +160,10 @@ export default function SurveyForm() {
               className={s.input}
               type="text"
               maxLength={80}
-              placeholder="What else do you shop for?"
-              value={other}
-              onChange={(e) => setOther(e.target.value)}
-              aria-label="Other category"
+              placeholder={q.id === "stores" ? "Which other app or site?" : "What else?"}
+              value={others[q.id] ?? ""}
+              onChange={(e) => setOthers((o) => ({ ...o, [q.id]: e.target.value }))}
+              aria-label={`Other: ${q.title}`}
             />
           )}
           {errors[q.id] && <p className={s.error}>{errors[q.id]}</p>}

@@ -5,11 +5,11 @@ import s from "./survey.module.css";
 export const metadata: Metadata = {
   title: "Quick survey: help us find deals you'll actually buy",
   description:
-    "Tell CartCrush what you shop for on Amazon India, your budget and where you want deals. 8 quick questions, about 90 seconds.",
+    "Tell CartCrush what you shop for online, where you shop, your budget and where you want deals. 9 quick questions, about 90 seconds.",
   alternates: { canonical: "/survey" },
   openGraph: {
     title: "CartCrush survey: what deals do you want?",
-    description: "8 quick questions, about 90 seconds. Help us pick the Amazon India deals you actually want.",
+    description: "9 quick questions, about 90 seconds. Help us pick the Amazon India deals you actually want.",
   },
 };
 

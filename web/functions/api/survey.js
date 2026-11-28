@@ -60,10 +60,14 @@ export async function onRequestPost({ request, env, waitUntil }) {
     if (q.max && list.length > q.max) return fail(`Pick up to ${q.max}.`, q.id);
     answers[q.id] = q.type === "single" ? list[0] || "" : list;
   }
-  let other = "";
-  if (answers.categories.includes("Other")) {
-    other = typeof body.answers?.categories_other === "string" ? body.answers.categories_other.trim().replace(/\s+/g, " ") : "";
-    if (other.length > 80) return fail("That answer is too long.", "categories");
+  // Free text for "Other" (questions with other: true), saved as <id>_other.
+  const others = {};
+  for (const q of SURVEY.questions) {
+    if (!q.other || !answers[q.id].includes("Other")) continue;
+    const raw = body.answers?.[`${q.id}_other`];
+    const t = typeof raw === "string" ? raw.trim().replace(/\s+/g, " ") : "";
+    if (t.length > 80) return fail("That answer is too long.", q.id);
+    if (t) others[`${q.id}_other`] = t;
   }
 
   // ---- consent and email ----
@@ -80,12 +84,12 @@ export async function onRequestPost({ request, env, waitUntil }) {
     await saveResponse(env, id, {
       email,
       answers,
-      categories_other: other,
+      others,
       source,
       consent: true,
       digest_optin: body.digest === true,
       country: request.cf?.country || "",
-      version: 1,
+      version: 2,
     });
   } catch (e) {
     console.log("survey save failed", String(e));
