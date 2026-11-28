@@ -1,0 +1,232 @@
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 16px 64px;
+}
+.hero {
+  text-align: center;
+  padding: 16px 0 28px;
+}
+.kicker {
+  margin: 0 0 8px;
+  color: var(--brand-deep);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.hero h1 {
+  margin: 0 auto;
+  max-width: 18ch;
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.1;
+}
+.lead {
+  margin: 14px auto 0;
+  max-width: 50ch;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.form {
+  display: grid;
+  gap: 14px;
+}
+.card {
+  min-width: 0;
+  margin: 0;
+  padding: 20px 20px 18px;
+  border: 1px solid var(--glass-edge, var(--line));
+  border-radius: 24px;
+  background: var(--surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+}
+.invalid {
+  border-color: var(--cta);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cta) 25%, transparent), var(--glass-shadow);
+}
+.legend {
+  float: left; /* lets the legend sit inside the card's padding */
+  width: 100%;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 0 0 14px;
+  padding: 0;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.35;
+}
+.legend + * {
+  clear: both;
+}
+.num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--cta);
+  color: #fff;
+  font-size: 14px;
+}
+.hint {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-2, #fff);
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.chip:hover {
+  border-color: var(--cta);
+}
+.chip:active {
+  transform: scale(0.97);
+}
+.chip:focus-visible,
+.submit:focus-visible,
+.input:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.on {
+  border-color: var(--cta);
+  background: var(--cta);
+  color: #fff;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-2, #fff);
+  color: inherit;
+  font: inherit;
+  font-size: 16px; /* no zoom-on-focus on iPhone */
+}
+.chips + .input {
+  margin-top: 12px;
+}
+
+.check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 14px;
+  font-size: 15px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+.check input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  accent-color: var(--cta);
+}
+.check a {
+  color: var(--brand-deep);
+}
+
+.error {
+  margin: 10px 0 0;
+  color: var(--cta);
+  font-size: 14px;
+  font-weight: 600;
+}
+.formError {
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--cta) 12%, transparent);
+  color: var(--cta);
+  font-weight: 600;
+}
+.trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.submit {
+  justify-self: center;
+  display: inline-block;
+  min-height: 52px;
+  padding: 14px 32px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--cta);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  font-size: 17px;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -10px var(--cta);
+}
+.submit:hover {
+  background: var(--brand-deep);
+}
+.submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.note {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.done {
+  text-align: center;
+  padding: 36px 24px;
+}
+.done h2 {
+  margin: 12px 0 8px;
+}
+.done p {
+  margin: 0 auto 22px;
+  max-width: 44ch;
+  color: var(--muted);
+}
+.tick {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: var(--cta);
+  color: #fff;
+  font-size: 32px;
+  font-weight: 800;
+}

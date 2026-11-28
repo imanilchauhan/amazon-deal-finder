@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { adsEnabled } from "@/lib/ads";
 
 export const metadata: Metadata = {
@@ -11,11 +12,11 @@ export default function Privacy() {
   return (
     <main className="prose">
       <h1>Privacy policy</h1>
-      <p>Last updated: 27 November 2026. This policy covers the cartcrush.in website and the CartCrush app for Android and iPhone.</p>
+      <p>Last updated: 28 November 2026. This policy covers the cartcrush.in website and the CartCrush app for Android and iPhone.</p>
       <h2>What we collect</h2>
       <p>
-        CartCrush does not ask you to create an account and does not collect your name, email address or payment details.
-        Our hosting provider may keep standard server logs (such as IP address, browser type and pages visited) to keep the
+        CartCrush does not ask you to create an account and does not collect your name or payment details. We only collect
+        your email address if you choose to fill in our survey (see below). Our hosting provider may keep standard server logs (such as IP address, browser type and pages visited) to keep the
         site secure and running.
       </p>
       <h2>Affiliate links and cookies</h2>
@@ -40,6 +41,18 @@ export default function Privacy() {
           </p>
         </>
       )}
+      <h2 id="survey">Our survey</h2>
+      <p>
+        If you fill in the survey at <Link href="/survey">cartcrush.in/survey</Link>, we store your answers, your email address,
+        the date, your country (worked out from your connection, not your exact location) and which link you came from, in
+        Google Firebase. We ask for your email so each person is counted once, and you agree to this before sending. We use
+        the answers only to choose which deals and categories to show. If you tick the weekly digest box, we may also email
+        you deals; every email will have a way to stop them.
+      </p>
+      <p>
+        We never sell or share your email or answers. We keep them until you ask us to delete them, which you can do at any
+        time by emailing <a href="mailto:crushcart004.21@gmail.com">crushcart004.21@gmail.com</a> from the same address.
+      </p>
       <h2 id="app">The CartCrush app</h2>
       <p>
         The app has no sign-in and does not collect your name, email, contacts, location or payment details. It downloads
