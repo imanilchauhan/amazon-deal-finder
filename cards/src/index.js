@@ -43,18 +43,72 @@ export const MAX_CATALOG_BYTES = 20 * 1024 * 1024;
 const CATALOG_KEY = 'catalog:v1';
 const CORS = { 'Access-Control-Allow-Origin': '*' };
 
-// Product cache (backend/deal_finder/catalog.py writes it after each scrape; the site build and
-// the admin read it instead of Firestore). The Worker only stores and serves the bytes.
-async function catalog(request, env) {
+// Product cache (backend/deal_finder/catalog.py writes it after each scrape; the site build,
+// the admin and the app read it instead of Firestore). The Worker only stores and serves the bytes.
+//
+// Caching, so app and site traffic doesn't use up the free Workers KV reads (100k a day):
+//   * each Cloudflare location keeps a copy for EDGE_SECONDS (Cache API), so most requests never
+//     read KV; a PUT drops the copy at the uploading location;
+//   * every response has an ETag; a client that sends If-None-Match gets a tiny 304 when nothing
+//     changed (the app does this);
+//   * the backend loads with ?fresh=1, which always reads KV: it merges its changes into the
+//     snapshot and must not start from an old copy.
+export const EDGE_SECONDS = 120;
+const EDGE_KEY = 'https://cartcrush-cards.internal/catalog.json';
+const edgeCache = () => (typeof caches !== 'undefined' ? caches.default : null);
+
+async function readCatalog(env) {
+  if (typeof env.CARDS.getWithMetadata === 'function') {
+    const { value, metadata } = await env.CARDS.getWithMetadata(CATALOG_KEY, 'arrayBuffer');
+    return value ? { body: value, etag: metadata?.etag || `"${value.byteLength}"` } : null;
+  }
+  const body = await env.CARDS.get(CATALOG_KEY, 'arrayBuffer');
+  return body ? { body, etag: `"${body.byteLength}"` } : null;
+}
+
+function catalogResponse(request, body, etag) {
+  const headers = {
+    ...CORS,
+    'Content-Type': 'application/json; charset=utf-8',
+    // Browsers and apps re-check after a minute (cheap with the ETag); edge copies are kept by
+    // the Worker itself, not by this header.
+    'Cache-Control': 'public, max-age=60',
+    ETag: etag,
+    'Access-Control-Expose-Headers': 'ETag',
+  };
+  const inm = request.headers.get('If-None-Match');
+  if (inm && inm.split(',').map((s) => s.trim().replace(/^W\//, '')).includes(etag)) {
+    return new Response(null, { status: 304, headers });
+  }
+  return new Response(request.method === 'HEAD' ? null : body, {
+    headers: { ...headers, 'Content-Length': String(body.byteLength) },
+  });
+}
+
+async function catalog(request, env, ctx) {
   if (request.method === 'GET' || request.method === 'HEAD') {
-    const body = await env.CARDS.get(CATALOG_KEY, 'arrayBuffer');
-    if (!body) return new Response('Not found', { status: 404, headers: CORS });
-    return new Response(request.method === 'HEAD' ? null : body, {
-      headers: { ...CORS, 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-cache', 'Content-Length': String(body.byteLength) },
-    });
+    const fresh = new URL(request.url).searchParams.has('fresh');
+    const cache = edgeCache();
+    if (cache && !fresh) {
+      const hit = await cache.match(EDGE_KEY);
+      if (hit) return catalogResponse(request, await hit.arrayBuffer(), hit.headers.get('ETag'));
+    }
+    const got = await readCatalog(env);
+    if (!got) return new Response('Not found', { status: 404, headers: CORS });
+    if (cache) {
+      const copy = new Response(got.body, {
+        headers: { 'Content-Type': 'application/json', ETag: got.etag, 'Cache-Control': `max-age=${EDGE_SECONDS}` },
+      });
+      const put = cache.put(EDGE_KEY, copy);
+      if (ctx?.waitUntil) ctx.waitUntil(put); else await put;
+    }
+    return catalogResponse(request, got.body, got.etag);
   }
   if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Allow-Methods': 'GET, HEAD' } });
+    return new Response(null, {
+      status: 204,
+      headers: { ...CORS, 'Access-Control-Allow-Methods': 'GET, HEAD', 'Access-Control-Allow-Headers': 'If-None-Match' },
+    });
   }
   if (request.method === 'PUT') {
     const auth = request.headers.get('Authorization') || '';
@@ -66,8 +120,10 @@ async function catalog(request, env) {
     if (body.byteLength === 0 || body.byteLength > MAX_CATALOG_BYTES || first !== 0x7b /* { */) {
       return new Response('Expected a JSON object under 20 MB', { status: 400 });
     }
-    await env.CARDS.put(CATALOG_KEY, body);
-    return new Response(JSON.stringify({ bytes: body.byteLength }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    const etag = `"${Date.now().toString(36)}-${body.byteLength.toString(36)}"`;
+    await env.CARDS.put(CATALOG_KEY, body, { metadata: { etag } });
+    await edgeCache()?.delete(EDGE_KEY);
+    return new Response(JSON.stringify({ bytes: body.byteLength, etag }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
   return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD, PUT' } });
 }
@@ -104,9 +160,9 @@ async function music(request, env, name) {
   return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD, PUT' } });
 }
 
-export async function handle(request, env) {
+export async function handle(request, env, ctx) {
   const url = new URL(request.url);
-  if (url.pathname === '/catalog.json') return catalog(request, env);
+  if (url.pathname === '/catalog.json') return catalog(request, env, ctx);
   const mm = url.pathname.match(MUSIC);
   if (mm) return music(request, env, mm[1]);
   const m = url.pathname.match(NAME);

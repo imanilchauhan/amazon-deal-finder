@@ -107,3 +107,22 @@ test('music: MP3 upload needs the secret; GET is public audio/mpeg with CORS', a
   assert.equal(r.headers.get('Access-Control-Allow-Origin'), '*');
   assert.equal((await handle(req('GET', '/m/../x.mp3'), e)).status, 404);
 });
+
+test('catalog: ETag from the upload, 304 when unchanged, ?fresh works', async () => {
+  const e = env();
+  const m = e.CARDS.m;
+  e.CARDS.getWithMetadata = async (k) => (m.has(k) ? { value: m.get(k).body, metadata: m.get(k).opts?.metadata } : { value: null, metadata: null });
+  const auth = { Authorization: 'Bearer s3cret' };
+  const put = await handle(req('PUT', '/catalog.json', { body: '{"deals":{}}', headers: auth }), e);
+  const { etag } = await put.json();
+  assert.match(etag, /^".+"$/);
+  const r = await handle(req('GET', '/catalog.json'), e);
+  assert.equal(r.status, 200);
+  assert.equal(r.headers.get('ETag'), etag);
+  assert.equal(r.headers.get('Cache-Control'), 'public, max-age=60');
+  const same = await handle(req('GET', '/catalog.json', { headers: { 'If-None-Match': etag } }), e);
+  assert.equal(same.status, 304);
+  const fresh = await handle(req('GET', '/catalog.json?fresh=1', { headers: { 'If-None-Match': '"old"' } }), e);
+  assert.equal(fresh.status, 200);
+  assert.deepEqual(await fresh.json(), { deals: {} });
+});

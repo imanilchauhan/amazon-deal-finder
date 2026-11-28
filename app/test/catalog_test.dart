@@ -50,6 +50,29 @@ void main() {
     await dir.delete(recursive: true);
   });
 
+  test('sends the saved ETag and reuses the saved copy on 304', () async {
+    final dir = await Directory.systemTemp.createTemp('cc');
+    String? sent;
+    var calls = 0;
+    final repo = CatalogRepository(
+      client: MockClient((req) async {
+        calls++;
+        sent = req.headers['if-none-match'];
+        if (calls == 1) {
+          return http.Response(catalogJson({'B0A0000001': entry()}), 200, headers: {'etag': '"v1"'});
+        }
+        return http.Response('', 304, headers: {'etag': '"v1"'});
+      }),
+      dir: () async => dir,
+    );
+    expect((await repo.load()).live.single.asin, 'B0A0000001');
+    expect(sent, isNull);
+    final again = await repo.load();
+    expect(sent, '"v1"');
+    expect(again.live.single.asin, 'B0A0000001');
+    expect(again.fromCache, isFalse);
+  });
+
   test('opens instantly from the saved copy, then shows the fresh download', () async {
     final dir = await Directory.systemTemp.createTemp('cc');
     final first = CatalogRepository(

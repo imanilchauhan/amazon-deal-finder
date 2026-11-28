@@ -86,3 +86,26 @@ def test_sync_rebuilds_after_an_admin_edit():
     assert catalog.sync(cache, store, upserts={}, deactivated=[], picks=None, now=NOW)["kind"] == "full"
     cache, store = Cache({"synced_at": (NOW - timedelta(minutes=1)).isoformat(), "deals": {}}), Edited()
     assert catalog.sync(cache, store, upserts={}, deactivated=[], picks=None, now=NOW)["kind"] == "patch"
+
+
+def test_trending_and_picks_due_from_snapshot():
+    from datetime import datetime, timezone
+
+    from deal_finder.catalog import picks_due, trending_due
+
+    now = datetime(2026, 11, 28, 12, tzinfo=timezone.utc)
+    snap = {
+        "deals": {
+            "OLD": {"active": True, "source": "trending", "updated_at": "2026-11-27T10:00:00Z"},
+            "OLDER": {"active": True, "source": "trending", "updated_at": "2026-11-27T08:00:00Z"},
+            "FRESH": {"active": True, "source": "trending", "updated_at": "2026-11-28T11:00:00Z"},
+            "ENDED": {"active": False, "source": "trending", "updated_at": "2026-11-26T08:00:00Z"},
+            "P1": {"active": True, "updated_at": "2026-11-27T09:00:00Z"},
+            "P2": {"active": True, "updated_at": "2026-11-28T11:30:00Z"},
+        },
+        "picks": {"winter": ["P1", "P2", "NEW"]},
+    }
+    assert trending_due(snap, 5, now) == ["OLDER", "OLD"]
+    assert trending_due(snap, 1, now) == ["OLDER"]
+    assert picks_due(snap, 5, now) == ["NEW", "P1"]
+    assert picks_due(snap, 0, now) == []

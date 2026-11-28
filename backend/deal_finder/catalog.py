@@ -101,7 +101,9 @@ class CatalogCache:
         self._timeout = timeout
 
     def load(self) -> dict | None:
-        resp = self._http.get(self._url, timeout=self._timeout, headers={"Cache-Control": "no-cache"})
+        # ?fresh=1 skips the Worker's edge copy: we merge into this snapshot, so it must be current.
+        resp = self._http.get(self._url, params={"fresh": "1"}, timeout=self._timeout,
+                              headers={"Cache-Control": "no-cache"})
         if resp.status_code == 404:
             return None
         resp.raise_for_status()
@@ -114,6 +116,37 @@ class CatalogCache:
         if resp.status_code not in (200, 201):
             raise RuntimeError(f"catalog upload failed: HTTP {resp.status_code} {resp.text[:120]}")
         return len(body)
+
+
+def trending_due(snapshot: dict, limit: int, now: datetime, older_than_hours: int = 16) -> list[str]:
+    """Like DealStore.trending_to_refresh, from the cached snapshot: no Firestore reads."""
+    if limit <= 0:
+        return []
+    cutoff = now - timedelta(hours=older_than_hours)
+    stale = []
+    for asin, d in (snapshot.get("deals") or {}).items():
+        updated = _parse(d.get("updated_at"))
+        if d.get("active") and d.get("source") == "trending" and updated is not None and updated < cutoff:
+            stale.append((updated, asin))
+    return [a for _, a in sorted(stale)[:limit]]
+
+
+def picks_due(snapshot: dict, limit: int, now: datetime, older_than_hours: int = 16) -> list[str]:
+    """Like DealStore.collection_asins_to_refresh, from the cached snapshot: no Firestore reads."""
+    if limit <= 0:
+        return []
+    deals = snapshot.get("deals") or {}
+    asins = list(dict.fromkeys(a for picks in (snapshot.get("picks") or {}).values() for a in picks))
+    cutoff = now - timedelta(hours=older_than_hours)
+    never, stale = [], []
+    for a in asins:
+        d = deals.get(a) or {}
+        updated = _parse(d.get("updated_at"))
+        if updated is None or not d.get("active"):
+            never.append(a)
+        elif updated < cutoff:
+            stale.append((updated, a))
+    return (never + [a for _, a in sorted(stale)])[:limit]
 
 
 def needs_full_sync(snapshot: dict | None, now: datetime, dirty_at=None) -> bool:

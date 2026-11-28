@@ -180,6 +180,27 @@ def _post_one(cfg: Config, deps: Deps, platform: str, deal: Deal, media: dict | 
     raise ValueError(platform)
 
 
+def _due_for_refresh(cfg, store, cache) -> tuple[list[str], list[str]]:
+    """Trending products and collection picks due a price re-check. Read from the product cache
+    (no Firestore reads); Firestore only when the cache can't be loaded."""
+    if store is None:
+        return [], []
+    if cache is not None:
+        try:
+            snap = cache.load()
+        except Exception as exc:  # noqa: BLE001
+            log.warning("product cache unavailable, reading Firestore: %s", exc)
+            snap = None
+        if snap and snap.get("deals"):
+            from .catalog import picks_due, trending_due
+
+            now = datetime.now(timezone.utc)
+            return (trending_due(snap, cfg.trending_refresh_per_run, now),
+                    picks_due(snap, cfg.collection_refresh_per_run, now))
+    return (store.trending_to_refresh(cfg.trending_refresh_per_run),
+            store.collection_asins_to_refresh(cfg.collection_refresh_per_run))
+
+
 def build_deps(cfg: Config) -> Deps:
     from functools import partial
 
@@ -204,16 +225,16 @@ def build_deps(cfg: Config) -> Deps:
     def scrape() -> list[Deal]:
         if cfg.asins:
             return base_scrape(asins=list(cfg.asins))
-        refresh = store.trending_to_refresh(cfg.trending_refresh_per_run) if store else []
+        refresh, picks = _due_for_refresh(cfg, store, cache)
         if refresh:
             log.info("re-checking %d trending products", len(refresh))
-        picks = store.collection_asins_to_refresh(cfg.collection_refresh_per_run) if store else []
         if picks:
             log.info("checking %d hand-picked collection products", len(picks))
         scrape.picks = picks
         return base_scrape(extra_asins=refresh, full_price_asins=picks)
 
     scrape.picks = []
+    cache = None
     x = meta = None
     if cfg.x.enabled and not cfg.dry_run:
         if cfg.x.publisher == "buffer":
@@ -235,7 +256,6 @@ def build_deps(cfg: Config) -> Deps:
         product = graphics.download_image(deal.image_url)
         return graphics.render_media(deal, product, media_dir, cfg.dm_keyword, want_video=want_video)
 
-    cache = None
     if os.environ.get("CATALOG_CACHE", "true").lower() not in {"0", "false", "no", "off"}:
         base, secret = os.environ.get("CARDS_BASE_URL", ""), os.environ.get("CARDS_UPLOAD_SECRET", "")
         if base and secret:

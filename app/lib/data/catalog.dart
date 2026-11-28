@@ -79,15 +79,42 @@ class CachedJson {
     return null;
   }
 
-  /// Downloads the current document and keeps a copy on the phone.
+  Future<File?> _etagFile() async {
+    final f = await _file();
+    return f == null ? null : File('${f.path}.etag');
+  }
+
+  /// Downloads the current document and keeps a copy on the phone. Sends the saved copy's ETag,
+  /// so when nothing changed the server answers with a tiny 304 and the saved copy is reused.
   Future<String> fetch() async {
-    final res = await _client.get(Uri.parse(url), headers: {'Cache-Control': 'no-cache'}).timeout(
-          const Duration(seconds: 20),
-        );
+    String? etag;
+    String? saved;
+    try {
+      final ef = await _etagFile();
+      if (ef != null && await ef.exists()) {
+        saved = await this.saved();
+        if (saved != null) etag = (await ef.readAsString()).trim();
+      }
+    } catch (_) {
+      etag = null;
+    }
+    final res = await _client.get(Uri.parse(url), headers: {
+      if (etag != null && etag.isNotEmpty) 'If-None-Match': etag,
+    }).timeout(const Duration(seconds: 20));
+    if (res.statusCode == 304 && saved != null) return saved;
     if (res.statusCode != 200 || !res.body.trim().startsWith('{')) throw HttpException('HTTP ${res.statusCode}');
     final body = utf8.decode(res.bodyBytes);
     try {
       await (await _file())?.writeAsString(body, flush: true);
+      final ef = await _etagFile();
+      final tag = res.headers['etag'];
+      if (ef != null) {
+        if (tag != null && tag.isNotEmpty) {
+          await ef.writeAsString(tag, flush: true);
+        } else if (await ef.exists()) {
+          await ef.delete();
+        }
+      }
     } catch (_) {
       // A full disk only costs the offline copy.
     }
